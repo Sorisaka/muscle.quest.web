@@ -1,4 +1,4 @@
-import quests from '../data/quests.json' assert { type: 'json' };
+import { getQuestById, getQuestExercises } from '../core/content.js';
 
 const starDisplay = (count) => '★'.repeat(count) || 'No rating yet';
 
@@ -12,6 +12,43 @@ const createExerciseList = (exercises) => {
     list.append(item);
   });
   return list;
+};
+
+const createExerciseGuides = (quest) => {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'exercise-guides';
+
+  const heading = document.createElement('h3');
+  heading.textContent = 'やり方ガイド';
+
+  const guides = document.createElement('div');
+  guides.className = 'exercise-guides__list';
+
+  const exerciseEntries = getQuestExercises(quest);
+  if (exerciseEntries.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'muted';
+    empty.textContent = 'このクエストに紐づくフォームガイドはまだありません。';
+    guides.append(empty);
+  } else {
+    exerciseEntries.forEach((exercise) => {
+      const details = document.createElement('details');
+      details.className = 'exercise-guides__item';
+
+      const summary = document.createElement('summary');
+      summary.textContent = exercise.title || exercise.slug;
+
+      const body = document.createElement('div');
+      body.className = 'exercise-guides__body';
+      body.innerHTML = exercise.body || '<p class="muted">ガイドが見つかりませんでした。</p>';
+
+      details.append(summary, body);
+      guides.append(details);
+    });
+  }
+
+  wrapper.append(heading, guides);
+  return wrapper;
 };
 
 const createTimerControls = (quest, store, navigate) => {
@@ -100,7 +137,7 @@ const createSteps = (steps) => {
 };
 
 export const renderQuest = (params, { navigate, store }) => {
-  const quest = quests.find((entry) => entry.id === params.id);
+  const quest = getQuestById(params.id);
 
   const container = document.createElement('section');
   container.className = 'stack';
@@ -127,13 +164,7 @@ export const renderQuest = (params, { navigate, store }) => {
   stars.textContent = `${starDisplay(quest.stars)} • ~${quest.estimatedMinutes} minutes`;
 
   const exercises = createExerciseList(quest.exercises);
-
-  const learnButton = document.createElement('a');
-  learnButton.href = quest.link;
-  learnButton.className = 'link';
-  learnButton.textContent = 'やり方リンクを開く';
-  learnButton.target = '_blank';
-  learnButton.rel = 'noreferrer';
+  const exerciseGuides = createExerciseGuides(quest);
 
   const steps = createSteps(quest.steps);
   const timerControls = createTimerControls(quest, store, navigate);
@@ -149,7 +180,7 @@ export const renderQuest = (params, { navigate, store }) => {
     description,
     stars,
     exercises,
-    learnButton,
+    exerciseGuides,
     steps,
     timerControls,
     backListButton,
