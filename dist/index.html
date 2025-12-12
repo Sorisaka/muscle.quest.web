@@ -7,24 +7,32 @@
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <main>
-      <header>
+    <main class="shell">
+      <header class="shell__header">
         <div>
-          <h1 data-route-title>Home</h1>
-          <p data-route-description>Loading...</p>
+          <p class="eyebrow">Hash router demo</p>
+          <h1>Muscle Quest</h1>
+          <p class="muted">Navigate with the buttons below to render each view.</p>
         </div>
-        <span class="current-route">Current: <strong data-current-route>#/</strong></span>
+        <nav class="nav">
+          <button data-nav-target="#/">Home</button>
+          <button data-nav-target="#/settings">Settings</button>
+          <button data-nav-target="#/rank/beginner">Rank</button>
+          <button data-nav-target="#/quest/beginner">Quest</button>
+          <button data-nav-target="#/run/beginner">Run</button>
+        </nav>
       </header>
 
-      <section class="route-grid">
-        <button data-nav data-nav-target="#/">Go to #/</button>
-        <button data-nav data-nav-target="#/settings">Go to #/settings</button>
-        <button data-nav data-nav-target="#/rank/example">Go to #/rank/...</button>
-        <button data-nav data-nav-target="#/quest/example">Go to #/quest/...</button>
-        <button data-nav data-nav-target="#/run/example">Go to #/run/...</button>
+      <section class="route-meta">
+        <div>
+          <p class="eyebrow">Current route</p>
+          <h2 data-route-title>Home</h2>
+          <p class="muted" data-route-description>Browse quests and jump into a run.</p>
+        </div>
+        <span class="pill" data-route-path>#/</span>
       </section>
 
-      <p>Use the buttons above or edit the URL hash to verify the main routes.</p>
+      <section data-view class="panel"></section>
     </main>
     <script type="module" src="./app.js"></script>
   </body>

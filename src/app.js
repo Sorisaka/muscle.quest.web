@@ -1,60 +1,85 @@
-const routes = {
-  '#/': {
+import { createRouter } from './core/router.js';
+import { createStore } from './core/store.js';
+import { renderHome } from './views/homeView.js';
+import { renderSettings } from './views/settingsView.js';
+import { renderRank } from './views/rankView.js';
+import { renderQuest } from './views/questView.js';
+import { renderRun } from './views/runView.js';
+
+const titleEl = document.querySelector('[data-route-title]');
+const pathEl = document.querySelector('[data-route-path]');
+const outlet = document.querySelector('[data-view]');
+const navButtons = document.querySelectorAll('[data-nav-target]');
+
+const store = createStore();
+let router;
+
+const routes = [
+  {
+    path: '#/',
     title: 'Home',
-    description: 'Welcome to Muscle Quest. Use the buttons below to check each route.'
+    description: 'Browse quests and jump into a run.',
+    render: renderHome,
   },
-  '#/settings': {
+  {
+    path: '#/settings',
     title: 'Settings',
-    description: 'Adjust your preferences and profile details.'
+    description: 'Saved to localStorage for persistence.',
+    render: renderSettings,
   },
-  '#/rank/example': {
-    title: 'Rank',
-    description: 'View leaderboard details for the selected rank.'
+  {
+    path: '#/rank/:id',
+    title: (params) => `Rank / ${params.id}`,
+    description: 'Sample leaderboard view with dynamic params.',
+    render: renderRank,
   },
-  '#/quest/example': {
-    title: 'Quest',
-    description: 'Track quest progress and objectives here.'
+  {
+    path: '#/quest/:id',
+    title: (params) => `Quest / ${params.id}`,
+    description: 'Quest detail with links to run and how-to guides.',
+    render: renderQuest,
   },
-  '#/run/example': {
-    title: 'Run',
-    description: 'Monitor an active run with live stats.'
+  {
+    path: '#/run/:id',
+    title: (params) => `Run / ${params.id}`,
+    description: 'Live run area that reads your saved settings.',
+    render: renderRun,
+  },
+];
+
+const renderShell = (match) => {
+  const { route, params, fullPath } = match;
+  const routeTitle = typeof route.title === 'function' ? route.title(params) : route.title;
+  const routeDescription =
+    typeof route.description === 'function' ? route.description(params) : route.description;
+
+  titleEl.textContent = routeTitle;
+  pathEl.textContent = fullPath;
+
+  const view = route.render(params, { navigate: router.navigate, store });
+  outlet.innerHTML = '';
+  outlet.append(view);
+
+  const descriptionEl = document.querySelector('[data-route-description]');
+  if (descriptionEl) {
+    descriptionEl.textContent = routeDescription;
   }
 };
 
-function renderRoute(target) {
-  const route = routes[target] || routes['#/'];
-  const heading = document.querySelector('[data-route-title]');
-  const body = document.querySelector('[data-route-description]');
-  const current = document.querySelector('[data-current-route]');
-
-  heading.textContent = route.title;
-  body.textContent = route.description;
-  current.textContent = target;
-}
-
-function navigate(target) {
-  window.location.hash = target;
-  renderRoute(target);
-}
-
-function setupNavigation() {
-  document.querySelectorAll('[data-nav]').forEach((button) => {
+const setupNavigation = () => {
+  navButtons.forEach((button) => {
     button.addEventListener('click', (event) => {
       const { navTarget } = event.currentTarget.dataset;
-      navigate(navTarget);
+      event.preventDefault();
+      router.navigate(navTarget);
     });
   });
+};
 
-  window.addEventListener('hashchange', () => {
-    renderRoute(window.location.hash || '#/');
-  });
-
-  const initial = window.location.hash || '#/';
-  renderRoute(initial);
-}
-
-function initApp() {
+const init = () => {
+  router = createRouter(routes, renderShell);
   setupNavigation();
-}
+  router.start();
+};
 
-document.addEventListener('DOMContentLoaded', initApp);
+document.addEventListener('DOMContentLoaded', init);

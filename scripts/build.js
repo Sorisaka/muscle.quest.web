@@ -9,21 +9,26 @@ async function clean() {
   await fs.rm(distDir, { recursive: true, force: true });
 }
 
-async function ensureDist() {
-  await fs.mkdir(distDir, { recursive: true });
-}
+async function copyDir(from, to) {
+  await fs.mkdir(to, { recursive: true });
+  const entries = await fs.readdir(from, { withFileTypes: true });
 
-async function copyAsset(fileName) {
-  const from = path.join(srcDir, fileName);
-  const to = path.join(distDir, fileName);
-  await fs.copyFile(from, to);
+  for (const entry of entries) {
+    const sourcePath = path.join(from, entry.name);
+    const targetPath = path.join(to, entry.name);
+
+    if (entry.isDirectory()) {
+      await copyDir(sourcePath, targetPath);
+    } else if (entry.isFile()) {
+      await fs.copyFile(sourcePath, targetPath);
+    }
+  }
 }
 
 async function build() {
   await clean();
-  await ensureDist();
-  await Promise.all(['index.html', 'style.css', 'app.js'].map(copyAsset));
-  console.log('Build complete: dist/ contains index.html and bundled app.js');
+  await copyDir(srcDir, distDir);
+  console.log('Build complete: dist/ mirrors src/');
 }
 
 if (require.main === module) {
