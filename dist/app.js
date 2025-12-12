@@ -1,5 +1,6 @@
 import { createRouter } from './core/router.js';
 import { createStore } from './core/store.js';
+import { initSfx, playSfx } from './core/sfx.js';
 import { renderHome } from './views/homeView.js';
 import { renderSettings } from './views/settingsView.js';
 import { renderQuestList } from './views/questListView.js';
@@ -9,7 +10,6 @@ import { renderRun } from './views/runView.js';
 const titleEl = document.querySelector('[data-route-title]');
 const pathEl = document.querySelector('[data-route-path]');
 const outlet = document.querySelector('[data-view]');
-const navButtons = document.querySelectorAll('[data-nav-target]');
 
 const store = createStore();
 let router;
@@ -56,7 +56,7 @@ const renderShell = (match) => {
   titleEl.textContent = routeTitle;
   pathEl.textContent = fullPath;
 
-  const view = route.render(params, { navigate: router.navigate, store });
+  const view = route.render(params, { navigate: router.navigate, store, playSfx });
   outlet.innerHTML = '';
   outlet.append(view);
 
@@ -66,19 +66,9 @@ const renderShell = (match) => {
   }
 };
 
-const setupNavigation = () => {
-  navButtons.forEach((button) => {
-    button.addEventListener('click', (event) => {
-      const { navTarget } = event.currentTarget.dataset;
-      event.preventDefault();
-      router.navigate(navTarget);
-    });
-  });
-};
-
 const init = () => {
   router = createRouter(routes, renderShell);
-  setupNavigation();
+  initSfx(store);
   router.start();
 };
 

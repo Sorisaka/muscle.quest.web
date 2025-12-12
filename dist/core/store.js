@@ -3,7 +3,11 @@ const STORAGE_KEY = 'musclequest:settings';
 const defaultSettings = {
   language: 'en',
   difficulty: 'beginner',
-  sound: true,
+  sfxEnabled: true,
+  sfxVolume: 0.6,
+  timerTrainingSeconds: 60,
+  timerRestSeconds: 20,
+  timerSets: 3,
 };
 
 const readSettings = () => {
@@ -12,7 +16,11 @@ const readSettings = () => {
 
   try {
     const parsed = JSON.parse(raw);
-    return { ...defaultSettings, ...parsed };
+    const normalized = { ...defaultSettings, ...parsed };
+    if (typeof parsed.sound === 'boolean' && typeof parsed.sfxEnabled === 'undefined') {
+      normalized.sfxEnabled = parsed.sound;
+    }
+    return normalized;
   } catch (error) {
     console.warn('Failed to parse settings from storage. Falling back to defaults.');
     return { ...defaultSettings };
@@ -25,7 +33,9 @@ export const createStore = () => {
   let runPlan = {
     questId: null,
     mode: 'timer',
-    seconds: 300,
+    trainingSeconds: settings.timerTrainingSeconds,
+    restSeconds: settings.timerRestSeconds,
+    sets: settings.timerSets,
   };
 
   const notify = () => {

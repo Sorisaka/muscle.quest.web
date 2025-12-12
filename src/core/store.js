@@ -5,6 +5,9 @@ const defaultSettings = {
   difficulty: 'beginner',
   sfxEnabled: true,
   sfxVolume: 0.6,
+  timerTrainingSeconds: 60,
+  timerRestSeconds: 20,
+  timerSets: 3,
 };
 
 const readSettings = () => {
@@ -30,7 +33,9 @@ export const createStore = () => {
   let runPlan = {
     questId: null,
     mode: 'timer',
-    seconds: 300,
+    trainingSeconds: settings.timerTrainingSeconds,
+    restSeconds: settings.timerRestSeconds,
+    sets: settings.timerSets,
   };
 
   const notify = () => {

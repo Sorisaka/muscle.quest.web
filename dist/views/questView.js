@@ -51,12 +51,36 @@ const createExerciseGuides = (quest) => {
   return wrapper;
 };
 
-const createTimerControls = (quest, store, navigate) => {
+const clampSeconds = (value) => {
+  if (value === '' || value === null || typeof value === 'undefined') return 0;
+  const parsed = Number(value);
+  if (Number.isNaN(parsed) || parsed < 0) return 0;
+  return Math.min(59, parsed);
+};
+
+const clampMinutes = (value) => {
+  if (value === '' || value === null || typeof value === 'undefined') return 0;
+  const parsed = Number(value);
+  if (Number.isNaN(parsed) || parsed < 0) return 0;
+  return Math.min(180, parsed);
+};
+
+const secondsToParts = (seconds) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return { mins, secs };
+};
+
+const createTimerControls = (quest, store, navigate, playSfx) => {
   const box = document.createElement('div');
   box.className = 'timer-box';
 
   let mode = 'timer';
-  let minutes = quest.estimatedMinutes;
+  const persisted = store.getSettings();
+
+  let trainingSeconds = persisted.timerTrainingSeconds || quest.estimatedMinutes * 60;
+  let restSeconds = persisted.timerRestSeconds;
+  let sets = persisted.timerSets;
 
   const modeLabel = document.createElement('p');
   modeLabel.textContent = 'タイマー設定 or ストップウォッチ';
@@ -72,7 +96,11 @@ const createTimerControls = (quest, store, navigate) => {
   timerInput.checked = true;
   timerInput.addEventListener('change', () => {
     mode = 'timer';
-    minutesInput.disabled = false;
+    trainingMinutesInput.disabled = false;
+    trainingSecondsInput.disabled = false;
+    restMinutesInput.disabled = false;
+    restSecondsInput.disabled = false;
+    setCountInput.disabled = false;
   });
   timerOption.append(timerInput, document.createTextNode('タイマー'));
 
@@ -83,40 +111,117 @@ const createTimerControls = (quest, store, navigate) => {
   stopwatchInput.name = 'mode';
   stopwatchInput.addEventListener('change', () => {
     mode = 'stopwatch';
-    minutesInput.disabled = true;
+    trainingMinutesInput.disabled = true;
+    trainingSecondsInput.disabled = true;
+    restMinutesInput.disabled = true;
+    restSecondsInput.disabled = true;
+    setCountInput.disabled = true;
   });
   stopwatchOption.append(stopwatchInput, document.createTextNode('ストップウォッチ'));
 
   controls.append(timerOption, stopwatchOption);
 
-  const minutesWrapper = document.createElement('label');
-  minutesWrapper.className = 'field';
-  const minutesText = document.createElement('span');
-  minutesText.textContent = 'タイマー分数';
-  const minutesInput = document.createElement('input');
-  minutesInput.type = 'number';
-  minutesInput.min = '1';
-  minutesInput.max = '90';
-  minutesInput.value = minutes;
-  minutesInput.addEventListener('input', (event) => {
-    const parsed = Number(event.target.value) || quest.estimatedMinutes;
-    minutes = Math.min(Math.max(parsed, 1), 90);
+  const createTimeField = (label, initialSeconds, onChange) => {
+    const wrapper = document.createElement('label');
+    wrapper.className = 'field';
+
+    const text = document.createElement('span');
+    text.textContent = label;
+
+    const inputs = document.createElement('div');
+    inputs.className = 'time-inputs';
+
+    const minutes = document.createElement('input');
+    minutes.type = 'number';
+    minutes.min = '0';
+    minutes.max = '180';
+    minutes.inputMode = 'numeric';
+
+    const seconds = document.createElement('input');
+    seconds.type = 'number';
+    seconds.min = '0';
+    seconds.max = '59';
+    seconds.inputMode = 'numeric';
+
+    const { mins, secs } = secondsToParts(initialSeconds);
+    minutes.value = mins;
+    seconds.value = secs;
+
+    const handleChange = () => {
+      const nextMinutes = clampMinutes(minutes.value);
+      const nextSeconds = clampSeconds(seconds.value);
+
+      minutes.value = nextMinutes;
+      seconds.value = nextSeconds;
+      onChange(nextMinutes * 60 + nextSeconds);
+    };
+
+    minutes.addEventListener('input', handleChange);
+    seconds.addEventListener('input', handleChange);
+
+    inputs.append(minutes, document.createTextNode('m'), seconds, document.createTextNode('s'));
+    wrapper.append(text, inputs);
+    return { wrapper, minutes, seconds };
+  };
+
+  const {
+    wrapper: trainingWrapper,
+    minutes: trainingMinutesInput,
+    seconds: trainingSecondsInput,
+  } = createTimeField('トレーニング時間', trainingSeconds, (total) => {
+    trainingSeconds = total;
+    store.updateSettings({ timerTrainingSeconds: total });
   });
-  minutesWrapper.append(minutesText, minutesInput);
+
+  const { wrapper: restWrapper, minutes: restMinutesInput, seconds: restSecondsInput } = createTimeField(
+    '休憩時間',
+    restSeconds,
+    (total) => {
+      restSeconds = total;
+      store.updateSettings({ timerRestSeconds: total });
+    },
+  );
+
+  const setWrapper = document.createElement('label');
+  setWrapper.className = 'field';
+  const setText = document.createElement('span');
+  setText.textContent = 'セット数';
+  const setCountInput = document.createElement('input');
+  setCountInput.type = 'number';
+  setCountInput.min = '1';
+  setCountInput.max = '20';
+  setCountInput.inputMode = 'numeric';
+  setCountInput.value = sets;
+  setCountInput.addEventListener('input', (event) => {
+    const parsed = Number(event.target.value);
+    const normalized = Number.isFinite(parsed) ? Math.min(Math.max(Math.round(parsed), 1), 20) : 1;
+    setCountInput.value = normalized;
+    sets = normalized;
+    store.updateSettings({ timerSets: normalized });
+  });
+  setWrapper.append(setText, setCountInput);
 
   const startButton = document.createElement('button');
   startButton.type = 'button';
   startButton.textContent = '受注する';
   startButton.addEventListener('click', () => {
+    if (mode === 'timer' && (trainingSeconds <= 0 || sets <= 0)) {
+      alert('トレーニング時間とセット数を正しく入力してください。');
+      return;
+    }
+
     store.setRunPlan({
       questId: quest.id,
       mode,
-      seconds: mode === 'timer' ? minutes * 60 : 0,
+      trainingSeconds,
+      restSeconds,
+      sets,
     });
+    playSfx('timer:start');
     navigate(`#/run/${quest.id}`);
   });
 
-  box.append(modeLabel, controls, minutesWrapper, startButton);
+  box.append(modeLabel, controls, trainingWrapper, restWrapper, setWrapper, startButton);
   return box;
 };
 
@@ -136,7 +241,7 @@ const createSteps = (steps) => {
   return list;
 };
 
-export const renderQuest = (params, { navigate, store }) => {
+export const renderQuest = (params, { navigate, store, playSfx }) => {
   const quest = getQuestById(params.id);
 
   const container = document.createElement('section');
@@ -148,7 +253,10 @@ export const renderQuest = (params, { navigate, store }) => {
     const back = document.createElement('button');
     back.type = 'button';
     back.textContent = 'Back to quests';
-    back.addEventListener('click', () => navigate('#/'));
+    back.addEventListener('click', () => {
+      playSfx('ui:navigate');
+      navigate('#/');
+    });
     container.append(title, back);
     return container;
   }
@@ -167,13 +275,16 @@ export const renderQuest = (params, { navigate, store }) => {
   const exerciseGuides = createExerciseGuides(quest);
 
   const steps = createSteps(quest.steps);
-  const timerControls = createTimerControls(quest, store, navigate);
+  const timerControls = createTimerControls(quest, store, navigate, playSfx);
 
   const backListButton = document.createElement('button');
   backListButton.type = 'button';
   backListButton.className = 'ghost';
   backListButton.textContent = '← 一覧に戻る';
-  backListButton.addEventListener('click', () => navigate(`#/quests/${quest.tier}`));
+  backListButton.addEventListener('click', () => {
+    playSfx('ui:navigate');
+    navigate(`#/quests/${quest.tier}`);
+  });
 
   container.append(
     title,

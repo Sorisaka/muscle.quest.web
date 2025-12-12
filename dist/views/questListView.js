@@ -2,7 +2,7 @@ import { getQuestsByTier } from '../core/content.js';
 
 const starBadge = (count) => `${'★'.repeat(count)} (${count})`;
 
-const createQuestItem = (quest, navigate) => {
+const createQuestItem = (quest, navigate, playSfx) => {
   const item = document.createElement('article');
   item.className = 'card quest-card';
 
@@ -32,7 +32,10 @@ const createQuestItem = (quest, navigate) => {
   const detailButton = document.createElement('button');
   detailButton.type = 'button';
   detailButton.textContent = '詳細';
-  detailButton.addEventListener('click', () => navigate(`#/quest/${quest.id}`));
+  detailButton.addEventListener('click', () => {
+    playSfx('ui:navigate');
+    navigate(`#/quest/${quest.id}`);
+  });
 
   actions.append(detailButton);
 
@@ -46,7 +49,7 @@ const tierLabels = {
   advanced: '上級',
 };
 
-export const renderQuestList = (params, { navigate }) => {
+export const renderQuestList = (params, { navigate, playSfx }) => {
   const listContainer = document.createElement('section');
   listContainer.className = 'stack';
 
@@ -63,7 +66,10 @@ export const renderQuestList = (params, { navigate }) => {
   back.type = 'button';
   back.className = 'ghost';
   back.textContent = '← ホームに戻る';
-  back.addEventListener('click', () => navigate('#/'));
+  back.addEventListener('click', () => {
+    playSfx('ui:navigate');
+    navigate('#/');
+  });
 
   heading.append(title, back);
 
@@ -80,7 +86,7 @@ export const renderQuestList = (params, { navigate }) => {
     grid.append(empty);
   } else {
     filtered.forEach((quest) => {
-      grid.append(createQuestItem(quest, navigate));
+      grid.append(createQuestItem(quest, navigate, playSfx));
     });
   }
 
