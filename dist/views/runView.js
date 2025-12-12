@@ -1,4 +1,4 @@
-import quests from '../data/quests.json' assert { type: 'json' };
+import { getQuestById } from '../core/content.js';
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60)
@@ -65,7 +65,7 @@ const createInstructions = (quest) => {
 };
 
 export const renderRun = (params, { navigate, store }) => {
-  const quest = quests.find((entry) => entry.id === params.id);
+  const quest = getQuestById(params.id);
   const { difficulty, sound } = store.getSettings();
   const runPlan = store.getRunPlan();
 

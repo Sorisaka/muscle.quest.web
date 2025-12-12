@@ -269,6 +269,47 @@ section.panel {
   line-height: 1.4;
 }
 
+.exercise-guides {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.exercise-guides__list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.exercise-guides__item {
+  background: #0c121d;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+}
+
+.exercise-guides__item summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.exercise-guides__body {
+  margin-top: 0.5rem;
+  color: #d1d5db;
+}
+
+.exercise-guides__body :is(h1, h2, h3) {
+  margin: 0.25rem 0;
+}
+
+.exercise-guides__body p {
+  margin: 0.25rem 0;
+}
+
+.exercise-guides__body ol,
+.exercise-guides__body ul {
+  padding-left: 1.25rem;
+  margin: 0.5rem 0 0;
+}
+
 .run-shell {
   display: grid;
   grid-template-rows: 1fr 1fr 1fr auto;

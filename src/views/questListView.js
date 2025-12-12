@@ -1,4 +1,4 @@
-import quests from '../data/quests.json' assert { type: 'json' };
+import { getQuestsByTier } from '../core/content.js';
 
 const starBadge = (count) => `${'★'.repeat(count)} (${count})`;
 
@@ -51,9 +51,7 @@ export const renderQuestList = (params, { navigate }) => {
   listContainer.className = 'stack';
 
   const tier = params.tier;
-  const filtered = quests
-    .filter((quest) => quest.tier === tier)
-    .sort((a, b) => a.stars - b.stars);
+  const filtered = getQuestsByTier(tier);
 
   const heading = document.createElement('div');
   heading.className = 'list-header';
