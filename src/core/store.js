@@ -22,6 +22,11 @@ const readSettings = () => {
 export const createStore = () => {
   let settings = readSettings();
   const subscribers = new Set();
+  let runPlan = {
+    questId: null,
+    mode: 'timer',
+    seconds: 300,
+  };
 
   const notify = () => {
     subscribers.forEach((callback) => callback(settings));
@@ -39,6 +44,12 @@ export const createStore = () => {
     notify();
   };
 
+  const setRunPlan = (plan) => {
+    runPlan = plan;
+  };
+
+  const getRunPlan = () => runPlan;
+
   const subscribe = (callback) => {
     subscribers.add(callback);
     return () => subscribers.delete(callback);
@@ -48,5 +59,7 @@ export const createStore = () => {
     getSettings,
     updateSettings,
     subscribe,
+    setRunPlan,
+    getRunPlan,
   };
 };
