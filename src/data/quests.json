@@ -1,0 +1,26 @@
+[
+  {
+    "id": "beginner",
+    "title": "Beginner Bootcamp",
+    "description": "Introductory movement set to get warmed up with simple reps.",
+    "stars": 2,
+    "exercises": ["push-ups", "squats"],
+    "estimatedMinutes": 10
+  },
+  {
+    "id": "intermediate",
+    "title": "Strength Sprint",
+    "description": "Pick up the pace with a mix of bodyweight classics.",
+    "stars": 3,
+    "exercises": ["lunges", "plank"],
+    "estimatedMinutes": 18
+  },
+  {
+    "id": "advanced",
+    "title": "Hero Challenge",
+    "description": "Long-form quest for seasoned adventurers.",
+    "stars": 4,
+    "exercises": ["burpees", "mountain climbers"],
+    "estimatedMinutes": 25
+  }
+]
