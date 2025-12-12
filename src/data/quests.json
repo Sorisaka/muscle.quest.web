@@ -1,26 +1,98 @@
 [
   {
-    "id": "beginner",
-    "title": "Beginner Bootcamp",
-    "description": "Introductory movement set to get warmed up with simple reps.",
+    "id": "b-01",
+    "tier": "beginner",
+    "title": "フォーム固めスクワット",
+    "description": "ウォームアップしながら下半身をほぐす基本セット。",
+    "stars": 1,
+    "exercises": ["squats"],
+    "estimatedMinutes": 8,
+    "link": "./content/exercises/squats.html",
+    "steps": [
+      { "heading": "ウォームアップ", "body": "足を肩幅に開き、つま先はやや外向きにセット。" },
+      { "heading": "深さを揃える", "body": "膝を外に開きながら椅子に座るイメージで腰を落とす。" },
+      { "heading": "押し上げ", "body": "かかとで床を押し、太もも前側を意識して立ち上がる。" }
+    ],
+    "tips": ["足裏全体で床を踏む", "背筋を伸ばして猫背を防ぐ", "呼吸は下で吸って上で吐く"]
+  },
+  {
+    "id": "b-02",
+    "tier": "beginner",
+    "title": "リズムプッシュアップ",
+    "description": "胸と腕を目覚めさせるテンポ重視の軽めセット。",
     "stars": 2,
-    "exercises": ["push-ups", "squats"],
-    "estimatedMinutes": 10
+    "exercises": ["push-ups"],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/push-ups.html",
+    "steps": [
+      { "heading": "姿勢を作る", "body": "手は肩幅よりやや広く、体を一直線に保つ。" },
+      { "heading": "胸を近づける", "body": "肘を後ろにたたむ意識で胸を床に近づける。" },
+      { "heading": "押し返す", "body": "手のひら全体で床を押して元の姿勢へ戻る。" }
+    ],
+    "tips": ["お腹を締めて腰が落ちないように", "肩がすくまない高さでキープ", "テンポは一定に"]
   },
   {
-    "id": "intermediate",
-    "title": "Strength Sprint",
-    "description": "Pick up the pace with a mix of bodyweight classics.",
+    "id": "i-01",
+    "tier": "intermediate",
+    "title": "ランジコンボ",
+    "description": "体幹を使いながら下半身の左右バランスを整えるコンボ。",
     "stars": 3,
-    "exercises": ["lunges", "plank"],
-    "estimatedMinutes": 18
+    "exercises": ["lunges"],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/lunges.html",
+    "steps": [
+      { "heading": "前足に荷重", "body": "一歩踏み出し、膝がつま先を越えない位置で静止。" },
+      { "heading": "垂直に沈む", "body": "後ろ脚の膝を床に近づけ、上体をまっすぐに保つ。" },
+      { "heading": "交互に入れ替え", "body": "前脚で押し返して元の位置へ、反対側も同様に行う。" }
+    ],
+    "tips": ["骨盤を正面に向ける", "膝が内側に入らないよう注意", "足幅は腰幅より少し広めに"]
   },
   {
-    "id": "advanced",
-    "title": "Hero Challenge",
-    "description": "Long-form quest for seasoned adventurers.",
+    "id": "i-02",
+    "tier": "intermediate",
+    "title": "プランク耐久",
+    "description": "姿勢を崩さずキープする体幹集中モード。",
     "stars": 4,
-    "exercises": ["burpees", "mountain climbers"],
-    "estimatedMinutes": 25
+    "exercises": ["plank"],
+    "estimatedMinutes": 18,
+    "link": "./content/exercises/plank.html",
+    "steps": [
+      { "heading": "肘の位置", "body": "肘は肩の真下に置き、手は軽く握る。" },
+      { "heading": "体を一直線に", "body": "頭からかかとまで一直線をイメージしてキープ。" },
+      { "heading": "呼吸を忘れない", "body": "浅い呼吸を続け、力みすぎないよう注意。" }
+    ],
+    "tips": ["腰が反らないよう腹圧をかける", "肩甲骨を寄せすぎない", "足幅をやや広めにすると安定"]
+  },
+  {
+    "id": "a-01",
+    "tier": "advanced",
+    "title": "バーピースプリント",
+    "description": "全身を一気に動かすハイテンポチャレンジ。",
+    "stars": 4,
+    "exercises": ["burpees"],
+    "estimatedMinutes": 22,
+    "link": "./content/exercises/burpees.html",
+    "steps": [
+      { "heading": "しゃがみ込み", "body": "足幅は肩幅、腰を落として両手を床につける。" },
+      { "heading": "キックバック", "body": "両足を後ろへ跳ねてハイプランク姿勢を取る。" },
+      { "heading": "立ち上がりジャンプ", "body": "足を元に戻し、真上に軽くジャンプして繰り返す。" }
+    ],
+    "tips": ["動作間の移行をスムーズに", "着地は静かに行う", "呼吸が浅くならないようリズムを意識"]
+  },
+  {
+    "id": "a-02",
+    "tier": "advanced",
+    "title": "マウンテンクライマー耐久",
+    "description": "心拍数を上げ続ける全身コンディショニング。",
+    "stars": 5,
+    "exercises": ["mountain-climbers"],
+    "estimatedMinutes": 25,
+    "link": "./content/exercises/mountain-climbers.html",
+    "steps": [
+      { "heading": "手を固定", "body": "肩の真下に手を置き、体を一直線に。" },
+      { "heading": "膝を素早く引き寄せ", "body": "片膝ずつ胸に引き寄せるように交互に動かす。" },
+      { "heading": "リズムを保つ", "body": "腰の高さを変えず、一定のテンポで継続。" }
+    ],
+    "tips": ["肩をすくめずリラックス", "膝を真ん中ラインに沿わせる", "スピードよりフォーム優先"]
   }
 ]

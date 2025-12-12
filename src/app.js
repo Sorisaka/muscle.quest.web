@@ -2,7 +2,7 @@ import { createRouter } from './core/router.js';
 import { createStore } from './core/store.js';
 import { renderHome } from './views/homeView.js';
 import { renderSettings } from './views/settingsView.js';
-import { renderRank } from './views/rankView.js';
+import { renderQuestList } from './views/questListView.js';
 import { renderQuest } from './views/questView.js';
 import { renderRun } from './views/runView.js';
 
@@ -18,7 +18,7 @@ const routes = [
   {
     path: '#/',
     title: 'Home',
-    description: 'Browse quests and jump into a run.',
+    description: '級を選んでクエストへ向かおう。',
     render: renderHome,
   },
   {
@@ -28,21 +28,21 @@ const routes = [
     render: renderSettings,
   },
   {
-    path: '#/rank/:id',
-    title: (params) => `Rank / ${params.id}`,
-    description: 'Sample leaderboard view with dynamic params.',
-    render: renderRank,
+    path: '#/quests/:tier',
+    title: (params) => `Quest List / ${params.tier}`,
+    description: '級ごとのクエストを★昇順で表示します。',
+    render: renderQuestList,
   },
   {
     path: '#/quest/:id',
     title: (params) => `Quest / ${params.id}`,
-    description: 'Quest detail with links to run and how-to guides.',
+    description: 'やり方リンクとタイマー設定を確認。',
     render: renderQuest,
   },
   {
     path: '#/run/:id',
     title: (params) => `Run / ${params.id}`,
-    description: 'Live run area that reads your saved settings.',
+    description: '4分割画面でタイマーと手順を確認。',
     render: renderRun,
   },
 ];
