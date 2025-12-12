@@ -51,7 +51,7 @@ const createExerciseGuides = (quest) => {
   return wrapper;
 };
 
-const createTimerControls = (quest, store, navigate) => {
+const createTimerControls = (quest, store, navigate, playSfx) => {
   const box = document.createElement('div');
   box.className = 'timer-box';
 
@@ -113,6 +113,7 @@ const createTimerControls = (quest, store, navigate) => {
       mode,
       seconds: mode === 'timer' ? minutes * 60 : 0,
     });
+    playSfx('timer:start');
     navigate(`#/run/${quest.id}`);
   });
 
@@ -136,7 +137,7 @@ const createSteps = (steps) => {
   return list;
 };
 
-export const renderQuest = (params, { navigate, store }) => {
+export const renderQuest = (params, { navigate, store, playSfx }) => {
   const quest = getQuestById(params.id);
 
   const container = document.createElement('section');
@@ -148,7 +149,10 @@ export const renderQuest = (params, { navigate, store }) => {
     const back = document.createElement('button');
     back.type = 'button';
     back.textContent = 'Back to quests';
-    back.addEventListener('click', () => navigate('#/'));
+    back.addEventListener('click', () => {
+      playSfx('ui:navigate');
+      navigate('#/');
+    });
     container.append(title, back);
     return container;
   }
@@ -167,13 +171,16 @@ export const renderQuest = (params, { navigate, store }) => {
   const exerciseGuides = createExerciseGuides(quest);
 
   const steps = createSteps(quest.steps);
-  const timerControls = createTimerControls(quest, store, navigate);
+  const timerControls = createTimerControls(quest, store, navigate, playSfx);
 
   const backListButton = document.createElement('button');
   backListButton.type = 'button';
   backListButton.className = 'ghost';
   backListButton.textContent = '← 一覧に戻る';
-  backListButton.addEventListener('click', () => navigate(`#/quests/${quest.tier}`));
+  backListButton.addEventListener('click', () => {
+    playSfx('ui:navigate');
+    navigate(`#/quests/${quest.tier}`);
+  });
 
   container.append(
     title,
