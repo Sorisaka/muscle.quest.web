@@ -201,6 +201,16 @@ section.panel {
   height: 18px;
 }
 
+.range-field {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 160px;
+}
+
+.range-field input[type='range'] {
+  width: 100%;
+}
+
 .row {
   display: flex;
   justify-content: space-between;

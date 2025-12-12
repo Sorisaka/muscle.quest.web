@@ -14,6 +14,37 @@ const createToggleField = (labelText, checked, onToggle) => {
   return field;
 };
 
+const createRangeField = (labelText, value, onChange) => {
+  const field = document.createElement('label');
+  field.className = 'field';
+
+  const text = document.createElement('span');
+  text.textContent = labelText;
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'range-field';
+
+  const display = document.createElement('span');
+  display.className = 'muted';
+  display.textContent = `${Math.round(value * 100)}%`;
+
+  const input = document.createElement('input');
+  input.type = 'range';
+  input.min = '0';
+  input.max = '1';
+  input.step = '0.05';
+  input.value = value;
+  input.addEventListener('input', (event) => {
+    const nextValue = Number(event.target.value);
+    display.textContent = `${Math.round(nextValue * 100)}%`;
+    onChange(nextValue);
+  });
+
+  wrapper.append(display, input);
+  field.append(text, wrapper);
+  return field;
+};
+
 const createSelectField = (labelText, value, options, onChange) => {
   const field = document.createElement('label');
   field.className = 'field';
@@ -72,7 +103,12 @@ export const renderSettings = (_params, { store }) => {
       ],
       (value) => store.updateSettings({ difficulty: value }),
     ),
-    createToggleField('Enable sound', settings.sound, (checked) => store.updateSettings({ sound: checked })),
+    createToggleField('効果音を鳴らす', settings.sfxEnabled, (checked) =>
+      store.updateSettings({ sfxEnabled: checked }),
+    ),
+    createRangeField('効果音の音量', settings.sfxVolume, (value) =>
+      store.updateSettings({ sfxVolume: Math.max(0, Math.min(1, value)) }),
+    ),
   );
 
   container.append(title, description, form);

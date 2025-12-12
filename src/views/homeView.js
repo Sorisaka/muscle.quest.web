@@ -1,4 +1,4 @@
-const createTierCard = (tier, label, summary, navigate) => {
+const createTierCard = (tier, label, summary, navigate, playSfx) => {
   const card = document.createElement('article');
   card.className = 'card tier-card';
 
@@ -18,13 +18,16 @@ const createTierCard = (tier, label, summary, navigate) => {
   const action = document.createElement('button');
   action.type = 'button';
   action.textContent = 'クエスト一覧へ';
-  action.addEventListener('click', () => navigate(`#/quests/${tier}`));
+  action.addEventListener('click', () => {
+    playSfx('ui:navigate');
+    navigate(`#/quests/${tier}`);
+  });
 
   card.append(header, description, action);
   return card;
 };
 
-export const renderHome = (_params, { navigate }) => {
+export const renderHome = (_params, { navigate, playSfx }) => {
   const container = document.createElement('section');
   container.className = 'stack';
 
@@ -42,7 +45,10 @@ export const renderHome = (_params, { navigate }) => {
   const settingsButton = document.createElement('button');
   settingsButton.type = 'button';
   settingsButton.textContent = '設定を開く';
-  settingsButton.addEventListener('click', () => navigate('#/settings'));
+  settingsButton.addEventListener('click', () => {
+    playSfx('ui:navigate');
+    navigate('#/settings');
+  });
 
   cta.append(settingsButton);
   hero.append(title, subtitle, cta);
@@ -51,9 +57,9 @@ export const renderHome = (_params, { navigate }) => {
   grid.className = 'card-grid';
 
   grid.append(
-    createTierCard('beginner', '初級', 'ウォームアップに最適な短めクエスト。', navigate),
-    createTierCard('intermediate', '中級', 'フォームを安定させながら負荷を上げる中距離戦。', navigate),
-    createTierCard('advanced', '上級', '集中力と体力の両方を試すハードモード。', navigate),
+    createTierCard('beginner', '初級', 'ウォームアップに最適な短めクエスト。', navigate, playSfx),
+    createTierCard('intermediate', '中級', 'フォームを安定させながら負荷を上げる中距離戦。', navigate, playSfx),
+    createTierCard('advanced', '上級', '集中力と体力の両方を試すハードモード。', navigate, playSfx),
   );
 
   container.append(hero, grid);

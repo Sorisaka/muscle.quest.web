@@ -10,7 +10,7 @@ const formatTime = (seconds) => {
   return `${mins}:${secs}`;
 };
 
-const createControls = (navigate, onStop, questId) => {
+const createControls = (navigate, onStop, questId, playSfx) => {
   const controls = document.createElement('div');
   controls.className = 'run-controls';
 
@@ -22,6 +22,7 @@ const createControls = (navigate, onStop, questId) => {
     const confirmed = window.confirm('中断してクエスト詳細に戻りますか？');
     if (confirmed) {
       onStop();
+      playSfx('timer:stop');
       navigate(`#/quest/${questId}`);
     }
   });
@@ -64,9 +65,9 @@ const createInstructions = (quest) => {
   return { sectionOne, sectionTwo };
 };
 
-export const renderRun = (params, { navigate, store }) => {
+export const renderRun = (params, { navigate, store, playSfx }) => {
   const quest = getQuestById(params.id);
-  const { difficulty, sound } = store.getSettings();
+  const { difficulty, sfxEnabled, sfxVolume } = store.getSettings();
   const runPlan = store.getRunPlan();
 
   const container = document.createElement('section');
@@ -77,7 +78,10 @@ export const renderRun = (params, { navigate, store }) => {
     missing.textContent = 'クエストが見つかりませんでした。ホームに戻ります。';
     const back = document.createElement('button');
     back.type = 'button';
-    back.addEventListener('click', () => navigate('#/'));
+    back.addEventListener('click', () => {
+      playSfx('ui:navigate');
+      navigate('#/');
+    });
     container.append(missing, back);
     return container;
   }
@@ -92,9 +96,9 @@ export const renderRun = (params, { navigate, store }) => {
   timerBox.className = 'run-timer';
   const timerLabel = document.createElement('p');
   timerLabel.className = 'muted';
-  timerLabel.textContent = `${mode === 'timer' ? 'タイマー' : 'ストップウォッチ'} / 難易度: ${difficulty} / 音: ${
-    sound ? 'ON' : 'OFF'
-  }`;
+  timerLabel.textContent = `${mode === 'timer' ? 'タイマー' : 'ストップウォッチ'} / 難易度: ${
+    difficulty
+  } / 音: ${sfxEnabled ? 'ON' : 'OFF'} / 音量: ${(sfxVolume * 100).toFixed(0)}%`;
   const timeDisplay = document.createElement('div');
   timeDisplay.className = 'run-timer__display';
   timeDisplay.textContent = mode === 'timer' ? formatTime(counter) : '00:00';
@@ -111,7 +115,7 @@ export const renderRun = (params, { navigate, store }) => {
     isRunning = false;
   };
 
-  const { controls, toggleButton } = createControls(navigate, stopTimer, quest.id);
+  const { controls, toggleButton } = createControls(navigate, stopTimer, quest.id, playSfx);
 
   const tick = () => {
     if (!isRunning) return;
@@ -119,6 +123,7 @@ export const renderRun = (params, { navigate, store }) => {
     timeDisplay.textContent = formatTime(counter);
     if (mode === 'timer' && counter <= 0) {
       stopTimer();
+      playSfx('timer:complete');
       alert('タイマーが終了しました！');
     }
   };
@@ -127,6 +132,7 @@ export const renderRun = (params, { navigate, store }) => {
     if (isRunning) {
       stopTimer();
       toggleButton.textContent = '開始';
+      playSfx('timer:stop');
       return;
     }
 
@@ -137,6 +143,7 @@ export const renderRun = (params, { navigate, store }) => {
 
     isRunning = true;
     toggleButton.textContent = '停止';
+    playSfx('timer:start');
     intervalId = setInterval(tick, 1000);
   });
 
