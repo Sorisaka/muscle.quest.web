@@ -1,4 +1,4 @@
-const createTierCard = (tier, label, summary, navigate) => {
+const createTierCard = (tier, label, summary, navigate, playSfx) => {
   const card = document.createElement('article');
   card.className = 'card tier-card';
 
@@ -18,44 +18,54 @@ const createTierCard = (tier, label, summary, navigate) => {
   const action = document.createElement('button');
   action.type = 'button';
   action.textContent = 'クエスト一覧へ';
-  action.addEventListener('click', () => navigate(`#/quests/${tier}`));
+  action.addEventListener('click', () => {
+    playSfx('ui:navigate');
+    navigate(`#/quests/${tier}`);
+  });
 
   card.append(header, description, action);
   return card;
 };
 
-export const renderHome = (_params, { navigate }) => {
+export const renderHome = (_params, { navigate, playSfx }) => {
   const container = document.createElement('section');
   container.className = 'stack';
-
-  const hero = document.createElement('div');
-  hero.className = 'hero';
-
-  const title = document.createElement('h2');
-  title.textContent = '冒険の準備はOK？';
-  const subtitle = document.createElement('p');
-  subtitle.className = 'muted';
-  subtitle.textContent = '設定から音・難易度を調整し、初級 / 中級 / 上級クエストに挑戦できます。';
-
-  const cta = document.createElement('div');
-  cta.className = 'hero__actions';
-  const settingsButton = document.createElement('button');
-  settingsButton.type = 'button';
-  settingsButton.textContent = '設定を開く';
-  settingsButton.addEventListener('click', () => navigate('#/settings'));
-
-  cta.append(settingsButton);
-  hero.append(title, subtitle, cta);
 
   const grid = document.createElement('div');
   grid.className = 'card-grid';
 
-  grid.append(
-    createTierCard('beginner', '初級', 'ウォームアップに最適な短めクエスト。', navigate),
-    createTierCard('intermediate', '中級', 'フォームを安定させながら負荷を上げる中距離戦。', navigate),
-    createTierCard('advanced', '上級', '集中力と体力の両方を試すハードモード。', navigate),
+  const beginnerCard = createTierCard(
+    'beginner',
+    '初級',
+    'ウォームアップに最適な短めクエスト。',
+    navigate,
+    playSfx,
+  );
+  const intermediateCard = createTierCard(
+    'intermediate',
+    '中級',
+    'フォームを安定させながら負荷を上げる中距離戦。',
+    navigate,
+    playSfx,
+  );
+  const advancedCard = createTierCard(
+    'advanced',
+    '上級',
+    '集中力と体力の両方を試すハードモード。',
+    navigate,
+    playSfx,
   );
 
-  container.append(hero, grid);
+  grid.append(beginnerCard, intermediateCard, advancedCard);
+
+  const settingsButton = document.createElement('button');
+  settingsButton.type = 'button';
+  settingsButton.textContent = '設定を開く';
+  settingsButton.addEventListener('click', () => {
+    playSfx('ui:navigate');
+    navigate('#/settings');
+  });
+
+  container.append(grid, settingsButton);
   return container;
 };

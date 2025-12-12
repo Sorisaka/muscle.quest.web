@@ -10,7 +10,6 @@ import { renderRun } from './views/runView.js';
 const titleEl = document.querySelector('[data-route-title]');
 const pathEl = document.querySelector('[data-route-path]');
 const outlet = document.querySelector('[data-view]');
-const navButtons = document.querySelectorAll('[data-nav-target]');
 
 const store = createStore();
 let router;
@@ -67,21 +66,9 @@ const renderShell = (match) => {
   }
 };
 
-const setupNavigation = () => {
-  navButtons.forEach((button) => {
-    button.addEventListener('click', (event) => {
-      const { navTarget } = event.currentTarget.dataset;
-      event.preventDefault();
-      playSfx('ui:navigate');
-      router.navigate(navTarget);
-    });
-  });
-};
-
 const init = () => {
   router = createRouter(routes, renderShell);
   initSfx(store);
-  setupNavigation();
   router.start();
 };
 
