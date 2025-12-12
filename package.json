@@ -1,20 +1,14 @@
 {
   "name": "muscle.quest.web",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "description": "Vanilla JS/HTML/CSS bundle for GitHub Pages",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Sorisaka/muscle.quest.web.git"
+    "dev": "node scripts/dev.js",
+    "build": "node scripts/build.js",
+    "preview": "node scripts/preview.js"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Sorisaka/muscle.quest.web/issues"
-  },
-  "homepage": "https://github.com/Sorisaka/muscle.quest.web#readme"
+  "license": "ISC"
 }

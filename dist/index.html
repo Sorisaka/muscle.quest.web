@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Muscle Quest</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1 data-route-title>Home</h1>
+          <p data-route-description>Loading...</p>
+        </div>
+        <span class="current-route">Current: <strong data-current-route>#/</strong></span>
+      </header>
+
+      <section class="route-grid">
+        <button data-nav data-nav-target="#/">Go to #/</button>
+        <button data-nav data-nav-target="#/settings">Go to #/settings</button>
+        <button data-nav data-nav-target="#/rank/example">Go to #/rank/...</button>
+        <button data-nav data-nav-target="#/quest/example">Go to #/quest/...</button>
+        <button data-nav data-nav-target="#/run/example">Go to #/run/...</button>
+      </section>
+
+      <p>Use the buttons above or edit the URL hash to verify the main routes.</p>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
