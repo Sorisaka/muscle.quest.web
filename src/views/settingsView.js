@@ -69,10 +69,19 @@ const createSelectField = (labelText, value, options, onChange) => {
   return field;
 };
 
-export const renderSettings = (_params, { store }) => {
+export const renderSettings = (_params, { store, navigate, playSfx }) => {
   const settings = store.getSettings();
   const container = document.createElement('section');
   container.className = 'stack';
+
+  const back = document.createElement('button');
+  back.type = 'button';
+  back.className = 'ghost';
+  back.textContent = '← ホームに戻る';
+  back.addEventListener('click', () => {
+    playSfx('ui:navigate');
+    navigate('#/');
+  });
 
   const title = document.createElement('h2');
   title.textContent = 'Settings';
@@ -111,6 +120,6 @@ export const renderSettings = (_params, { store }) => {
     ),
   );
 
-  container.append(title, description, form);
+  container.append(back, title, description, form);
   return container;
 };

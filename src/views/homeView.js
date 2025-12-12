@@ -50,7 +50,29 @@ export const renderHome = (_params, { navigate, playSfx }) => {
     navigate('#/settings');
   });
 
-  cta.append(settingsButton);
+  const quickNav = document.createElement('div');
+  quickNav.className = 'hero__quick-nav';
+
+  const createNavButton = (label, hash) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'ghost';
+    button.textContent = label;
+    button.addEventListener('click', () => {
+      playSfx('ui:navigate');
+      navigate(hash);
+    });
+    return button;
+  };
+
+  quickNav.append(
+    createNavButton('ホーム', '#/'),
+    createNavButton('初級', '#/quests/beginner'),
+    createNavButton('中級', '#/quests/intermediate'),
+    createNavButton('上級', '#/quests/advanced'),
+  );
+
+  cta.append(settingsButton, quickNav);
   hero.append(title, subtitle, cta);
 
   const grid = document.createElement('div');
