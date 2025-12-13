@@ -1,0 +1,223 @@
+export const trainingDefinitions = {
+  'squats': {
+    id: 'squats',
+    label: 'スクワット',
+    unit: 'weightReps',
+    description: '下半身全体を使う自重スクワット。膝とつま先の向きを揃えて実施します。',
+    restSeconds: 30,
+    difficulties: {
+      beginner: {
+        defaultSets: [
+          { weight: 0, reps: 12 },
+          { weight: 0, reps: 12 },
+          { weight: 0, reps: 12 },
+        ],
+        maxSets: 6,
+        limits: { weight: { min: 0, max: 40 }, reps: { min: 6, max: 25 } },
+        points: { base: 120, perWork: 0.08, setBonus: 8, completion: 30, challengeScale: 0.5 },
+        howto:
+          '背筋を伸ばし、かかと重心でしゃがみすぎない。可動域が足りない場合は椅子に腰掛ける高さを目安に。',
+      },
+      intermediate: {
+        defaultSets: [
+          { weight: 5, reps: 15 },
+          { weight: 5, reps: 15 },
+          { weight: 5, reps: 15 },
+          { weight: 5, reps: 15 },
+        ],
+        maxSets: 7,
+        limits: { weight: { min: 0, max: 60 }, reps: { min: 8, max: 30 } },
+        points: { base: 180, perWork: 0.1, setBonus: 12, completion: 40, challengeScale: 0.55 },
+        howto: '膝が内側に入らないように、お尻の後ろへ引く動きで深さを揃えます。',
+      },
+      advanced: {
+        defaultSets: [
+          { weight: 10, reps: 18 },
+          { weight: 10, reps: 18 },
+          { weight: 10, reps: 18 },
+          { weight: 10, reps: 18 },
+        ],
+        maxSets: 8,
+        limits: { weight: { min: 0, max: 80 }, reps: { min: 10, max: 40 } },
+        points: { base: 200, perWork: 0.12, setBonus: 14, completion: 60, challengeScale: 0.6 },
+        howto: 'バーベル・ダンベルを想定。安定しない場合は重量を落として可動域を優先します。',
+      },
+    },
+  },
+  'push-ups': {
+    id: 'push-ups',
+    label: 'プッシュアップ',
+    unit: 'weightReps',
+    description: '胸・肩・上腕三頭筋を使う基本プッシュアップ。手幅と体幹を固定して実施。',
+    restSeconds: 40,
+    difficulties: {
+      beginner: {
+        defaultSets: [
+          { weight: 0, reps: 10 },
+          { weight: 0, reps: 10 },
+          { weight: 0, reps: 10 },
+        ],
+        maxSets: 5,
+        limits: { weight: { min: 0, max: 30 }, reps: { min: 6, max: 25 } },
+        points: { base: 130, perWork: 0.09, setBonus: 10, completion: 35, challengeScale: 0.5 },
+        howto: '手幅は肩幅よりやや広め。膝付きで負荷調整し、肘を後ろへたたむ。',
+      },
+      intermediate: {
+        defaultSets: [
+          { weight: 2, reps: 12 },
+          { weight: 2, reps: 12 },
+          { weight: 2, reps: 12 },
+          { weight: 2, reps: 12 },
+        ],
+        maxSets: 6,
+        limits: { weight: { min: 0, max: 40 }, reps: { min: 8, max: 30 } },
+        points: { base: 190, perWork: 0.11, setBonus: 12, completion: 45, challengeScale: 0.55 },
+        howto: '足を揃え、肩甲骨を動かす意識で胸を床に近づける。テンポは一定に。',
+      },
+      advanced: {
+        defaultSets: [
+          { weight: 5, reps: 15 },
+          { weight: 5, reps: 15 },
+          { weight: 5, reps: 15 },
+          { weight: 5, reps: 15 },
+        ],
+        maxSets: 7,
+        limits: { weight: { min: 0, max: 50 }, reps: { min: 10, max: 40 } },
+        points: { base: 210, perWork: 0.13, setBonus: 14, completion: 60, challengeScale: 0.6 },
+        howto: '足を台に乗せる・荷重を追加するなど高負荷想定。腰が落ちないよう腹圧を維持。',
+      },
+    },
+  },
+  'lunges': {
+    id: 'lunges',
+    label: 'ランジ',
+    unit: 'weightReps',
+    description: '前後に足を入れ替える片脚スクワット。バランスと体幹を鍛えます。',
+    restSeconds: 35,
+    difficulties: {
+      beginner: {
+        defaultSets: [
+          { weight: 0, reps: 8 },
+          { weight: 0, reps: 8 },
+          { weight: 0, reps: 8 },
+        ],
+        maxSets: 5,
+        limits: { weight: { min: 0, max: 30 }, reps: { min: 6, max: 18 } },
+        points: { base: 110, perWork: 0.09, setBonus: 8, completion: 30, challengeScale: 0.45 },
+        howto: '骨盤を正面に向けたまま前足で踏み切る。膝がつま先を越えない位置で上下動。',
+      },
+      intermediate: {
+        defaultSets: [
+          { weight: 4, reps: 12 },
+          { weight: 4, reps: 12 },
+          { weight: 4, reps: 12 },
+          { weight: 4, reps: 12 },
+        ],
+        maxSets: 6,
+        limits: { weight: { min: 0, max: 40 }, reps: { min: 8, max: 24 } },
+        points: { base: 170, perWork: 0.11, setBonus: 12, completion: 40, challengeScale: 0.5 },
+        howto: '体幹を立てたまま前後差を大きくしすぎない。左右の重心移動を滑らかに。',
+      },
+      advanced: {
+        defaultSets: [
+          { weight: 8, reps: 14 },
+          { weight: 8, reps: 14 },
+          { weight: 8, reps: 14 },
+          { weight: 8, reps: 14 },
+        ],
+        maxSets: 7,
+        limits: { weight: { min: 0, max: 55 }, reps: { min: 10, max: 28 } },
+        points: { base: 190, perWork: 0.13, setBonus: 14, completion: 55, challengeScale: 0.55 },
+        howto: 'ダンベルやバーベルを保持し、膝が内側に入らないよう股関節で受ける。',
+      },
+    },
+  },
+  'plank': {
+    id: 'plank',
+    label: 'プランク',
+    unit: 'time',
+    description: '体幹を静的に支える種目。呼吸を止めずに一直線を保つ。',
+    restSeconds: 25,
+    difficulties: {
+      beginner: {
+        defaultSets: [
+          { timeSeconds: 40 },
+          { timeSeconds: 40 },
+          { timeSeconds: 40 },
+        ],
+        maxSets: 6,
+        limits: { timeSeconds: { min: 20, max: 120 } },
+        points: { base: 100, perWork: 0.5, setBonus: 6, completion: 25, challengeScale: 0.6 },
+        howto: '肩の下に肘を置き、お腹とお尻を締めて一直線をキープ。腰が反りすぎないよう注意。',
+      },
+      intermediate: {
+        defaultSets: [
+          { timeSeconds: 60 },
+          { timeSeconds: 60 },
+          { timeSeconds: 60 },
+          { timeSeconds: 60 },
+        ],
+        maxSets: 7,
+        limits: { timeSeconds: { min: 30, max: 180 } },
+        points: { base: 150, perWork: 0.55, setBonus: 8, completion: 35, challengeScale: 0.65 },
+        howto: '呼吸を安定させ、肩がすくまないように首を長く保つ。',
+      },
+      advanced: {
+        defaultSets: [
+          { timeSeconds: 75 },
+          { timeSeconds: 75 },
+          { timeSeconds: 75 },
+          { timeSeconds: 75 },
+        ],
+        maxSets: 8,
+        limits: { timeSeconds: { min: 40, max: 240 } },
+        points: { base: 180, perWork: 0.6, setBonus: 10, completion: 45, challengeScale: 0.7 },
+        howto: 'ウェイトを背負う・脚を上げるなど高負荷を想定。フォームを崩さずに時間を積み上げる。',
+      },
+    },
+  },
+  'mountain-climbers': {
+    id: 'mountain-climbers',
+    label: 'マウンテンクライマー',
+    unit: 'time',
+    description: '心拍を上げつつ体幹を使う全身運動。膝を胸に引き寄せてテンポ良く。',
+    restSeconds: 20,
+    difficulties: {
+      beginner: {
+        defaultSets: [
+          { timeSeconds: 30 },
+          { timeSeconds: 30 },
+          { timeSeconds: 30 },
+        ],
+        maxSets: 6,
+        limits: { timeSeconds: { min: 15, max: 90 } },
+        points: { base: 90, perWork: 0.45, setBonus: 6, completion: 20, challengeScale: 0.55 },
+        howto: '手は肩の真下、骨盤は水平。腰が浮かないよう膝を素早く引き込みます。',
+      },
+      intermediate: {
+        defaultSets: [
+          { timeSeconds: 40 },
+          { timeSeconds: 40 },
+          { timeSeconds: 40 },
+          { timeSeconds: 40 },
+        ],
+        maxSets: 7,
+        limits: { timeSeconds: { min: 20, max: 120 } },
+        points: { base: 130, perWork: 0.5, setBonus: 8, completion: 30, challengeScale: 0.6 },
+        howto: 'つま先で素早く切り替え、肩が前に出すぎないよう固定。',
+      },
+      advanced: {
+        defaultSets: [
+          { timeSeconds: 50 },
+          { timeSeconds: 50 },
+          { timeSeconds: 50 },
+          { timeSeconds: 50 },
+        ],
+        maxSets: 8,
+        limits: { timeSeconds: { min: 25, max: 150 } },
+        points: { base: 150, perWork: 0.55, setBonus: 10, completion: 40, challengeScale: 0.65 },
+        howto: 'スライダーや足台を使った高負荷を想定。体幹の安定を優先しテンポを維持。',
+      },
+    },
+  },
+};

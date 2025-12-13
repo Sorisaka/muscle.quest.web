@@ -366,8 +366,34 @@ section.panel {
   gap: 0.5rem;
 }
 
+.run-timer__controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem;
+}
+
 .run-timer__meta {
   font-size: 0.9rem;
+}
+
+.run-plan__box {
+  padding: 1rem;
+  border: 1px dashed var(--muted);
+  border-radius: 12px;
+}
+
+.set-editor__row {
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.set-editor input[type='number'] {
+  width: 5rem;
+}
+
+.run-points {
+  font-size: 0.95rem;
+  color: #a5b4fc;
 }
 
 .run-howto__panel {
@@ -392,6 +418,31 @@ section.panel {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: 0.5rem;
+}
+
+.leaderboard-row {
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.leaderboard-row__user {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.auth-placeholder {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.auth-placeholder__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth-placeholder button {
+  justify-self: start;
 }
 
 @media (max-width: 480px) {
