@@ -1,16 +1,17 @@
 const defaultConfig = {
-  mode: 'timer',
-  trainingSec: 60,
-  restSec: 30,
+  mode: 'timer', // timer | interval | stopwatch
+  workSeconds: 60,
+  restSeconds: 30,
   sets: 1,
+  workSets: [],
 };
 
 export const createTimerEngine = (initialConfig = {}) => {
   let config = { ...defaultConfig, ...initialConfig };
   let state = 'idle';
-  let phase = 'training';
+  let phase = 'work';
   let currentSet = 1;
-  let remainingPhase = config.trainingSec;
+  let remainingSeconds = config.workSeconds;
   let elapsedSeconds = 0;
   let timerId = null;
   let lastTimestamp = null;
@@ -25,14 +26,39 @@ export const createTimerEngine = (initialConfig = {}) => {
     }
   };
 
+  const getWorkDuration = (setIndex) => {
+    if (Array.isArray(config.workSets) && config.workSets[setIndex - 1]) {
+      const value = config.workSets[setIndex - 1];
+      if (typeof value === 'number') return value;
+      if (typeof value?.timeSeconds === 'number') return value.timeSeconds;
+    }
+    return config.workSeconds;
+  };
+
+  const nextPhase = () => {
+    if (config.mode === 'stopwatch') return '計測中';
+    if (config.mode === 'timer') return '完了';
+
+    if (phase === 'work') {
+      if (currentSet >= config.sets) return '完了';
+      return '休憩';
+    }
+    if (phase === 'rest') {
+      if (currentSet >= config.sets) return '完了';
+      return 'トレーニング';
+    }
+    return '完了';
+  };
+
   const getSnapshot = () => ({
     mode: config.mode,
     state,
     phase,
     currentSet,
-    totalSets: config.sets,
-    remainingSeconds: config.mode === 'timer' ? Math.max(remainingPhase, 0) : 0,
+    totalSets: config.mode === 'interval' ? config.sets : 1,
+    remainingSeconds: config.mode === 'stopwatch' ? 0 : Math.max(remainingSeconds, 0),
     elapsedSeconds,
+    next: nextPhase(),
   });
 
   const notifyTick = () => {
@@ -63,30 +89,44 @@ export const createTimerEngine = (initialConfig = {}) => {
       lastTimestamp += diffSeconds * 1000;
       elapsedSeconds += diffSeconds;
 
-      if (config.mode === 'timer') {
-        remainingPhase -= diffSeconds;
+      if (config.mode === 'stopwatch') {
+        notifyTick();
+      } else if (config.mode === 'timer') {
+        remainingSeconds -= diffSeconds;
+        if (remainingSeconds <= 0) {
+          finish();
+          return;
+        }
+        notifyTick();
+      } else if (config.mode === 'interval') {
+        remainingSeconds -= diffSeconds;
+        while (remainingSeconds <= 0) {
+          const overflow = Math.abs(remainingSeconds);
 
-        while (remainingPhase <= 0) {
-          const overflow = Math.abs(remainingPhase);
-
-          if (phase === 'training' && config.restSec > 0) {
-            phase = 'rest';
-            remainingPhase = config.restSec - overflow;
+          if (phase === 'work') {
+            if (currentSet >= config.sets) {
+              finish();
+              return;
+            }
+            if (config.restSeconds > 0) {
+              phase = 'rest';
+              remainingSeconds = config.restSeconds - overflow;
+            } else {
+              currentSet += 1;
+              remainingSeconds = getWorkDuration(currentSet) - overflow;
+            }
           } else {
             currentSet += 1;
-
             if (currentSet > config.sets) {
               finish();
               return;
             }
-
-            phase = 'training';
-            remainingPhase = config.trainingSec - overflow;
+            phase = 'work';
+            remainingSeconds = getWorkDuration(currentSet) - overflow;
           }
         }
+        notifyTick();
       }
-
-      notifyTick();
     }
 
     const drift = 1000 - (Date.now() - lastTimestamp);
@@ -99,9 +139,9 @@ export const createTimerEngine = (initialConfig = {}) => {
 
     config = { ...config, ...override };
     state = 'running';
-    phase = 'training';
+    phase = config.mode === 'interval' ? 'work' : 'work';
     currentSet = 1;
-    remainingPhase = config.trainingSec;
+    remainingSeconds = config.mode === 'interval' ? getWorkDuration(1) : config.workSeconds;
     elapsedSeconds = 0;
     lastTimestamp = Date.now();
 
@@ -138,9 +178,9 @@ export const createTimerEngine = (initialConfig = {}) => {
     clearTimer();
     config = { ...config, ...override };
     state = 'idle';
-    phase = 'training';
+    phase = 'work';
     currentSet = 1;
-    remainingPhase = config.trainingSec;
+    remainingSeconds = config.mode === 'interval' ? getWorkDuration(1) : config.workSeconds;
     elapsedSeconds = 0;
     lastTimestamp = null;
     notifyState();

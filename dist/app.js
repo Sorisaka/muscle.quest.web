@@ -6,6 +6,7 @@ import { renderSettings } from './views/settingsView.js';
 import { renderQuestList } from './views/questListView.js';
 import { renderQuest } from './views/questView.js';
 import { renderRun } from './views/runView.js';
+import { renderRank } from './views/rankView.js';
 
 const titleEl = document.querySelector('[data-route-title]');
 const pathEl = document.querySelector('[data-route-path]');
@@ -44,6 +45,18 @@ const routes = [
     title: (params) => `Run / ${params.id}`,
     description: '4分割画面でタイマーと手順を確認。',
     render: renderRun,
+  },
+  {
+    path: '#/rank/:board',
+    title: (params) => `Rank / ${params.board}`,
+    description: 'ポイントとローカルランキングを確認します。',
+    render: renderRank,
+  },
+  {
+    path: '#/rank',
+    title: 'Rank',
+    description: 'ポイントとローカルランキングを確認します。',
+    render: renderRank,
   },
 ];
 
