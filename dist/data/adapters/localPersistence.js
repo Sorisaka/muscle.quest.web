@@ -1,3 +1,5 @@
+import { aggregatePoints } from '../../core/history.js';
+
 const PROFILE_KEY = 'musclequest:profile';
 const HISTORY_KEY = 'musclequest:history';
 const LAST_PLAN_KEY = 'musclequest:lastPlans';
@@ -87,16 +89,30 @@ export const createLocalPersistence = () => {
     return next;
   };
 
-  const loadLeaderboard = () => {
+  const loadLeaderboard = (period = 'overall') => {
     const profile = loadProfile();
+    const history = loadHistory();
+    const totals = aggregatePoints(history);
     const bots = [
-      { id: 'atlas', displayName: 'Atlas', points: 3200 },
-      { id: 'valkyrie', displayName: 'Valkyrie', points: 2500 },
-      { id: 'nova', displayName: 'Nova', points: 1800 },
+      { id: 'atlas', displayName: 'Atlas', points: 3200, daily: 140, weekly: 860, monthly: 2100 },
+      { id: 'valkyrie', displayName: 'Valkyrie', points: 2500, daily: 110, weekly: 640, monthly: 1600 },
+      { id: 'nova', displayName: 'Nova', points: 1800, daily: 80, weekly: 420, monthly: 1100 },
     ];
+    const getPeriodPoints = (entry) => {
+      if (entry.id === profile.id) {
+        if (period === 'daily') return totals.daily || 0;
+        if (period === 'weekly') return totals.weekly || 0;
+        if (period === 'monthly') return totals.monthly || 0;
+      }
+      if (period === 'daily') return entry.daily ?? entry.points ?? 0;
+      if (period === 'weekly') return entry.weekly ?? entry.points ?? 0;
+      if (period === 'monthly') return entry.monthly ?? entry.points ?? 0;
+      return entry.points || 0;
+    };
+
     const entries = [...bots, profile];
     return entries
-      .map((entry) => ({ ...entry, points: Math.max(entry.points || 0, 0) }))
+      .map((entry) => ({ ...entry, points: Math.max(getPeriodPoints(entry), 0) }))
       .sort((a, b) => b.points - a.points)
       .slice(0, 20);
   };
