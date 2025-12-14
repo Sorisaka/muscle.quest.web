@@ -1,6 +1,10 @@
-const createRankRow = (position, entry) => {
+const createRankRow = (position, entry, selfId) => {
   const row = document.createElement('div');
   row.className = 'row leaderboard-row';
+  if (entry.id === selfId) {
+    row.classList.add('is-self');
+  }
+  row.dataset.entryId = entry.id || '';
 
   const badge = document.createElement('span');
   badge.className = 'pill';
@@ -24,94 +28,17 @@ const createRankRow = (position, entry) => {
 
 export const renderRank = (params, { navigate, store, playSfx }) => {
   const container = document.createElement('section');
-  container.className = 'stack';
+  container.className = 'stack rank-view';
 
   const boardId = params.board || 'local';
+  const profile = store.getProfile();
+  const selfId = profile?.id || 'local-user';
+
+  const header = document.createElement('div');
+  header.className = 'list-header';
+
   const heading = document.createElement('h2');
   heading.textContent = `Rank board: ${boardId}`;
-
-  const description = document.createElement('p');
-  description.className = 'muted';
-  description.textContent = 'ローカル保存されたポイントとサンプル順位を表示します。将来的に Supabase へ差し替え可能なアダプタ構造です。';
-
-  const authNotice = document.createElement('div');
-  authNotice.className = 'card auth-placeholder';
-  const authTitle = document.createElement('div');
-  authTitle.className = 'auth-placeholder__header';
-  authTitle.innerHTML = '<strong>未ログイン</strong>（ローカルランキングのみ表示）';
-  const authDesc = document.createElement('p');
-  authDesc.className = 'muted';
-  authDesc.textContent = 'Supabase アカウント連携を追加すると、ここでオンライン順位と同期を切り替える予定です。';
-  const loginPlaceholder = document.createElement('button');
-  loginPlaceholder.type = 'button';
-  loginPlaceholder.disabled = true;
-  loginPlaceholder.className = 'ghost';
-  loginPlaceholder.textContent = 'Supabase ログイン（準備中）';
-  authNotice.append(authTitle, authDesc, loginPlaceholder);
-
-  const profile = store.getProfile();
-  const pointSummary = store.getPointSummary();
-
-  const profileCard = document.createElement('div');
-  profileCard.className = 'hero';
-  const profileTitle = document.createElement('h3');
-  profileTitle.textContent = profile.displayName || 'Guest';
-  const profileMeta = document.createElement('p');
-  profileMeta.className = 'muted';
-  profileMeta.textContent = `獲得ポイント: ${profile.points || 0} / 完了クエスト: ${profile.completedRuns || 0}`;
-
-  const nameField = document.createElement('label');
-  nameField.className = 'field';
-  const nameLabel = document.createElement('span');
-  nameLabel.textContent = '表示名';
-  const nameInput = document.createElement('input');
-  nameInput.type = 'text';
-  nameInput.value = profile.displayName || '';
-  nameInput.placeholder = 'Your name';
-  nameInput.addEventListener('change', (event) => {
-    const next = store.setProfileName(event.target.value);
-    profileTitle.textContent = next.displayName || 'Guest';
-    profileMeta.textContent = `獲得ポイント: ${next.points || 0} / 完了クエスト: ${next.completedRuns || 0}`;
-    playSfx('ui:navigate');
-    renderLeaderboard();
-  });
-  nameField.append(nameLabel, nameInput);
-
-  const streakRow = document.createElement('p');
-  streakRow.className = 'muted';
-  streakRow.textContent = `ストリーク: ${pointSummary.streak} 日`;
-
-  const totals = document.createElement('ul');
-  totals.className = 'muted';
-  const daily = document.createElement('li');
-  daily.textContent = `本日: ${pointSummary.totals.daily} pts`;
-  const weekly = document.createElement('li');
-  weekly.textContent = `直近7日: ${pointSummary.totals.weekly} pts`;
-  const monthly = document.createElement('li');
-  monthly.textContent = `直近30日: ${pointSummary.totals.monthly} pts`;
-  totals.append(daily, weekly, monthly);
-
-  profileCard.append(profileTitle, profileMeta, streakRow, totals, nameField);
-
-  const board = document.createElement('div');
-  board.className = 'stack';
-
-  const renderLeaderboard = () => {
-    board.innerHTML = '';
-    const entries = store.getLeaderboard();
-    if (!entries || entries.length === 0) {
-      const empty = document.createElement('p');
-      empty.className = 'muted';
-      empty.textContent = 'まだランキング情報がありません。';
-      board.append(empty);
-      return;
-    }
-    entries.forEach((entry, index) => {
-      board.append(createRankRow(index + 1, entry));
-    });
-  };
-
-  renderLeaderboard();
 
   const back = document.createElement('button');
   back.type = 'button';
@@ -122,6 +49,102 @@ export const renderRank = (params, { navigate, store, playSfx }) => {
     navigate('#/');
   });
 
-  container.append(heading, description, authNotice, profileCard, board, back);
+  header.append(heading, back);
+
+  const description = document.createElement('p');
+  description.className = 'muted';
+  description.textContent = 'ローカル保存されたポイントとサンプル順位を表示します。将来的に Supabase へ差し替え可能なアダプタ構造です。';
+
+  const periods = [
+    { id: 'daily', label: '本日' },
+    { id: 'weekly', label: '直近7日' },
+    { id: 'monthly', label: '直近30日' },
+  ];
+
+  let activePeriod = 'daily';
+  let searchTerm = '';
+
+  const controls = document.createElement('div');
+  controls.className = 'rank-toolbar';
+
+  const tabList = document.createElement('div');
+  tabList.className = 'tabs';
+
+  const searchRow = document.createElement('div');
+  searchRow.className = 'rank-search';
+  const searchInput = document.createElement('input');
+  searchInput.type = 'search';
+  searchInput.placeholder = 'ID で検索';
+  searchInput.addEventListener('input', (event) => {
+    searchTerm = event.target.value.trim().toLowerCase();
+    renderLeaderboard();
+  });
+  searchRow.append(searchInput);
+
+  const board = document.createElement('div');
+  board.className = 'rank-scroll-area';
+
+  const list = document.createElement('div');
+  list.className = 'stack rank-list';
+  board.append(list);
+
+  const scrollToSelf = () => {
+    const selfRow = list.querySelector(`[data-entry-id="${selfId}"]`);
+    if (!selfRow) {
+      list.scrollTop = 0;
+      return;
+    }
+    requestAnimationFrame(() => {
+      const offset = selfRow.offsetTop - list.clientHeight / 2 + selfRow.clientHeight / 2;
+      list.scrollTop = Math.max(offset, 0);
+    });
+  };
+
+  const renderLeaderboard = () => {
+    list.innerHTML = '';
+    const entries = store.getLeaderboard(activePeriod);
+    const filtered = (entries || []).filter((entry) => {
+      if (!searchTerm) return true;
+      const id = (entry.id || '').toLowerCase();
+      const name = (entry.displayName || '').toLowerCase();
+      return id.includes(searchTerm) || name.includes(searchTerm);
+    });
+
+    if (!filtered.length) {
+      const empty = document.createElement('p');
+      empty.className = 'muted';
+      empty.textContent = '検索条件に一致する順位がありません。';
+      list.append(empty);
+      return;
+    }
+
+    filtered.forEach((entry, index) => {
+      list.append(createRankRow(index + 1, entry, selfId));
+    });
+
+    scrollToSelf();
+  };
+
+  periods.forEach((period) => {
+    const tab = document.createElement('button');
+    tab.type = 'button';
+    tab.className = 'tab';
+    tab.textContent = period.label;
+    if (period.id === activePeriod) tab.classList.add('is-active');
+    tab.addEventListener('click', () => {
+      if (activePeriod === period.id) return;
+      activePeriod = period.id;
+      tabList.querySelectorAll('.tab').forEach((node) => node.classList.remove('is-active'));
+      tab.classList.add('is-active');
+      renderLeaderboard();
+    });
+    tabList.append(tab);
+  });
+
+  controls.append(tabList, searchRow);
+
+  renderLeaderboard();
+
+  container.append(header, description, controls, board);
   return container;
 };

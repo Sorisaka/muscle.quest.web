@@ -1,18 +1,25 @@
 import { createRouter } from './core/router.js';
 import { createStore } from './core/store.js';
 import { initSfx, playSfx } from './core/sfx.js';
+import { createAccountState } from './core/accountState.js';
 import { renderHome } from './views/homeView.js';
 import { renderSettings } from './views/settingsView.js';
 import { renderQuestList } from './views/questListView.js';
 import { renderQuest } from './views/questView.js';
 import { renderRun } from './views/runView.js';
 import { renderRank } from './views/rankView.js';
+import { renderAccount } from './views/accountView.js';
+import { createAccountDrawer } from './ui/accountDrawer.js';
 
 const titleEl = document.querySelector('[data-route-title]');
 const pathEl = document.querySelector('[data-route-path]');
 const outlet = document.querySelector('[data-view]');
+const accountTrigger = document.querySelector('[data-account-trigger]');
+const drawerOverlay = document.querySelector('[data-drawer-overlay]');
+const accountDrawer = document.querySelector('[data-account-drawer]');
 
 const store = createStore();
+const accountState = createAccountState(store);
 let router;
 
 const routes = [
@@ -58,6 +65,12 @@ const routes = [
     description: 'ポイントとローカルランキングを確認します。',
     render: renderRank,
   },
+  {
+    path: '#/account',
+    title: 'Account',
+    description: 'プロフィールとポイントの概要。',
+    render: renderAccount,
+  },
 ];
 
 const renderShell = (match) => {
@@ -69,7 +82,7 @@ const renderShell = (match) => {
   titleEl.textContent = routeTitle;
   pathEl.textContent = fullPath;
 
-  const view = route.render(params, { navigate: router.navigate, store, playSfx });
+  const view = route.render(params, { navigate: router.navigate, store, playSfx, accountState });
   outlet.innerHTML = '';
   outlet.append(view);
 
@@ -81,6 +94,14 @@ const renderShell = (match) => {
 
 const init = () => {
   router = createRouter(routes, renderShell);
+  createAccountDrawer({
+    triggerEl: accountTrigger,
+    drawerEl: accountDrawer,
+    overlayEl: drawerOverlay,
+    accountState,
+    navigate: (path) => router.navigate(path),
+    playSfx,
+  });
   initSfx(store);
   router.start();
 };

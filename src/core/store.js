@@ -122,7 +122,7 @@ export const createStore = (driver = 'local') => {
     return enriched;
   };
 
-  const getLeaderboard = () => persistence.loadLeaderboard();
+  const getLeaderboard = (period = 'overall') => persistence.loadLeaderboard(period);
 
   const getHistory = () => history;
 

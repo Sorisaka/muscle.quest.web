@@ -24,4 +24,5 @@ All primary hash routes can be checked without extra tooling:
    - `#/rank/...` (example button points to `#/rank/example`)
    - `#/quest/...` (example button points to `#/quest/example`)
    - `#/run/...` (example button points to `#/run/example`)
+   - `#/account`
 3. The header updates to confirm the active route and description.

@@ -47,6 +47,45 @@ main.shell {
   grid-template-rows: auto 1fr;
   gap: 0.75rem;
   min-height: 0;
+  position: relative;
+}
+
+.shell__header {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  position: relative;
+  z-index: 2;
+}
+
+.shell__header .route-meta {
+  flex: 1;
+  margin: 0;
+}
+
+.account-trigger {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid #1f2937;
+  background: linear-gradient(135deg, #132030, #0c121d);
+  color: #d1d5db;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+  transition: transform 0.12s ease, background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.account-trigger:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #1a2940, #0c121d);
+}
+
+.account-trigger:active {
+  transform: translateY(0);
 }
 
 button,
@@ -85,6 +124,7 @@ section.panel {
   height: 100%;
   min-height: 0;
   overflow: auto;
+  position: relative;
 }
 
 .route-meta {
@@ -428,6 +468,195 @@ section.panel {
 .leaderboard-row__user {
   display: grid;
   gap: 0.1rem;
+}
+
+.leaderboard-row.is-self {
+  border: 1px solid #2ea043;
+  border-radius: 10px;
+  padding: 0.5rem;
+}
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 80;
+  touch-action: none;
+}
+
+.drawer-overlay.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.account-drawer {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: min(360px, 86vw);
+  background: #0c121d;
+  border-right: 1px solid #1f2937;
+  box-shadow: 6px 0 24px rgba(0, 0, 0, 0.35);
+  transform: translateX(-105%);
+  transition: transform 0.24s ease;
+  z-index: 90;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  will-change: transform;
+}
+
+.account-drawer.is-open {
+  transform: translateX(0);
+}
+
+.account-drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #1f2937;
+}
+
+.account-drawer__body {
+  padding: 1rem;
+  overflow-y: auto;
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+}
+
+.account-summary {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.rank-view {
+  min-height: 0;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr;
+  gap: 0.75rem;
+}
+
+.rank-toolbar {
+  display: grid;
+  gap: 0.5rem;
+  position: sticky;
+  top: 0;
+  background: #0c121d;
+  padding-bottom: 0.35rem;
+  z-index: 10;
+  border-bottom: 1px solid #1f2937;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.tab {
+  background: #111827;
+  border-color: #1f2937;
+  color: #e6edf3;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+}
+
+.tab.is-active {
+  background: #2ea043;
+  color: #0c121d;
+  border-color: #34d399;
+}
+
+.rank-search input {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #1f2937;
+  background: #0f1623;
+  color: #e6edf3;
+}
+
+.rank-scroll-area {
+  overflow-y: auto;
+  height: 100%;
+  min-height: 0;
+  padding-right: 0.25rem;
+}
+
+.rank-list {
+  gap: 0.75rem;
+}
+
+.account-view {
+  gap: 1.5rem;
+}
+
+.account-card {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.account-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.account-card__title {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.account-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.account-metric__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  background: #0f1623;
+}
+
+.account-summary__name {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.account-summary__meta {
+  color: #9ca3af;
+  font-size: 0.95rem;
+}
+
+.account-metrics {
+  display: grid;
+  gap: 0.35rem;
+  background: #0f1623;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  padding: 0.75rem;
+}
+
+.account-metrics__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #d1d5db;
+}
+
+.drawer-actions {
+  display: grid;
+  gap: 0.5rem;
 }
 
 .auth-placeholder {

@@ -31,26 +31,17 @@ export const renderHome = (_params, { navigate, playSfx }) => {
   const container = document.createElement('section');
   container.className = 'stack';
 
-  const authPlaceholder = document.createElement('div');
-  authPlaceholder.className = 'card auth-placeholder';
-  const authHeading = document.createElement('div');
-  authHeading.className = 'auth-placeholder__header';
-  authHeading.innerHTML = '<strong>未ログイン</strong>（ローカルゲストとして動作中）';
-
-  const authCopy = document.createElement('p');
-  authCopy.className = 'muted';
-  authCopy.textContent = '将来ここに Supabase ログインを配置し、クラウド同期を切り替えられるようにします。';
-
-  const loginButton = document.createElement('button');
-  loginButton.type = 'button';
-  loginButton.disabled = true;
-  loginButton.className = 'ghost';
-  loginButton.textContent = 'Supabase ログイン（準備中）';
-
-  authPlaceholder.append(authHeading, authCopy, loginButton);
-
   const grid = document.createElement('div');
   grid.className = 'card-grid';
+
+  const rankButton = document.createElement('button');
+  rankButton.type = 'button';
+  rankButton.className = 'ghost';
+  rankButton.textContent = 'ランキングを見る';
+  rankButton.addEventListener('click', () => {
+    playSfx('ui:navigate');
+    navigate('#/rank/local');
+  });
 
   const beginnerCard = createTierCard(
     'beginner',
@@ -75,24 +66,6 @@ export const renderHome = (_params, { navigate, playSfx }) => {
   );
 
   grid.append(beginnerCard, intermediateCard, advancedCard);
-
-  const settingsButton = document.createElement('button');
-  settingsButton.type = 'button';
-  settingsButton.textContent = '設定を開く';
-  settingsButton.addEventListener('click', () => {
-    playSfx('ui:navigate');
-    navigate('#/settings');
-  });
-
-  const rankButton = document.createElement('button');
-  rankButton.type = 'button';
-  rankButton.className = 'ghost';
-  rankButton.textContent = 'ランキングを見る';
-  rankButton.addEventListener('click', () => {
-    playSfx('ui:navigate');
-    navigate('#/rank/local');
-  });
-
-  container.append(authPlaceholder, grid, settingsButton, rankButton);
+  container.append(rankButton, grid);
   return container;
 };
