@@ -55,8 +55,8 @@ export const createAccountDrawer = ({
     const metrics = document.createElement('div');
     metrics.className = 'account-metrics';
     metrics.append(
-      createMetricRow('総保有ポイント', `${status.points} pts`),
       createMetricRow('Streak', `${status.streak} 日`),
+      createMetricRow('総保有ポイント', `${status.points} pts`),
       createMetricRow('本日', `${status.totals.daily || 0} pts`),
       createMetricRow('直近7日', `${status.totals.weekly || 0} pts`),
       createMetricRow('直近30日', `${status.totals.monthly || 0} pts`),
