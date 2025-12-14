@@ -19,8 +19,22 @@ export const renderAccount = (_params, { navigate, accountState, playSfx }) => {
   const container = document.createElement('section');
   container.className = 'stack account-view';
 
-  const heading = document.createElement('h2');
-  heading.textContent = 'アカウント情報';
+  const heading = document.createElement('div');
+  heading.className = 'list-header account-header';
+
+  const title = document.createElement('h2');
+  title.textContent = 'アカウント情報';
+
+  const backHome = document.createElement('button');
+  backHome.type = 'button';
+  backHome.className = 'ghost';
+  backHome.textContent = '← ホームに戻る';
+  backHome.addEventListener('click', () => {
+    playSfx('ui:navigate');
+    navigate('#/');
+  });
+
+  heading.append(title, backHome);
 
   const description = document.createElement('p');
   description.className = 'muted';
@@ -114,16 +128,7 @@ export const renderAccount = (_params, { navigate, accountState, playSfx }) => {
     navigate('#/settings');
   });
 
-  const backHome = document.createElement('button');
-  backHome.type = 'button';
-  backHome.className = 'ghost';
-  backHome.textContent = '← ホームに戻る';
-  backHome.addEventListener('click', () => {
-    playSfx('ui:navigate');
-    navigate('#/');
-  });
-
-  actions.append(toRank, toSettings, backHome);
+  actions.append(toRank, toSettings);
 
   container.append(
     heading,
