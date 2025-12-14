@@ -88,15 +88,26 @@ export const renderQuest = (params, { navigate, store, playSfx }) => {
   if (!quest) {
     const missing = document.createElement('p');
     missing.textContent = 'クエストが見つかりませんでした。ホームに戻ります。';
-    const back = document.createElement('button');
-    back.type = 'button';
-    back.addEventListener('click', () => navigate('#/'));
-    container.append(missing, back);
+    container.append(missing);
     return container;
   }
 
-  const heading = document.createElement('h2');
-  heading.textContent = quest.title;
+  const heading = document.createElement('div');
+  heading.className = 'list-header quest-header';
+
+  const title = document.createElement('h2');
+  title.textContent = quest.title;
+
+  const backToList = document.createElement('button');
+  backToList.type = 'button';
+  backToList.className = 'ghost';
+  backToList.textContent = '一覧に戻る';
+  backToList.addEventListener('click', () => {
+    playSfx('ui:navigate');
+    navigate(`#/quests/${quest.tier}`);
+  });
+
+  heading.append(title, backToList);
   const description = document.createElement('p');
   description.className = 'muted';
   description.textContent = quest.description;

@@ -185,6 +185,14 @@ section.panel {
   flex-wrap: wrap;
 }
 
+.quest-header {
+  align-items: center;
+}
+
+.quest-header button {
+  padding: 0.35rem 0.75rem;
+}
+
 .tier-card .pill {
   text-transform: uppercase;
 }
@@ -638,6 +646,11 @@ section.panel {
   font-size: 0.95rem;
 }
 
+.account-summary__id {
+  color: #e6edf3;
+  font-weight: 600;
+}
+
 .account-metrics {
   display: grid;
   gap: 0.35rem;
@@ -657,6 +670,10 @@ section.panel {
 .drawer-actions {
   display: grid;
   gap: 0.5rem;
+}
+
+.drawer-actions__note {
+  line-height: 1.45;
 }
 
 .auth-placeholder {
