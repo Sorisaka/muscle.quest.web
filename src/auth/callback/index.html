@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Auth Callback | Muscle Quest</title>
+    <link rel="stylesheet" href="../../style.css" />
+    <style>
+      .callback-shell {
+        max-width: 520px;
+        margin: 20vh auto 0;
+        padding: 24px;
+        border-radius: 16px;
+        background: #101014;
+        color: #f4f4f5;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+      }
+      .callback-shell h1 {
+        margin: 0 0 12px;
+        font-size: 1.25rem;
+      }
+      .callback-shell p {
+        margin: 0 0 12px;
+      }
+      .callback-shell pre {
+        margin: 8px 0 0;
+        padding: 12px;
+        border-radius: 12px;
+        background: #1f2937;
+        color: #fca5a5;
+        overflow: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="callback-shell" aria-live="polite">
+      <h1>Signing you in...</h1>
+      <p data-status>Preparing authentication flow.</p>
+      <pre data-error hidden></pre>
+    </main>
+    <script src="../../config.js"></script>
+    <script type="module" src="./callback.js"></script>
+  </body>
+</html>

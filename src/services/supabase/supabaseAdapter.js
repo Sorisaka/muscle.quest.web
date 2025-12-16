@@ -1,12 +1,13 @@
-import { createSupabaseClient, resolveRuntimeConfig } from './supabaseClientStub.js';
+import { getSupabaseClient } from '../../lib/supabaseClient.js';
+import { getRuntimeConfig } from '../../lib/runtimeConfig.js';
 
 const notReady = (method) => {
   console.warn(`Supabase adapter stub invoked: ${method}`);
 };
 
 export const createSupabaseAdapter = (options = {}) => {
-  const client = createSupabaseClient(options);
-  const config = resolveRuntimeConfig(options.runtimeConfig || {});
+  const { client, ready, error, config = getRuntimeConfig(options.runtimeConfig || {}) } =
+    getSupabaseClient(options);
 
   const baseProfile = {
     id: 'supabase-user',
@@ -47,6 +48,8 @@ export const createSupabaseAdapter = (options = {}) => {
 
   return {
     client,
+    ready,
+    error,
     loadProfile,
     saveProfile,
     recordResult,

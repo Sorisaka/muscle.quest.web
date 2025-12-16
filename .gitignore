@@ -1,3 +1,4 @@
 src/config/runtime.js
 dist/config/runtime.js
+dist/config.js
 .DS_Store

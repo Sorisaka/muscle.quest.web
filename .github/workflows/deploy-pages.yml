@@ -26,11 +26,27 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Show tool versions
+        run: |
+          node -v
+          npm -v
+
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build site
         run: npm run build
+
+      - name: Inject runtime config
+        run: |
+          mkdir -p dist
+          cat > dist/config.js << 'EOF'
+          window.__APP_CONFIG__ = {
+            SUPABASE_URL: "${{ secrets.SUPABASE_URL }}",
+            SUPABASE_ANON_KEY: "${{ secrets.SUPABASE_ANON_KEY }}",
+            OAUTH_REDIRECT_TO: "${{ secrets.OAUTH_REDIRECT_TO }}"
+          };
+          EOF
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
