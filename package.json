@@ -8,6 +8,9 @@
     "build": "node scripts/build.js",
     "preview": "node scripts/preview.js"
   },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC"
