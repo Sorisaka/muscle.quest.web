@@ -34,10 +34,10 @@ Vanilla JS/HTML/CSS bundle aimed at GitHub Pages.
 
 ## ランタイム設定 (Supabase などの秘匿値)
 - 機微情報はソースに含めず、Pages に配信する成果物 `dist/config.js` にだけ埋め込みます。
-- ローカル開発では `cp src/config.example.js dist/config.js` でテンプレートを複製し、`SUPABASE_URL` / `SUPABASE_ANON_KEY` / `OAUTH_REDIRECT_TO` を手元の値に差し替えてください。
+- ローカル開発では `cp src/config.example.js dist/config.js` でテンプレートを複製し、`SUPABASE_URL` / `SUPABASE_ANON_KEY` / `OAUTH_REDIRECT_TO` を手元の値に差し替えてください。`npm run build` / `npm run dev` は `dist/config.js` が無い場合に `dist/config.example.js` を自動コピーします（Secrets を含まないダミー）。
 - GitHub Actions では `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `OAUTH_REDIRECT_TO` の Secrets を登録し、`npm run build` 後にワークフローが `dist/config.js` を生成してから Pages へアップロードします。
 - `dist/config.js` は `.gitignore` 済みです。コミットしないでください。
-- `npm run build` は毎回 `dist/` をクリーンするため、開発時はビルドのあとに改めて `dist/config.js` を配置してください。
+- `npm run build` は毎回 `dist/` をクリーンするため、開発時はビルドのあとに改めて `dist/config.js` を配置してください。自動コピーされたダミー設定では Supabase 連携が無効なままなので、必要に応じて値を差し替えてください。
 
 ### Supabase の profiles セットアップ
 - Supabase の SQL Editor で `supabase/sql/001_profiles.sql` を実行し、`profiles` テーブルとサインアップ時に自動作成されるトリガーを作成してください。
@@ -68,3 +68,4 @@ All primary hash routes can be checked without extra tooling:
    - `#/run/...` (example button points to `#/run/example`)
    - `#/account`
 3. The header updates to confirm the active route and description.
+4. Keep the devtools console open and ensure there are no MIME type errors for `config.js` or module-resolution errors (e.g., `@supabase/supabase-js`). The build now ships `dist/config.js` automatically (dummy values) and serves `vendor/supabase-js` from `dist/vendor/` so the bundle loads without missing-script failures.

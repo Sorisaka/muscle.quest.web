@@ -3,6 +3,7 @@ const path = require('path');
 
 const projectRoot = path.resolve(__dirname, '..');
 const srcDir = path.join(projectRoot, 'src');
+const vendorDir = path.join(projectRoot, 'vendor');
 const distDir = path.join(projectRoot, 'dist');
 
 async function clean() {
@@ -76,10 +77,47 @@ async function generateContentModule() {
   await fs.writeFile(path.join(generatedDir, 'contentMap.js'), moduleSource, 'utf-8');
 }
 
+async function copyVendor() {
+  try {
+    await fs.access(vendorDir);
+    await copyDir(vendorDir, path.join(distDir, 'vendor'));
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      throw error;
+    }
+  }
+}
+
+async function ensureRuntimeConfig() {
+  const configPath = path.join(distDir, 'config.js');
+  const examplePath = path.join(distDir, 'config.example.js');
+
+  try {
+    await fs.access(configPath);
+    return;
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+
+  try {
+    await fs.copyFile(examplePath, configPath);
+    console.warn('dist/config.js was missing. Copied dist/config.example.js for local use.');
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      console.warn('No runtime config found. Create dist/config.js from dist/config.example.js.');
+      return;
+    }
+
+    throw error;
+  }
+}
+
 async function build() {
   await clean();
   await copyDir(srcDir, distDir);
+  await copyVendor();
   await generateContentModule();
+  await ensureRuntimeConfig();
   console.log('Build complete: dist/ mirrors src/ with generated content map.');
 }
 

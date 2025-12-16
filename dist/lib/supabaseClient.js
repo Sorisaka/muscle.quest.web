@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '../vendor/supabase-js/dist/index.js';
 import { getRuntimeConfig, hasSupabaseCredentials } from './runtimeConfig.js';
 
 let cachedClient = null;
