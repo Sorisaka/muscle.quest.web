@@ -22,6 +22,12 @@ export const createAccountDrawer = ({
 }) => {
   if (!triggerEl || !drawerEl || !overlayEl) return null;
 
+  let guestNotice = '';
+
+  const updateGuestNotice = (message) => {
+    guestNotice = message;
+  };
+
   const renderDrawer = () => {
     const status = accountState.getStatus();
     drawerEl.innerHTML = '';
@@ -77,12 +83,48 @@ export const createAccountDrawer = ({
       helper.className = 'muted drawer-actions__note';
       helper.textContent = 'Supabase OAuth を使ってログインできます。';
 
+      if (guestNotice) {
+        const notice = document.createElement('p');
+        notice.className = 'drawer-actions__note drawer-actions__notice';
+        notice.textContent = guestNotice;
+        actions.append(notice);
+      }
+
       const loginBtn = document.createElement('button');
       loginBtn.type = 'button';
       loginBtn.textContent = 'GitHub でログイン';
       loginBtn.addEventListener('click', async () => {
         playSfx('ui:navigate');
-        await accountState.login('github');
+        const result = await accountState.login('github');
+        if (result?.error) {
+          updateGuestNotice(result.error.message || 'ログインできませんでした。');
+          renderDrawer();
+          return;
+        }
+        updateGuestNotice('');
+        closeDrawer();
+      });
+
+      const signupBtn = document.createElement('button');
+      signupBtn.type = 'button';
+      signupBtn.className = 'ghost';
+      signupBtn.textContent = 'GitHub でサインアップ';
+      signupBtn.addEventListener('click', async () => {
+        playSfx('ui:navigate');
+        const statusSnapshot = accountState.getStatus();
+        if (statusSnapshot.hasAccount) {
+          updateGuestNotice('そのアカウントは既に存在します。ログインしてください。');
+          renderDrawer();
+          return;
+        }
+
+        const result = await accountState.signUp('github');
+        if (result?.error) {
+          updateGuestNotice(result.error.message || 'サインアップできませんでした。');
+          renderDrawer();
+          return;
+        }
+        updateGuestNotice('');
         closeDrawer();
       });
 
@@ -96,7 +138,7 @@ export const createAccountDrawer = ({
         closeDrawer();
       });
 
-      actions.append(helper, loginBtn, settingsLink);
+      actions.append(helper, loginBtn, signupBtn, settingsLink);
     } else {
       const idRow = document.createElement('p');
       idRow.className = 'account-summary__meta account-summary__id';
@@ -144,6 +186,7 @@ export const createAccountDrawer = ({
   };
 
   const closeDrawer = () => {
+    updateGuestNotice('');
     drawerEl.classList.remove('is-open');
     overlayEl.classList.remove('is-active');
   };

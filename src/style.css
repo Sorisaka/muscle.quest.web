@@ -676,6 +676,11 @@ section.panel {
   line-height: 1.45;
 }
 
+.drawer-actions__notice {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
 .auth-placeholder {
   display: grid;
   gap: 0.35rem;

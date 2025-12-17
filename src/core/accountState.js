@@ -4,19 +4,23 @@ import { fetchProfile, upsertProfile } from '../services/profileService.js';
 
 const ACCOUNT_SESSION_KEY = 'musclequest:account';
 
+const DEFAULT_LOCAL_SESSION = { loggedIn: false, registered: false };
+
 const readLocalSession = () => {
   try {
     const raw = localStorage.getItem(ACCOUNT_SESSION_KEY);
-    if (!raw) return { loggedIn: false };
-    return JSON.parse(raw);
+    if (!raw) return { ...DEFAULT_LOCAL_SESSION };
+    const parsed = JSON.parse(raw);
+    return { ...DEFAULT_LOCAL_SESSION, ...parsed };
   } catch (error) {
-    return { loggedIn: false };
+    return { ...DEFAULT_LOCAL_SESSION };
   }
 };
 
 const persistLocalSession = (session) => {
-  localStorage.setItem(ACCOUNT_SESSION_KEY, JSON.stringify(session));
-  return session;
+  const normalized = { ...DEFAULT_LOCAL_SESSION, ...session };
+  localStorage.setItem(ACCOUNT_SESSION_KEY, JSON.stringify(normalized));
+  return normalized;
 };
 
 const missingConfigMessage = [
@@ -60,6 +64,7 @@ export const createAccountState = (store) => {
     const profile = store.getProfile();
     const pointSummary = store.getPointSummary();
     const loggedIn = Boolean(state.session && state.supabaseReady && !state.supabaseError);
+    const hasAccount = Boolean(loggedIn || state.localSession.registered);
 
     return {
       loading: state.loading,
@@ -69,6 +74,7 @@ export const createAccountState = (store) => {
       profile: state.profile,
       loggedIn,
       isGuest: !loggedIn,
+      hasAccount,
       id: loggedIn ? state.session?.user?.id || state.profile?.id : profile?.id || 'local-user',
       email: state.session?.user?.email || null,
       displayName: deriveDisplayName(),
@@ -132,6 +138,9 @@ export const createAccountState = (store) => {
       supabaseError: null,
       session,
       profile: null,
+      localSession: session
+        ? persistLocalSession({ ...state.localSession, loggedIn: true, registered: true })
+        : state.localSession,
     });
 
     if (session?.user) {
@@ -140,6 +149,10 @@ export const createAccountState = (store) => {
   };
 
   const login = async (provider = 'github') => {
+    const status = getStatus();
+    if (!status.hasAccount) {
+      return { data: null, error: new Error('そのアカウントは存在しません。') };
+    }
     const result = await signInWithOAuth(provider);
     if (result?.error) {
       setState({ supabaseError: result.error.message || String(result.error) });
@@ -147,10 +160,31 @@ export const createAccountState = (store) => {
     return result;
   };
 
+  const signUp = async (provider = 'github') => {
+    const status = getStatus();
+    if (status.hasAccount) {
+      return { data: null, error: new Error('そのアカウントは既に存在します。') };
+    }
+    const result = await signInWithOAuth(provider);
+    if (result?.error) {
+      setState({ supabaseError: result.error.message || String(result.error) });
+      return result;
+    }
+    const localSession = persistLocalSession({ ...state.localSession, registered: true, loggedIn: true });
+    setState({ localSession });
+    return result;
+  };
+
   const logout = async () => {
     await signOut();
-    setState({ session: null, profile: null, supabaseReady: true, supabaseError: null });
-    persistLocalSession({ ...state.localSession, loggedIn: false });
+    const localSession = persistLocalSession({ ...state.localSession, loggedIn: false });
+    setState({
+      session: null,
+      profile: null,
+      supabaseReady: true,
+      supabaseError: null,
+      localSession,
+    });
   };
 
   const setDisplayName = async (name) => {
@@ -197,6 +231,7 @@ export const createAccountState = (store) => {
     getStatus,
     subscribe,
     login,
+    signUp,
     logout,
     setDisplayName,
     refreshSession,
