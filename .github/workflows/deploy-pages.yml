@@ -38,13 +38,23 @@ jobs:
         run: npm run build
 
       - name: Inject runtime config
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          OAUTH_REDIRECT_TO: ${{ secrets.OAUTH_REDIRECT_TO }}
         run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ] || [ -z "${OAUTH_REDIRECT_TO:-}" ]; then
+            echo "Missing required Supabase secrets (SUPABASE_URL, SUPABASE_ANON_KEY, OAUTH_REDIRECT_TO)." >&2
+            exit 1
+          fi
+
           mkdir -p dist
           cat > dist/config.js << 'EOF'
           window.__APP_CONFIG__ = {
-            SUPABASE_URL: "${{ secrets.SUPABASE_URL }}",
-            SUPABASE_ANON_KEY: "${{ secrets.SUPABASE_ANON_KEY }}",
-            OAUTH_REDIRECT_TO: "${{ secrets.OAUTH_REDIRECT_TO }}"
+            SUPABASE_URL: "${SUPABASE_URL}",
+            SUPABASE_ANON_KEY: "${SUPABASE_ANON_KEY}",
+            OAUTH_REDIRECT_TO: "${OAUTH_REDIRECT_TO}"
           };
           EOF
 

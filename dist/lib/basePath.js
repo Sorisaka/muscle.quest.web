@@ -1,13 +1,20 @@
-const CALLBACK_SEGMENT = '/auth/callback/';
+const CALLBACK_PATH = '/auth/callback.html';
+const LEGACY_CALLBACK_DIR = '/auth/callback/';
 
 function ensureLeadingSlash(path) {
   if (!path) return '/';
   return path.startsWith('/') ? path : `/${path}`;
 }
 
-function ensureTrailingSlash(path) {
-  if (!path) return '/';
-  return path.endsWith('/') ? path : `${path}/`;
+function stripTrailingSlash(path) {
+  if (!path || path === '/') return path || '/';
+  return path.endsWith('/') ? path.slice(0, -1) : path;
+}
+
+function normalizeBasePath(basePath) {
+  const withSlash = ensureLeadingSlash(basePath || '/');
+  if (withSlash === '/') return '/';
+  return stripTrailingSlash(withSlash);
 }
 
 function resolveOrigin(override) {
@@ -19,22 +26,31 @@ function resolveOrigin(override) {
 }
 
 export function inferBasePath(pathname) {
-  const normalized = ensureTrailingSlash(ensureLeadingSlash(pathname || '/'));
-  const callbackIndex = normalized.indexOf(CALLBACK_SEGMENT);
+  const normalized = ensureLeadingSlash(pathname || '/');
 
+  const callbackIndex = normalized.indexOf(CALLBACK_PATH);
   if (callbackIndex >= 0) {
-    return normalized.slice(0, callbackIndex + 1);
+    return normalizeBasePath(normalized.slice(0, callbackIndex));
   }
 
-  return normalized;
+  const legacyIndex = normalized.indexOf(LEGACY_CALLBACK_DIR);
+  if (legacyIndex >= 0) {
+    return normalizeBasePath(normalized.slice(0, legacyIndex));
+  }
+
+  return normalizeBasePath(normalized);
 }
 
 export function buildCallbackUrl(basePath, originOverride) {
-  const normalizedBase = ensureTrailingSlash(ensureLeadingSlash(basePath || '/'));
-  return `${resolveOrigin(originOverride)}${normalizedBase}auth/callback/`;
+  const normalizedBase = normalizeBasePath(basePath || '/');
+  const origin = resolveOrigin(originOverride);
+  const prefix = normalizedBase === '/' ? '' : normalizedBase;
+  return `${origin}${prefix}/auth/callback.html`;
 }
 
 export function buildAccountUrl(basePath, originOverride) {
-  const normalizedBase = ensureTrailingSlash(ensureLeadingSlash(basePath || '/'));
-  return `${resolveOrigin(originOverride)}${normalizedBase}#/account`;
+  const normalizedBase = normalizeBasePath(basePath || '/');
+  const origin = resolveOrigin(originOverride);
+  const prefix = normalizedBase === '/' ? '' : normalizedBase;
+  return `${origin}${prefix}/#/account`;
 }

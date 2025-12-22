@@ -2,5 +2,5 @@
 window.__APP_CONFIG__ = {
   SUPABASE_URL: 'https://your-supabase-project.supabase.co',
   SUPABASE_ANON_KEY: 'supabase-anon-key',
-  OAUTH_REDIRECT_TO: 'http://localhost:4173/auth/callback/',
+  OAUTH_REDIRECT_TO: 'http://localhost:4173/auth/callback.html',
 };

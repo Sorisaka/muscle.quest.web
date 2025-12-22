@@ -79,10 +79,10 @@ export const createAccountDrawer = ({
 
       const loginBtn = document.createElement('button');
       loginBtn.type = 'button';
-      loginBtn.textContent = 'GitHub でログイン';
+      loginBtn.textContent = 'Google でログイン';
       loginBtn.addEventListener('click', async () => {
         playSfx('ui:navigate');
-        await accountState.login('github');
+        await accountState.login();
         closeDrawer();
       });
 

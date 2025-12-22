@@ -139,8 +139,8 @@ export const createAccountState = (store) => {
     }
   };
 
-  const login = async (provider = 'github') => {
-    const result = await signInWithOAuth(provider);
+  const login = async () => {
+    const result = await signInWithOAuth('google');
     if (result?.error) {
       setState({ supabaseError: result.error.message || String(result.error) });
     }

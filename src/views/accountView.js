@@ -51,16 +51,16 @@ const createLoggedOutCard = (accountState) => {
 
   const copy = document.createElement('p');
   copy.className = 'muted';
-  copy.textContent = 'Supabase OAuth を使ってプロフィールを同期します。GitHub でログインできます。';
+  copy.textContent = 'Supabase OAuth を使ってプロフィールを同期します。Google でログインできます。';
 
   const actions = document.createElement('div');
   actions.className = 'hero__actions';
 
   const login = document.createElement('button');
   login.type = 'button';
-  login.textContent = 'GitHub でログイン';
+  login.textContent = 'Google でログイン';
   login.addEventListener('click', () => {
-    accountState.login('github');
+    accountState.login();
   });
 
   actions.append(login);

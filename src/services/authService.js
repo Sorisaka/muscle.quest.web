@@ -2,8 +2,26 @@ import { getRuntimeConfig } from '../lib/runtimeConfig.js';
 import { getSupabaseClient } from '../lib/supabaseClient.js';
 import { buildCallbackUrl, inferBasePath } from '../lib/basePath.js';
 
+function normalizeCallbackUrl(url) {
+  if (!url) return url;
+  try {
+    const parsed = new URL(url, typeof window !== 'undefined' ? window.location?.origin : undefined);
+    if (parsed.pathname.endsWith('/auth/callback/')) {
+      parsed.pathname = parsed.pathname.replace(/\/auth\/callback\/$/, '/auth/callback.html');
+    } else if (parsed.pathname.endsWith('/auth/callback')) {
+      parsed.pathname = `${parsed.pathname}.html`;
+    }
+    return parsed.toString();
+  } catch (error) {
+    if (typeof url === 'string' && url.endsWith('/auth/callback/')) {
+      return url.replace(/\/auth\/callback\/$/, '/auth/callback.html');
+    }
+    return url;
+  }
+}
+
 function fallbackRedirect(config) {
-  if (config.oauthRedirectTo) return config.oauthRedirectTo;
+  if (config.oauthRedirectTo) return normalizeCallbackUrl(config.oauthRedirectTo);
 
   if (typeof window === 'undefined' || !window.location) return undefined;
 

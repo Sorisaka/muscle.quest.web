@@ -1,5 +1,5 @@
-import { getSupabaseClient } from '../../lib/supabaseClient.js';
-import { buildAccountUrl, buildCallbackUrl, inferBasePath } from '../../lib/basePath.js';
+import { getSupabaseClient } from '../lib/supabaseClient.js';
+import { buildAccountUrl, buildCallbackUrl, inferBasePath } from '../lib/basePath.js';
 
 const statusEl = document.querySelector('[data-status]');
 const errorEl = document.querySelector('[data-error]');
