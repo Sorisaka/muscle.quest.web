@@ -1,6 +1,7 @@
 import { getRuntimeConfig, hasSupabaseCredentials } from '../lib/runtimeConfig.js';
 import { getSession, onAuthStateChange, signInWithOAuth, signOut } from '../services/authService.js';
 import { fetchProfile, upsertProfile } from '../services/profileService.js';
+import { authLog, authWarn } from '../lib/authDebug.js';
 
 const ACCOUNT_SESSION_KEY = 'musclequest:account';
 
@@ -36,6 +37,7 @@ export const createAccountState = (store) => {
   };
 
   const subscribers = new Set();
+  let loginInFlight = false;
 
   const setState = (partial) => {
     state = { ...state, ...partial };
@@ -140,10 +142,18 @@ export const createAccountState = (store) => {
   };
 
   const login = async () => {
+    if (loginInFlight) {
+      authWarn('oauth sign-in already in progress');
+      return { data: null, error: new Error('OAuth sign-in already in progress.') };
+    }
+
+    loginInFlight = true;
     const result = await signInWithOAuth('google');
     if (result?.error) {
       setState({ supabaseError: result.error.message || String(result.error) });
+      loginInFlight = false;
     }
+    authLog('oauth sign-in initiated', { redirected: !result?.error });
     return result;
   };
 

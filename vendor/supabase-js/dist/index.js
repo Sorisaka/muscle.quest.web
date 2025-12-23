@@ -5,8 +5,6 @@ const SESSION_KEY_PREFIX = 'musclequest:auth:session:';
 const PKCE_KEY_PREFIX = 'musclequest:auth:pkce:';
 const REFRESH_MARGIN_SECONDS = 60; // Refresh a minute before expiry when possible.
 
-const encoder = new TextEncoder();
-
 function createEmitter() {
   const listeners = new Set();
   return {
@@ -24,27 +22,6 @@ function createEmitter() {
       return () => listeners.delete(callback);
     },
   };
-}
-
-function toBase64Url(arrayBuffer) {
-  const bytes = new Uint8Array(arrayBuffer);
-  let binary = '';
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
-  }
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-function randomString(bytesLength = 32) {
-  const bytes = new Uint8Array(bytesLength);
-  crypto.getRandomValues(bytes);
-  return toBase64Url(bytes);
-}
-
-async function sha256Base64Url(value) {
-  const data = encoder.encode(value);
-  const digest = await crypto.subtle.digest('SHA-256', data);
-  return toBase64Url(digest);
 }
 
 function normalizeUrl(url) {
@@ -158,7 +135,6 @@ function createAuthClient(supabaseUrl, supabaseKey, options = {}) {
   const autoRefreshToken = options.autoRefreshToken !== false;
 
   const readPkceState = () => loadJson(pkceStorageKey);
-  const savePkceState = (state) => persistJson(pkceStorageKey, state);
   const clearPkceState = () => removeStorageItem(pkceStorageKey);
 
   const readSession = () => {
@@ -202,70 +178,61 @@ function createAuthClient(supabaseUrl, supabaseKey, options = {}) {
       if (!redirectTo) {
         return { data: null, error: new Error('redirectTo is required for OAuth sign-in.') };
       }
-      if (typeof crypto === 'undefined' || !crypto.getRandomValues || !crypto.subtle) {
-        return { data: null, error: new Error('Secure crypto APIs are required for PKCE OAuth.') };
-      }
 
-      const pkceState = await (async () => {
-        const verifier = randomString(64);
-        const challenge = await sha256Base64Url(verifier);
-        const state = randomString(24);
-        return { codeVerifier: verifier, codeChallenge: challenge, state, redirectTo, createdAt: Date.now() };
-      })();
-
-      savePkceState(pkceState);
+      clearPkceState();
 
       const authorizeUrl = new URL(`${authBaseUrl}/authorize`);
       authorizeUrl.searchParams.set('provider', provider);
       authorizeUrl.searchParams.set('redirect_to', redirectTo);
-      authorizeUrl.searchParams.set('response_type', 'code');
-      authorizeUrl.searchParams.set('code_challenge', pkceState.codeChallenge);
-      authorizeUrl.searchParams.set('code_challenge_method', 's256');
-      authorizeUrl.searchParams.set('state', pkceState.state);
-      authorizeUrl.searchParams.set('flow_type', 'pkce');
 
-      if (!oauthOptions.skipBrowserRedirect) {
-        window.location.assign(authorizeUrl.toString());
+      const authorizeHref = authorizeUrl.toString();
+
+      if (!oauthOptions.skipBrowserRedirect && authorizeHref) {
+        window.location.assign(authorizeHref);
       }
 
-      return { data: { url: authorizeUrl.toString(), provider }, error: null };
+      return { data: { url: authorizeHref, provider }, error: null };
     },
 
     async exchangeCodeForSession(input) {
       const pkceState = readPkceState();
       const parsed = (() => {
-        if (!input) return { code: null, state: null };
+        if (!input) return { code: null, state: null, redirectTo: null };
         if (typeof input === 'string') {
           try {
             const url = new URL(input, window.location?.origin || undefined);
             const params = url.searchParams;
-            return { code: params.get('code') || input, state: params.get('state') };
+            const redirectTo = `${url.origin}${url.pathname}`;
+            return { code: params.get('code') || input, state: params.get('state'), redirectTo };
           } catch (_error) {
-            return { code: input, state: null };
+            return { code: input, state: null, redirectTo: null };
           }
         }
-        return { code: input.code || null, state: input.state || null };
+        return {
+          code: input.code || null,
+          state: input.state || null,
+          redirectTo: input.redirectTo || null,
+        };
       })();
 
       if (!parsed.code) {
         return { data: null, error: new Error('No authorization code found.') };
       }
 
-      if (pkceState?.state && parsed.state && pkceState.state !== parsed.state) {
-        return { data: null, error: new Error('OAuth state mismatch.') };
-      }
-
-      if (!pkceState?.codeVerifier) {
-        return { data: null, error: new Error('Missing PKCE code verifier for token exchange.') };
-      }
+      const redirectTo = normalizeUrl(pkceState?.redirectTo || parsed.redirectTo);
+      const usePkceGrant = Boolean(pkceState?.codeVerifier);
+      const tokenUrl = usePkceGrant
+        ? `${authBaseUrl}/token?grant_type=pkce`
+        : `${authBaseUrl}/token?grant_type=authorization_code`;
 
       const { data, error } = await postJson(
-        `${authBaseUrl}/token?grant_type=pkce`,
+        tokenUrl,
         supabaseKey,
         {
           auth_code: parsed.code,
-          code_verifier: pkceState.codeVerifier,
-          redirect_to: pkceState.redirectTo,
+          code: parsed.code,
+          code_verifier: pkceState?.codeVerifier,
+          redirect_to: redirectTo,
         },
         supabaseKey,
       );

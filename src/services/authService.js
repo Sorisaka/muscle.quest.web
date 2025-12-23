@@ -1,6 +1,6 @@
 import { getRuntimeConfig } from '../lib/runtimeConfig.js';
 import { getSupabaseClient } from '../lib/supabaseClient.js';
-import { buildCallbackUrl, inferBasePath } from '../lib/basePath.js';
+import { inferBasePath } from '../lib/basePath.js';
 import { authError, authLog, authWarn } from '../lib/authDebug.js';
 
 function normalizeCallbackUrl(url) {
@@ -27,7 +27,9 @@ function fallbackRedirect(config) {
   if (typeof window === 'undefined' || !window.location) return undefined;
 
   const basePath = inferBasePath(window.location.pathname || '/');
-  return buildCallbackUrl(basePath, window.location.origin);
+  const prefix = basePath === '/' ? '' : basePath;
+  const redirectUrl = new URL(`${prefix}/auth/callback.html`, window.location.origin);
+  return normalizeCallbackUrl(redirectUrl.toString());
 }
 
 function requireClient() {
