@@ -42,10 +42,8 @@ function buildClient(config) {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true,
-      options: {
-        redirectTo: config.oauthRedirectTo,
-      },
+      detectSessionInUrl: false,
+      flowType: 'pkce',
     },
   });
 

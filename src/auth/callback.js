@@ -1,44 +1,26 @@
 import { getSupabaseClient } from '../lib/supabaseClient.js';
-import { buildAccountUrl, buildCallbackUrl, inferBasePath } from '../lib/basePath.js';
 import { authError, authLog } from '../lib/authDebug.js';
 
 const statusEl = document.querySelector('[data-status]');
 const errorEl = document.querySelector('[data-error]');
-const actionEl = document.querySelector('[data-action]');
+
+const CALLBACK_PATH = '/auth/callback.html';
+const ACCOUNT_PATH = '/#/account';
 
 function setStatus(message) {
-  if (!statusEl) return;
-  statusEl.textContent = message;
+  if (statusEl) statusEl.textContent = message;
 }
 
-function setActionLink(href, label) {
-  if (!actionEl) return;
-  if (!href) {
-    actionEl.hidden = true;
-    actionEl.textContent = '';
-    return;
-  }
-  const anchor = document.createElement('a');
-  anchor.href = href;
-  anchor.textContent = label || 'Try signing in again';
-  anchor.rel = 'noopener noreferrer';
-  actionEl.innerHTML = '';
-  actionEl.append(anchor);
-  actionEl.hidden = false;
-}
-
-function showError(prefix, error, actionHref) {
-  if (!errorEl) return;
-  const description = error?.message || error || 'Unknown error';
+function showError(message) {
   setStatus('Sign-in failed.');
-  setActionLink(actionHref, 'Return to sign-in');
-  errorEl.textContent = `${prefix}\n${description}`;
-  errorEl.hidden = false;
-  authError(prefix, description);
+  if (errorEl) {
+    errorEl.hidden = false;
+    errorEl.textContent = message;
+  }
 }
 
-function cleanCallbackUrl(basePath) {
-  const cleanHref = buildCallbackUrl(basePath);
+function cleanCallbackUrl() {
+  const cleanHref = `${window.location.origin}${CALLBACK_PATH}`;
   if (typeof history.replaceState === 'function') {
     history.replaceState(null, '', cleanHref);
   } else {
@@ -46,76 +28,54 @@ function cleanCallbackUrl(basePath) {
   }
 }
 
-function redirectToAccount(basePath) {
-  const accountUrl = buildAccountUrl(basePath);
-  // Allow the UI message to render before navigating.
-  setTimeout(() => window.location.assign(accountUrl), 250);
+function redirectToAccount() {
+  window.location.replace(`${window.location.origin}${ACCOUNT_PATH}`);
 }
 
-async function handleCallback() {
-  const basePath = inferBasePath(window.location.pathname || '/');
-  const accountUrl = buildAccountUrl(basePath);
+async function run() {
   const { client, ready, error } = getSupabaseClient();
-
   if (!client || !ready) {
-    showError('Supabase configuration is missing.', error, accountUrl);
-    cleanCallbackUrl(basePath);
+    showError('Supabase credentials are missing. Please configure the app and try again.');
+    authError('callback client missing', error?.message || error);
     return;
   }
 
-  const currentUrl = window.location.href;
-  const params = new URL(currentUrl).searchParams;
-  const hasAuthorizationCode = params.has('code');
-  const errorCode = params.get('error_code');
-  const errorDescription = params.get('error_description') || params.get('error');
-  const state = params.get('state');
-  authLog('callback href', {
-    href: currentUrl,
-    hasCode: hasAuthorizationCode,
-    state,
-    errorCode,
-  });
+  const loadedHref = window.location.href;
+  const params = new URL(loadedHref).searchParams;
+  const hasCode = params.has('code');
 
-  if (!hasAuthorizationCode && (errorCode || errorDescription)) {
-    showError(
-      'Authentication was rejected.',
-      `${errorCode || 'error'}: ${errorDescription || 'Unknown error'}`,
-      accountUrl,
-    );
-    cleanCallbackUrl(basePath);
-    return;
-  }
+  authLog('callback loaded', { href: loadedHref, hasCode });
 
-  try {
-    setStatus(hasAuthorizationCode ? 'Exchanging authorization code…' : 'Checking existing session…');
-    const result = hasAuthorizationCode
-      ? await client.auth.exchangeCodeForSession(currentUrl)
-      : await client.auth.getSession();
-
-    if (result?.error) {
-      throw result.error;
+  let exchangeError = null;
+  if (hasCode) {
+    try {
+      const exchangeResult = await client.auth.exchangeCodeForSession(loadedHref);
+      exchangeError = exchangeResult?.error || null;
+      authLog('exchangeCodeForSession', exchangeError?.message || 'success');
+    } catch (caught) {
+      exchangeError = caught;
+      authError('exchangeCodeForSession threw', caught?.message || caught);
     }
-
-    const session = result?.data?.session || null;
-    authLog('exchange result', session ? 'session established' : 'no session');
-
-    cleanCallbackUrl(basePath);
-
-    const sessionCheck = await client.auth.getSession();
-    const sessionPresent = Boolean(sessionCheck?.data?.session);
-    authLog('post-exchange getSession', {
-      hasSession: sessionPresent,
-      userId: sessionCheck?.data?.session?.user?.id || null,
-    });
-
-    setStatus('Sign-in complete. Redirecting…');
-  } catch (caughtError) {
-    showError('Authentication failed. Redirecting to account.', caughtError, accountUrl);
-  } finally {
-    redirectToAccount(basePath);
+  } else {
+    authLog('callback no code present', null);
   }
+
+  const sessionResult = await client.auth.getSession();
+  const hasSession = Boolean(sessionResult?.data?.session);
+  authLog('post-callback getSession', { hasSession });
+
+  if (exchangeError || (!hasSession && hasCode)) {
+    showError('Authentication failed. Please try signing in again.');
+    cleanCallbackUrl();
+    return;
+  }
+
+  cleanCallbackUrl();
+  setStatus('Sign-in complete. Redirecting…');
+  redirectToAccount();
 }
 
-handleCallback().catch((error) => {
-  showError('Unexpected error during callback handling.', error);
+run().catch((caught) => {
+  authError('callback fatal', caught?.message || caught);
+  showError('Unexpected error during sign-in. Please try again.');
 });

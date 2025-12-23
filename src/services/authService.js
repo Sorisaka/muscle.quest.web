@@ -1,35 +1,19 @@
 import { getRuntimeConfig } from '../lib/runtimeConfig.js';
 import { getSupabaseClient } from '../lib/supabaseClient.js';
-import { inferBasePath } from '../lib/basePath.js';
 import { authError, authLog, authWarn } from '../lib/authDebug.js';
 
-function normalizeCallbackUrl(url) {
-  if (!url) return url;
-  try {
-    const parsed = new URL(url, typeof window !== 'undefined' ? window.location?.origin : undefined);
-    if (parsed.pathname.endsWith('/auth/callback/')) {
-      parsed.pathname = parsed.pathname.replace(/\/auth\/callback\/$/, '/auth/callback.html');
-    } else if (parsed.pathname.endsWith('/auth/callback')) {
-      parsed.pathname = `${parsed.pathname}.html`;
-    }
-    return parsed.toString();
-  } catch (error) {
-    if (typeof url === 'string' && url.endsWith('/auth/callback/')) {
-      return url.replace(/\/auth\/callback\/$/, '/auth/callback.html');
-    }
-    return url;
-  }
+function buildRedirectTo(origin) {
+  const base = typeof origin === 'string' ? origin : null;
+  if (!base) return null;
+  return `${base.replace(/\\/+$/, '')}/auth/callback.html`;
 }
 
 function fallbackRedirect(config) {
-  if (config.oauthRedirectTo) return normalizeCallbackUrl(config.oauthRedirectTo);
-
-  if (typeof window === 'undefined' || !window.location) return undefined;
-
-  const basePath = inferBasePath(window.location.pathname || '/');
-  const prefix = basePath === '/' ? '' : basePath;
-  const redirectUrl = new URL(`${prefix}/auth/callback.html`, window.location.origin);
-  return normalizeCallbackUrl(redirectUrl.toString());
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return buildRedirectTo(window.location.origin);
+  }
+  if (config.oauthRedirectTo) return buildRedirectTo(config.oauthRedirectTo);
+  return null;
 }
 
 function requireClient() {
@@ -69,6 +53,11 @@ export async function signInWithOAuth(provider) {
   if (!client) return { data: null, error };
 
   const redirectTo = fallbackRedirect(config || getRuntimeConfig());
+  if (!redirectTo) {
+    const redirectError = new Error('OAuth redirect URL is not available.');
+    authError('signIn redirect missing', redirectError.message);
+    return { data: null, error: redirectError };
+  }
   authLog('signIn redirectTo', redirectTo);
 
   const result = await client.auth.signInWithOAuth({
