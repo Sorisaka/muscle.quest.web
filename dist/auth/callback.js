@@ -1,11 +1,14 @@
 import { getSupabaseClient } from '../lib/supabaseClient.js';
+import { buildAccountUrl, buildCallbackUrl, inferBasePath } from '../lib/basePath.js';
 import { authError, authLog } from '../lib/authDebug.js';
 
 const statusEl = document.querySelector('[data-status]');
 const errorEl = document.querySelector('[data-error]');
 
-const CALLBACK_PATH = '/auth/callback.html';
-const ACCOUNT_PATH = '/#/account';
+const basePath = inferBasePath(window.location.pathname || '/');
+const origin = window.location.origin;
+const callbackHref = buildCallbackUrl(basePath, origin);
+const accountHref = buildAccountUrl(basePath, origin);
 
 function setStatus(message) {
   if (statusEl) statusEl.textContent = message;
@@ -20,16 +23,15 @@ function showError(message) {
 }
 
 function cleanCallbackUrl() {
-  const cleanHref = `${window.location.origin}${CALLBACK_PATH}`;
   if (typeof history.replaceState === 'function') {
-    history.replaceState(null, '', cleanHref);
+    history.replaceState(null, '', callbackHref);
   } else {
-    window.location.replace(cleanHref);
+    window.location.replace(callbackHref);
   }
 }
 
 function redirectToAccount() {
-  window.location.replace(`${window.location.origin}${ACCOUNT_PATH}`);
+  window.location.replace(accountHref);
 }
 
 async function run() {
@@ -44,7 +46,7 @@ async function run() {
   const params = new URL(loadedHref).searchParams;
   const hasCode = params.has('code');
 
-  authLog('callback loaded', { href: loadedHref, hasCode });
+  authLog('callback loaded', { href: loadedHref, hasCode, callbackHref, accountHref });
 
   let exchangeError = null;
   if (hasCode) {
