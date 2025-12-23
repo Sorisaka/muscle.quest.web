@@ -42,7 +42,9 @@ function buildClient(config) {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: false,
+      // Enable Supabase's URL parsing to catch PKCE fragments without affecting hash routing,
+      // because the callback page is a standalone HTML (not a hash route).
+      detectSessionInUrl: true,
       flowType: 'pkce',
     },
   });
