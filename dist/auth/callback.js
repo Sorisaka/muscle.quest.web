@@ -10,6 +10,29 @@ const origin = window.location.origin;
 const callbackHref = buildCallbackUrl(basePath, origin);
 const accountHref = buildAccountUrl(basePath, origin);
 
+function parseAuthParams(search, hash) {
+  const params = new URLSearchParams(search || '');
+  const hadCodeInSearch = params.has('code');
+
+  const fragment = (hash || '').replace(/^#/, '');
+  if (fragment) {
+    const queryIndex = fragment.indexOf('?');
+    const fragmentQuery = queryIndex >= 0 ? fragment.slice(queryIndex + 1) : fragment;
+    if (fragmentQuery) {
+      const hashParams = new URLSearchParams(fragmentQuery);
+      ['code', 'state', 'error', 'error_description'].forEach((key) => {
+        if (!params.has(key) && hashParams.has(key)) {
+          params.set(key, hashParams.get(key));
+        }
+      });
+    }
+  }
+
+  const codeFromHash = !hadCodeInSearch && params.has('code');
+
+  return { params, codeFromHash };
+}
+
 function setStatus(message) {
   if (statusEl) statusEl.textContent = message;
 }
@@ -43,15 +66,52 @@ async function run() {
   }
 
   const loadedHref = window.location.href;
-  const params = new URL(loadedHref).searchParams;
-  const hasCode = params.has('code');
+  const { params, codeFromHash } = parseAuthParams(window.location.search, window.location.hash);
+  const code = params.get('code');
+  const state = params.get('state');
+  const oauthError = params.get('error');
+  const oauthErrorDescription = params.get('error_description');
+  const hasCode = Boolean(code);
 
-  authLog('callback loaded', { href: loadedHref, hasCode, callbackHref, accountHref });
+  const initialSessionResult = await client.auth.getSession();
+  const initialHasSession = Boolean(initialSessionResult?.data?.session);
+
+  authLog('callback loaded', {
+    href: loadedHref,
+    hasCode,
+    codeFromHash,
+    callbackHref,
+    accountHref,
+    initialHasSession,
+  });
+
+  if (initialHasSession) {
+    cleanCallbackUrl();
+    setStatus('Sign-in complete. Redirecting…');
+    redirectToAccount();
+    return;
+  }
+
+  if (oauthError) {
+    const message = oauthErrorDescription || oauthError || 'OAuth failed.';
+    showError(message);
+    authError('callback oauth error', { oauthError, oauthErrorDescription });
+    return;
+  }
 
   let exchangeError = null;
   if (hasCode) {
+    const exchangeHref = codeFromHash
+      ? (() => {
+          const url = new URL(callbackHref);
+          url.searchParams.set('code', code);
+          if (state) url.searchParams.set('state', state);
+          return url.toString();
+        })()
+      : loadedHref;
+
     try {
-      const exchangeResult = await client.auth.exchangeCodeForSession(loadedHref);
+      const exchangeResult = await client.auth.exchangeCodeForSession(exchangeHref);
       exchangeError = exchangeResult?.error || null;
       authLog('exchangeCodeForSession', exchangeError?.message || 'success');
     } catch (caught) {
@@ -66,9 +126,18 @@ async function run() {
   const hasSession = Boolean(sessionResult?.data?.session);
   authLog('post-callback getSession', { hasSession });
 
-  if (exchangeError || (!hasSession && hasCode)) {
+  if (exchangeError) {
     showError('Authentication failed. Please try signing in again.');
-    cleanCallbackUrl();
+    return;
+  }
+
+  if (!hasCode && !hasSession) {
+    showError('Authentication failed. Please try signing in again.');
+    return;
+  }
+
+  if (hasCode && !hasSession) {
+    showError('Authentication failed. Please try signing in again.');
     return;
   }
 

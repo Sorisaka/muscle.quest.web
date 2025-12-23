@@ -10,6 +10,7 @@ import { renderRun } from './views/runView.js';
 import { renderRank } from './views/rankView.js';
 import { renderAccount } from './views/accountView.js';
 import { createAccountDrawer } from './ui/accountDrawer.js';
+import { handleOAuthReturn } from './lib/oauthReturn.js';
 
 const titleEl = document.querySelector('[data-route-title]');
 const pathEl = document.querySelector('[data-route-path]');
@@ -92,7 +93,8 @@ const renderShell = (match) => {
   }
 };
 
-const init = () => {
+const init = async () => {
+  await handleOAuthReturn();
   router = createRouter(routes, renderShell);
   createAccountDrawer({
     triggerEl: accountTrigger,
