@@ -1,6 +1,7 @@
 import { getRuntimeConfig } from '../lib/runtimeConfig.js';
 import { getSupabaseClient } from '../lib/supabaseClient.js';
 import { buildCallbackUrl, inferBasePath } from '../lib/basePath.js';
+import { authError, authLog, authWarn } from '../lib/authDebug.js';
 
 function normalizeCallbackUrl(url) {
   if (!url) return url;
@@ -43,7 +44,9 @@ function requireClient() {
 export async function getSession() {
   const { client, error } = requireClient();
   if (!client) return { data: { session: null }, error };
-  return client.auth.getSession();
+  const result = await client.auth.getSession();
+  authLog('getSession', result?.data?.session ? 'session present' : 'no session');
+  return result;
 }
 
 export function onAuthStateChange(callback) {
@@ -53,7 +56,10 @@ export function onAuthStateChange(callback) {
     return () => {};
   }
 
-  return client.auth.onAuthStateChange((event, session) => callback(event, session, null));
+  return client.auth.onAuthStateChange((event, session) => {
+    authLog('auth state change', event);
+    callback(event, session, null);
+  });
 }
 
 export async function signInWithOAuth(provider) {
@@ -61,7 +67,43 @@ export async function signInWithOAuth(provider) {
   if (!client) return { data: null, error };
 
   const redirectTo = fallbackRedirect(config || getRuntimeConfig());
-  return client.auth.signInWithOAuth({ provider, options: { redirectTo } });
+  authLog('signIn redirectTo', redirectTo);
+
+  const result = await client.auth.signInWithOAuth({
+    provider,
+    options: { redirectTo, skipBrowserRedirect: true },
+  });
+
+  if (result?.error) {
+    authError('signInWithOAuth error', result.error?.message || result.error);
+    return result;
+  }
+
+  const authorizeUrl = result?.data?.url;
+  if (!authorizeUrl) {
+    const missingUrlError = new Error('Authorize URL was not returned from Supabase.');
+    authError('missing authorize url', missingUrlError.message);
+    return { data: null, error: missingUrlError };
+  }
+
+  try {
+    const parsed = new URL(authorizeUrl);
+    authLog('authorize url', parsed.toString());
+    if (!parsed.pathname.includes('/auth/v1/authorize')) {
+      const badUrlError = new Error('Unexpected authorize URL returned.');
+      authWarn('authorize pathname', parsed.pathname);
+      return { data: null, error: badUrlError };
+    }
+  } catch (parseError) {
+    authError('authorize url parse failed', parseError);
+    return { data: null, error: parseError };
+  }
+
+  if (typeof window !== 'undefined') {
+    window.location.assign(authorizeUrl);
+  }
+
+  return result;
 }
 
 export async function signOut() {

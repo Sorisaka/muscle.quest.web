@@ -1,4 +1,5 @@
 import { createClient } from '../vendor/supabase-js/dist/index.js';
+import { authLog, authWarn } from './authDebug.js';
 import { getRuntimeConfig, hasSupabaseCredentials } from './runtimeConfig.js';
 
 let cachedClient = null;
@@ -8,6 +9,29 @@ const missingCredentialsMessage = [
   'Supabase credentials were not found.',
   'Add SUPABASE_URL and SUPABASE_ANON_KEY to dist/config.js to enable cloud features.',
 ].join(' ');
+
+function normalizeUrl(value) {
+  if (!value) return value;
+  return value.replace(/\/+$/, '');
+}
+
+function sanitizeConfig(config) {
+  return {
+    ...config,
+    supabaseUrl: normalizeUrl(config.supabaseUrl),
+    oauthRedirectTo: normalizeUrl(config.oauthRedirectTo),
+  };
+}
+
+function logSupabaseHost(config) {
+  if (!config?.supabaseUrl) return;
+  try {
+    const host = new URL(config.supabaseUrl).host;
+    authLog('supabaseUrl host', host);
+  } catch (_error) {
+    authWarn('supabaseUrl invalid', config.supabaseUrl);
+  }
+}
 
 function createSignature(config) {
   return `${config.supabaseUrl || ''}::${config.supabaseAnonKey || ''}`;
@@ -31,7 +55,7 @@ function buildClient(config) {
 }
 
 export function getSupabaseClient(options = {}) {
-  const runtimeConfig = getRuntimeConfig(options.runtimeConfig || {});
+  const runtimeConfig = sanitizeConfig(getRuntimeConfig(options.runtimeConfig || {}));
 
   if (!hasSupabaseCredentials(runtimeConfig)) {
     return {
@@ -41,6 +65,8 @@ export function getSupabaseClient(options = {}) {
       error: missingCredentialsMessage,
     };
   }
+
+  logSupabaseHost(runtimeConfig);
 
   const signature = createSignature(runtimeConfig);
   if (cachedClient && signature === cachedConfigSignature) {
