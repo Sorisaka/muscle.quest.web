@@ -40,11 +40,15 @@ Vanilla JS/HTML/CSS bundle aimed at GitHub Pages.
 
 ## ランタイム設定 (Supabase などの秘匿値)
 - 機微情報はソースに含めず、Pages に配信する成果物 `dist/config.js` にだけ埋め込みます。
-- ローカル開発では `cp src/config.example.js dist/config.js` でテンプレートを複製し、`SUPABASE_URL` / `SUPABASE_ANON_KEY` / `OAUTH_REDIRECT_TO`（`.../auth/callback.html` で末尾 `/` なし）を手元の値に差し替えてください。`npm run build` / `npm run dev` は `dist/config.js` が無い場合に `dist/config.example.js` を自動コピーします（Secrets を含まないダミー）。
-- GitHub Actions では `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `OAUTH_REDIRECT_TO` の Secrets を登録し、`npm run build` 後にワークフローが Secrets を用いて `dist/config.js` を生成してから Pages へアップロードします（Secrets が欠けている場合はジョブが失敗します）。CI では `dist/config.example.js` は使用されません。
+- ローカル開発では `cp src/config.example.js dist/config.js` でテンプレートを複製し、`SUPABASE_URL` / `SUPABASE_ANON_KEY` を自分の値に差し替えてください。`OAUTH_REDIRECT_TO` は空のままでも `authService` が `origin + basePath + /auth/callback.html` を推測します（必要に応じて明示設定）。`npm run build` / `npm run dev` は `dist/config.js` が無い場合に `dist/config.example.js` を自動コピーしますが、中身は秘匿値を含まないプレースホルダーのままです。
+- GitHub Actions では `SUPABASE_URL` / `SUPABASE_ANON_KEY`（必要に応じて `OAUTH_REDIRECT_TO`）の Secrets を登録し、`npm run build` 後にワークフローが Secrets を用いて `dist/config.js` を生成してから Pages へアップロードします（Secrets が欠けている場合はジョブが失敗します）。CI では `dist/config.example.js` は使用されません。
 - `dist/config.js` は `.gitignore` 済みです。コミットしないでください。
 - `npm run build` は毎回 `dist/` をクリーンするため、開発時はビルドのあとに改めて `dist/config.js` を配置してください。自動コピーされたダミー設定では Supabase 連携が無効なままなので、必要に応じて値を差し替えてください。
-- `src/config.example.js` / `dist/config.example.js` は常にダミー値のまま保持し、実キーを絶対に貼り付けないでください。実環境用の `dist/config.js` はローカルで生成するか、CI で Secrets から注入します。
+- `src/config.example.js` / `dist/config.example.js` は常にダミー値（`SUPABASE_ANON_KEY` と `OAUTH_REDIRECT_TO` は空）で保持し、実キーを絶対に貼り付けないでください。実環境用の `dist/config.js` はローカルで生成するか、CI で Secrets から注入します。
+
+### ストレージドライバーの扱い
+- アプリの保存処理はデフォルトでローカルストレージを用いる `local` ドライバーのみ提供しています。`supabase` ドライバーはまだ未実装で、指定された場合は警告を出してローカル保存にフォールバックします。
+- Supabase との連携は現状、`profileService` 経由のプロフィール読書きと OAuth 認証に限定しています（RLS 付き `profiles` テーブルを REST で操作）。将来の Supabase 永続化を追加する場合は storage adapter 側に新実装を加えてください。
 
 ## HAR / ログ共有時のマスキングガイド
 サポート向けに HAR やブラウザログを共有する場合は、以下を守って機密情報を伏せてください。
@@ -65,22 +69,20 @@ Vanilla JS/HTML/CSS bundle aimed at GitHub Pages.
    - 同画面の **承認済みのリダイレクト URI** に、下記「Redirect URLs」を追加して保存。
    - 取得した **Client ID / Client Secret** を Supabase の Google プロバイダー設定に貼り付けて保存。
 3. **Redirect URLs を登録（末尾 `/` なし、`.html` を付与）**
-   - 開発: `http://localhost:4173/auth/callback.html`
-   - プレビュー: `http://localhost:4174/auth/callback.html`
-   - 本番(GitHub Pages): `https://<your-github-username>.github.io/muscle.quest.web/auth/callback.html`
-   - リポジトリ名や Pages の公開パスを変える場合は、`/<repo-name>` などを含めたベースパスに合わせて `.html` 付きで登録してください（例: `https://example.github.io/custom-repo/auth/callback.html`）。
+   - デプロイ先のホスト / ベースパスに合わせて `https://<host>/auth/callback.html` を登録します。GitHub Pages であれば `https://<your-github-username>.github.io/<repo>/auth/callback.html` のようにパスを合わせてください。
+   - ローカル開発でもブラウザのオリジンに合わせて `http://localhost:<port>/auth/callback.html` を追加しておくと便利です。
 4. **SQL の適用順序**
    - Supabase Dashboard → SQL Editor で、番号順に以下を実行します。
      1. `supabase/sql/001_profiles.sql` – `profiles` テーブル（`created_at` / `updated_at`）と、サインアップ時に自動作成するトリガー、更新時に `updated_at` を更新するトリガーを作成。
      2. `supabase/sql/002_profiles_policies.sql` – `profiles` の RLS を有効化し、select / insert / update / delete の各ポリシーを追加。
    - 実行後の確認: 新規サインアップで `auth.users` と同じ `id` の行が `profiles` に作成され、`display_name` が `raw_user_meta_data.full_name / name / user_name / email` の順で反映されること。`#/account` で表示名を更新すると `updated_at` が更新され、RLS ポリシーにより自分の行のみ参照・更新できること。
 5. **クライアント設定（dist/config.js）**
-   - ローカル: `cp src/config.example.js dist/config.js` を実行し、`SUPABASE_URL` / `SUPABASE_ANON_KEY` / `OAUTH_REDIRECT_TO` を入力します。`OAUTH_REDIRECT_TO` は必ず `.html` 版（例: `http://localhost:4173/auth/callback.html`）にしてください。
-   - GitHub Pages 配信時: GitHub Actions の Secrets に `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `OAUTH_REDIRECT_TO` を登録し、ワークフローが `dist/config.js` を生成してから Pages へアップロードします。
+   - ローカル: `cp src/config.example.js dist/config.js` を実行し、`SUPABASE_URL` / `SUPABASE_ANON_KEY` を入力します。`OAUTH_REDIRECT_TO` は空のままでも自動推論が働きますが、ベースパスをずらす場合は `.html` 付きで明示してください。
+   - GitHub Pages 配信時: GitHub Actions の Secrets に `SUPABASE_URL` / `SUPABASE_ANON_KEY`（必要なら `OAUTH_REDIRECT_TO`）を登録し、ワークフローが `dist/config.js` を生成してから Pages アーティファクトに含めます。
 6. **動作確認**
    - アプリのアカウント画面で「Google でログイン」を押し、OAuth フロー完了後に `#/account` へ戻ることを確認します。設定不足の場合はエラーメッセージが表示されます。
 7. **GitHub Pages での config 注入**
-   - GitHub Actions の Secrets に `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `OAUTH_REDIRECT_TO`（例: `https://<your-github-username>.github.io/muscle.quest.web/auth/callback.html`）を登録します。
+   - GitHub Actions の Secrets に `SUPABASE_URL` / `SUPABASE_ANON_KEY`（必要に応じて `OAUTH_REDIRECT_TO`。例: `https://<your-github-username>.github.io/muscle.quest.web/auth/callback.html`）を登録します。
    - Pages 用ワークフローが `npm run build` 後に Secrets から `dist/config.js` を生成し、Pages アーティファクトへ含めます（Secrets 未設定時はデプロイを中断）。
 
 
