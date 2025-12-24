@@ -1,5 +1,11 @@
 // Minimal-but-functional Supabase auth client implementation for browsers.
 // Replaces the previous stub that returned only { auth } without Supabase URL metadata.
+//
+// Flow note: this client now drives the PKCE OAuth flow end-to-end.
+// - signInWithOAuth generates a code_verifier + code_challenge and stores them in
+//   sessionStorage so the callback can exchange the authorization code.
+// - exchangeCodeForSession verifies state (when present), calls /auth/v1/token?grant_type=pkce,
+//   persists the session, and emits auth events for UI updates.
 
 const SESSION_KEY_PREFIX = 'musclequest:auth:session:';
 const PKCE_KEY_PREFIX = 'musclequest:auth:pkce:';
@@ -49,15 +55,35 @@ function getStorageItem(key) {
   }
 }
 
+function getSessionStorageItem(key) {
+  try {
+    return sessionStorage.getItem(key);
+  } catch (_error) {
+    return null;
+  }
+}
+
 function setStorageItem(key, value) {
   try {
     localStorage.setItem(key, value);
   } catch (_error) {}
 }
 
+function setSessionStorageItem(key, value) {
+  try {
+    sessionStorage.setItem(key, value);
+  } catch (_error) {}
+}
+
 function removeStorageItem(key) {
   try {
     localStorage.removeItem(key);
+  } catch (_error) {}
+}
+
+function removeSessionStorageItem(key) {
+  try {
+    sessionStorage.removeItem(key);
   } catch (_error) {}
 }
 
@@ -71,8 +97,23 @@ function loadJson(key) {
   }
 }
 
+function loadSessionJson(key) {
+  const raw = getSessionStorageItem(key);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch (_error) {
+    return null;
+  }
+}
+
 function persistJson(key, value) {
   setStorageItem(key, JSON.stringify(value));
+  return value;
+}
+
+function persistSessionJson(key, value) {
+  setSessionStorageItem(key, JSON.stringify(value));
   return value;
 }
 
@@ -85,6 +126,55 @@ function buildHeaders(apiKey, accessToken) {
     'X-Client-Info': 'musclequest-embedded-supabase',
   };
   return headers;
+}
+
+function toBase64Url(buffer) {
+  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer || 0);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i += 1) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function randomBytes(size) {
+  try {
+    const array = new Uint8Array(size);
+    if (typeof crypto?.getRandomValues === 'function') {
+      crypto.getRandomValues(array);
+    } else {
+      for (let i = 0; i < size; i += 1) {
+        array[i] = Math.floor(Math.random() * 256);
+      }
+    }
+    return array;
+  } catch (_error) {
+    return null;
+  }
+}
+
+async function sha256Base64Url(value) {
+  if (!value || typeof value !== 'string') {
+    throw new Error('code_verifier is required');
+  }
+  if (typeof crypto?.subtle?.digest !== 'function') {
+    throw new Error('Crypto digest is not available in this environment.');
+  }
+  const data = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return toBase64Url(digest);
+}
+
+function generateCodeVerifier() {
+  const bytes = randomBytes(32);
+  if (!bytes) throw new Error('Failed to generate code verifier');
+  return toBase64Url(bytes);
+}
+
+function generateState() {
+  const bytes = randomBytes(16);
+  if (!bytes) return null;
+  return toBase64Url(bytes);
 }
 
 function normalizeSession(response) {
@@ -133,9 +223,12 @@ function createAuthClient(supabaseUrl, supabaseKey, options = {}) {
 
   const persistSession = options.persistSession !== false;
   const autoRefreshToken = options.autoRefreshToken !== false;
+  const pkceFlowType = (options.flowType || options.flow_type || 'pkce').toLowerCase();
+  const isPkceEnabled = pkceFlowType === 'pkce';
 
-  const readPkceState = () => loadJson(pkceStorageKey);
-  const clearPkceState = () => removeStorageItem(pkceStorageKey);
+  const readPkceState = () => loadSessionJson(pkceStorageKey);
+  const savePkceState = (state) => persistSessionJson(pkceStorageKey, state);
+  const clearPkceState = () => removeSessionStorageItem(pkceStorageKey);
 
   const readSession = () => {
     if (memorySession) return memorySession;
@@ -185,6 +278,30 @@ function createAuthClient(supabaseUrl, supabaseKey, options = {}) {
       authorizeUrl.searchParams.set('provider', provider);
       authorizeUrl.searchParams.set('redirect_to', redirectTo);
 
+      let pkceState = null;
+      if (isPkceEnabled) {
+        try {
+          const codeVerifier = generateCodeVerifier();
+          const codeChallenge = await sha256Base64Url(codeVerifier);
+          const state = generateState();
+
+          pkceState = { codeVerifier, redirectTo, state };
+          savePkceState(pkceState);
+
+          authorizeUrl.searchParams.set('flow_type', 'pkce');
+          authorizeUrl.searchParams.set('code_challenge_method', 'S256');
+          authorizeUrl.searchParams.set('code_challenge', codeChallenge);
+          if (state) authorizeUrl.searchParams.set('state', state);
+        } catch (error) {
+          clearPkceState();
+          return { data: null, error };
+        }
+      }
+
+      if (!isPkceEnabled && oauthOptions?.state) {
+        authorizeUrl.searchParams.set('state', oauthOptions.state);
+      }
+
       const authorizeHref = authorizeUrl.toString();
 
       if (!oauthOptions.skipBrowserRedirect && authorizeHref) {
@@ -220,7 +337,12 @@ function createAuthClient(supabaseUrl, supabaseKey, options = {}) {
       }
 
       const redirectTo = normalizeUrl(pkceState?.redirectTo || parsed.redirectTo);
-      const usePkceGrant = Boolean(pkceState?.codeVerifier);
+      if (pkceState?.state && parsed.state && pkceState.state !== parsed.state) {
+        clearPkceState();
+        return { data: null, error: new Error('OAuth state mismatch.') };
+      }
+
+      const usePkceGrant = Boolean(pkceState?.codeVerifier) || isPkceEnabled;
       const tokenUrl = usePkceGrant
         ? `${authBaseUrl}/token?grant_type=pkce`
         : `${authBaseUrl}/token?grant_type=authorization_code`;
@@ -287,16 +409,21 @@ function createAuthClient(supabaseUrl, supabaseKey, options = {}) {
       saveSession(null);
       clearPkceState();
 
-      if (!session?.access_token) {
+      if (!session?.access_token && !session?.refresh_token) {
         emitter.emit('SIGNED_OUT', null, null);
         return { error: null };
+      }
+
+      const payload = { scope: 'global' };
+      if (session?.refresh_token) {
+        payload.refresh_token = session.refresh_token;
       }
 
       const { error } = await postJson(
         `${authBaseUrl}/logout`,
         supabaseKey,
-        { scope: 'global' },
-        session.access_token,
+        payload,
+        session?.access_token || supabaseKey,
       );
 
       emitter.emit('SIGNED_OUT', null, null);

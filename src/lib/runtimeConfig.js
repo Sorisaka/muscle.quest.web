@@ -7,6 +7,14 @@ const DEFAULT_CONFIG = {
   profileDisplayName: 'Guest',
 };
 
+/*
+  Runtime configuration expectations
+
+  - dist/config.js should be generated privately (do not commit real Supabase keys).
+  - dist/config.example.js stays redacted so public bundles never ship secrets.
+  - Values are read from window.__APP_CONFIG__ at runtime; avoid logging raw keys.
+*/
+
 const missingMessage = [
   'Runtime configuration was not found on window.__APP_CONFIG__.',
   'Create dist/config.js from dist/config.example.js for local development',

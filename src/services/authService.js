@@ -1,7 +1,21 @@
 import { getRuntimeConfig } from '../lib/runtimeConfig.js';
 import { getSupabaseClient } from '../lib/supabaseClient.js';
-import { inferBasePath } from '../lib/basePath.js';
-import { authError, authLog, authWarn } from '../lib/authDebug.js';
+import { buildCallbackUrl, inferBasePath } from '../lib/basePath.js';
+import { authError, authLog, authWarn, sanitizeUrlForLog } from '../lib/authDebug.js';
+
+/*
+  OAuth flow overview (expected PKCE vs implicit fallback)
+
+  - Expected PKCE
+    1) signInWithOAuth() builds /auth/v1/authorize with a code_challenge.
+    2) Provider redirects to /auth/callback.html?code=...&state=...
+    3) callback.js exchanges the code via /auth/v1/token (grant_type=pkce) and persists the session.
+
+  - Current implicit fallback (what we are observing)
+    1) signInWithOAuth() builds /auth/v1/authorize without PKCE parameters.
+    2) Supabase redirects to /auth/v1/callback#access_token=...&refresh_token=...
+    3) callback.js cannot exchange a code, session stays null, and /auth/v1/token is never called.
+*/
 
 function normalizeCallbackUrl(url) {
   if (!url) return null;
@@ -18,16 +32,20 @@ function normalizeCallbackUrl(url) {
 }
 
 function buildRedirectTo(config) {
+  const normalizedConfigRedirect = normalizeCallbackUrl(config?.oauthRedirectTo);
+  if (normalizedConfigRedirect) return normalizedConfigRedirect;
+
   if (typeof window !== 'undefined' && window.location?.origin) {
     const basePath = inferBasePath(window.location.pathname || '/');
-    const prefix = basePath === '/' ? '' : basePath;
-    return `${window.location.origin}${prefix}/auth/callback.html`;
+    return buildCallbackUrl(basePath, window.location.origin);
   }
-  return normalizeCallbackUrl(config?.oauthRedirectTo);
+
+  return null;
 }
 
 function resolveRedirect(config) {
-  return buildRedirectTo(config || {}) || buildRedirectTo(getRuntimeConfig());
+  const mergedConfig = { ...getRuntimeConfig(), ...(config || {}) };
+  return buildRedirectTo(mergedConfig);
 }
 
 function requireClient() {
@@ -76,7 +94,7 @@ export async function signInWithOAuth(provider) {
 
   const result = await client.auth.signInWithOAuth({
     provider,
-    options: { redirectTo, skipBrowserRedirect: true },
+    options: { redirectTo, skipBrowserRedirect: true, flowType: 'pkce' },
   });
 
   if (result?.error) {
@@ -93,7 +111,14 @@ export async function signInWithOAuth(provider) {
 
   try {
     const parsed = new URL(authorizeUrl);
-    authLog('authorize url', parsed.toString());
+    const authorizeLog = {
+      origin: sanitizeUrlForLog(parsed.toString()),
+      queryKeys: Array.from(parsed.searchParams.keys()),
+      hasPkceParams:
+        parsed.searchParams.has('code_challenge') || parsed.searchParams.has('code_challenge_method'),
+      responseType: parsed.searchParams.get('response_type') || 'default',
+    };
+    authLog('authorize url', authorizeLog);
     if (!parsed.pathname.includes('/auth/v1/authorize')) {
       const badUrlError = new Error('Unexpected authorize URL returned.');
       authWarn('authorize pathname', parsed.pathname);

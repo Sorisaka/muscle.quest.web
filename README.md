@@ -44,6 +44,15 @@ Vanilla JS/HTML/CSS bundle aimed at GitHub Pages.
 - GitHub Actions では `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `OAUTH_REDIRECT_TO` の Secrets を登録し、`npm run build` 後にワークフローが Secrets を用いて `dist/config.js` を生成してから Pages へアップロードします（Secrets が欠けている場合はジョブが失敗します）。CI では `dist/config.example.js` は使用されません。
 - `dist/config.js` は `.gitignore` 済みです。コミットしないでください。
 - `npm run build` は毎回 `dist/` をクリーンするため、開発時はビルドのあとに改めて `dist/config.js` を配置してください。自動コピーされたダミー設定では Supabase 連携が無効なままなので、必要に応じて値を差し替えてください。
+- `src/config.example.js` / `dist/config.example.js` は常にダミー値のまま保持し、実キーを絶対に貼り付けないでください。実環境用の `dist/config.js` はローカルで生成するか、CI で Secrets から注入します。
+
+## HAR / ログ共有時のマスキングガイド
+サポート向けに HAR やブラウザログを共有する場合は、以下を守って機密情報を伏せてください。
+
+- Authorization ヘッダー、`access_token` / `refresh_token`、`provider_token`、Supabase の anon key などは **全削除** するか、先頭 4 文字 + 末尾 4 文字のみ残す形でマスクする。
+- URL のクエリやフラグメントにコードやトークンが含まれている場合は削除してから共有する（`authDebug.maskToken` / `sanitizeUrlForLog` と同じルールで十分）。
+- ブラウザストレージ（`localStorage` / `sessionStorage`）のダンプや `dist/config.js` の中身を貼らない。設定値が必要な場合は、キー名だけを示して実値は省く。
+- 収集手順を自動化する場合も、ログ出力では上記マスクを適用すること（`src/lib/authDebug.js` にトークンマスク関数あり）。
 
 ### Supabase セットアップ（Google OAuth / profiles / RLS）
 以下の手順で Supabase 側を構成すると、README の内容だけで再現できます（すべて URL の末尾 `/` は付けないでください）。

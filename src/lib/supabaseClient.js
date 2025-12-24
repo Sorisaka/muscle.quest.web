@@ -2,6 +2,14 @@ import { createClient } from '../vendor/supabase-js/dist/index.js';
 import { authLog, authWarn } from './authDebug.js';
 import { getRuntimeConfig, hasSupabaseCredentials } from './runtimeConfig.js';
 
+/*
+  Auth wiring overview
+
+  - authService.signInWithOAuth builds /auth/v1/authorize with PKCE params (code_verifier + challenge).
+  - callback.js expects a ?code=... redirect and exchanges it via /auth/v1/token using PKCE.
+  - The embedded Supabase client mirrors the PKCE settings to keep session parsing consistent.
+*/
+
 let cachedClient = null;
 let cachedConfigSignature = null;
 
@@ -38,15 +46,19 @@ function createSignature(config) {
 }
 
 function buildClient(config) {
+  const authOptions = {
+    persistSession: true,
+    autoRefreshToken: true,
+    // Enable Supabase's URL parsing to catch PKCE fragments without affecting hash routing,
+    // because the callback page is a standalone HTML (not a hash route).
+    detectSessionInUrl: true,
+    flowType: 'pkce',
+  };
+
+  authLog('createClient auth options', authOptions);
+
   const client = createClient(config.supabaseUrl, config.supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      // Enable Supabase's URL parsing to catch PKCE fragments without affecting hash routing,
-      // because the callback page is a standalone HTML (not a hash route).
-      detectSessionInUrl: true,
-      flowType: 'pkce',
-    },
+    auth: authOptions,
   });
 
   cachedClient = { client, config, ready: true, error: null };

@@ -1,6 +1,22 @@
 import { getSupabaseClient } from '../lib/supabaseClient.js';
 import { buildAccountUrl, buildCallbackUrl, inferBasePath } from '../lib/basePath.js';
-import { authError, authLog } from '../lib/authDebug.js';
+import {
+  authError,
+  authLog,
+  maskToken,
+  sanitizeSessionForLog,
+  sanitizeUrlForLog,
+} from '../lib/authDebug.js';
+
+/*
+  OAuth callback flow expectations
+
+  - PKCE (expected): /auth/v1/authorize -> /auth/callback.html?code=... -> exchangeCodeForSession() -> /auth/v1/token
+  - Implicit fallback (observed): /auth/v1/authorize (no code_challenge) -> /auth/v1/callback#access_token=...
+    -> no code to exchange, session remains null
+
+  We log only masked tokens and sanitized URLs to trace where the flow stops without leaking secrets.
+*/
 
 const statusEl = document.querySelector('[data-status]');
 const errorEl = document.querySelector('[data-error]');
@@ -62,6 +78,54 @@ function parseAuthParams(locationHref, locationHash) {
   }
 }
 
+function sanitizeAuthParamsForLog(params) {
+  return {
+    source: params.source,
+    hasCode: Boolean(params.code),
+    code: maskToken(params.code),
+    hasState: Boolean(params.state),
+    state: params.state ? `${params.state.slice(0, 4)}…${params.state.slice(-4)}` : null,
+    error: params.error,
+    errorDescription: params.errorDescription,
+  };
+}
+
+function summarizeFragmentTokens(fragment) {
+  const params = parseFragmentParams(fragment);
+  const keys = Array.from(params.keys());
+  return {
+    keys,
+    hasAccessToken: params.has('access_token'),
+    hasRefreshToken: params.has('refresh_token'),
+    hasProviderToken: params.has('provider_token') || params.has('provider_refresh_token'),
+    tokens: {
+      accessToken: maskToken(params.get('access_token')),
+      refreshToken: maskToken(params.get('refresh_token')),
+      providerToken: maskToken(params.get('provider_token')),
+      providerRefreshToken: maskToken(params.get('provider_refresh_token')),
+    },
+  };
+}
+
+function summarizeLocationForLog(locationHref, locationHash, fragmentSummary) {
+  let searchKeys = [];
+  try {
+    searchKeys = Array.from(new URL(locationHref).searchParams.keys());
+  } catch (_error) {}
+
+  return {
+    href: sanitizeUrlForLog(locationHref),
+    hashPresent: Boolean(locationHash),
+    hashKeys: fragmentSummary.keys,
+    searchKeys,
+  };
+}
+
+function logSession(label, sessionResult) {
+  const session = sessionResult?.data?.session;
+  authLog(label, { hasSession: Boolean(session), session: sanitizeSessionForLog(session) });
+}
+
 function setStatus(message) {
   if (statusEl) statusEl.textContent = message;
 }
@@ -99,10 +163,14 @@ async function run() {
   }
 
   const loadedHref = window.location.href;
-  const locationSearch = window.location.search;
   const locationHash = window.location.hash;
   const authParams = parseAuthParams(loadedHref, locationHash);
+  const fragmentSummary = summarizeFragmentTokens(locationHash);
+  const locationSummary = summarizeLocationForLog(loadedHref, locationHash, fragmentSummary);
+  const sanitizedAuthParams = sanitizeAuthParamsForLog(authParams);
   const hasCode = Boolean(authParams.code);
+
+  const preflightSession = await client.auth.getSession();
 
   if (errorBackEl) {
     errorBackEl.href = accountHref;
@@ -112,13 +180,13 @@ async function run() {
   }
 
   authLog('callback loaded', {
-    href: loadedHref,
-    search: locationSearch,
-    hash: locationHash,
-    callbackHref,
-    accountHref,
+    location: locationSummary,
+    callbackHref: sanitizeUrlForLog(callbackHref),
+    accountHref: sanitizeUrlForLog(accountHref),
   });
-  authLog('callback auth params', authParams);
+  authLog('callback fragment tokens', fragmentSummary);
+  authLog('callback auth params', sanitizedAuthParams);
+  logSession('callback pre-flight session', preflightSession);
 
   if (authParams.error || authParams.errorDescription) {
     showError(authParams.errorDescription || authParams.error || 'Authentication failed. Please try again.');
@@ -132,9 +200,19 @@ async function run() {
   }
 
   if (!hasCode) {
-    const sessionResult = await client.auth.getSession();
-    const hasSession = Boolean(sessionResult?.data?.session);
-    authLog('callback no code present', { hasSession, session: sessionResult?.data?.session });
+    if (fragmentSummary.hasAccessToken || fragmentSummary.hasRefreshToken) {
+      authLog('callback implicit fragment detected', {
+        fragmentSummary,
+        message: 'Tokens present in hash but no authorization code; PKCE exchange skipped.',
+      });
+    }
+
+    const hasSession = Boolean(preflightSession?.data?.session);
+    authLog('callback no code present', {
+      hasSession,
+      fragmentSummary,
+      session: sanitizeSessionForLog(preflightSession?.data?.session),
+    });
 
     if (!hasSession) {
       showError('No OAuth code found. Please retry sign-in.');
@@ -153,10 +231,10 @@ async function run() {
   if (authParams.state) exchangeUrl.searchParams.set('state', authParams.state);
 
   authLog('exchangeCodeForSession invoking', {
-    url: exchangeUrl.toString(),
+    url: sanitizeUrlForLog(exchangeUrl.toString()),
     codeSource: authParams.source,
-    code: authParams.code,
-    state: authParams.state,
+    code: maskToken(authParams.code),
+    state: authParams.state ? `${authParams.state.slice(0, 4)}…${authParams.state.slice(-4)}` : null,
   });
 
   let exchangeError = null;
@@ -170,8 +248,8 @@ async function run() {
   }
 
   const sessionResult = await client.auth.getSession();
+  logSession('post-callback getSession', sessionResult);
   const hasSession = Boolean(sessionResult?.data?.session);
-  authLog('post-callback getSession', { hasSession, session: sessionResult?.data?.session });
 
   if (exchangeError || !hasSession) {
     showError('Authentication failed. Please try signing in again.');
