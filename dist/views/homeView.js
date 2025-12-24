@@ -34,6 +34,15 @@ export const renderHome = (_params, { navigate, playSfx }) => {
   const grid = document.createElement('div');
   grid.className = 'card-grid';
 
+  const rankButton = document.createElement('button');
+  rankButton.type = 'button';
+  rankButton.className = 'ghost';
+  rankButton.textContent = 'ランキングを見る';
+  rankButton.addEventListener('click', () => {
+    playSfx('ui:navigate');
+    navigate('#/rank/local');
+  });
+
   const beginnerCard = createTierCard(
     'beginner',
     '初級',
@@ -57,15 +66,6 @@ export const renderHome = (_params, { navigate, playSfx }) => {
   );
 
   grid.append(beginnerCard, intermediateCard, advancedCard);
-
-  const settingsButton = document.createElement('button');
-  settingsButton.type = 'button';
-  settingsButton.textContent = '設定を開く';
-  settingsButton.addEventListener('click', () => {
-    playSfx('ui:navigate');
-    navigate('#/settings');
-  });
-
-  container.append(grid, settingsButton);
+  container.append(rankButton, grid);
   return container;
 };

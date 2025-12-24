@@ -1,4 +1,7 @@
 import { getQuestById } from '../core/content.js';
+import { createTimerEngine } from '../core/timerEngine.js';
+import { createPlanFromDefinition } from '../core/trainingPlan.js';
+import { trainingConfig } from '../data/trainingConfig.js';
 
 const formatTime = (seconds) => {
   const safeSeconds = Math.max(seconds, 0);
@@ -11,7 +14,7 @@ const formatTime = (seconds) => {
   return `${mins}:${secs}`;
 };
 
-const createControls = (navigate, onStop, onReset, questId, playSfx) => {
+const createControls = (navigate, questId, playSfx, onReset, onToggle, onComplete) => {
   const controls = document.createElement('div');
   controls.className = 'run-controls';
 
@@ -22,7 +25,6 @@ const createControls = (navigate, onStop, onReset, questId, playSfx) => {
   stopButton.addEventListener('click', () => {
     const confirmed = window.confirm('中断してクエスト詳細に戻りますか？');
     if (confirmed) {
-      onStop();
       playSfx('timer:stop');
       navigate(`#/quest/${questId}`);
     }
@@ -37,46 +39,136 @@ const createControls = (navigate, onStop, onReset, questId, playSfx) => {
   const toggleButton = document.createElement('button');
   toggleButton.type = 'button';
   toggleButton.textContent = '開始';
+  toggleButton.addEventListener('click', onToggle);
 
-  controls.append(stopButton, resetButton, toggleButton);
-  return { controls, toggleButton, stopButton, resetButton };
+  const completeButton = document.createElement('button');
+  completeButton.type = 'button';
+  completeButton.textContent = '完了して記録';
+  completeButton.addEventListener('click', onComplete);
+
+  controls.append(stopButton, resetButton, toggleButton, completeButton);
+  return { controls, toggleButton, completeButton };
 };
 
-const createInstructions = (quest) => {
-  const sectionOne = document.createElement('div');
-  sectionOne.className = 'run-howto__panel';
-  const headingOne = document.createElement('h3');
-  headingOne.textContent = '手順';
-  const steps = document.createElement('ol');
-  steps.className = 'steps';
-  quest.steps.forEach((step) => {
-    const li = document.createElement('li');
-    li.innerHTML = `<strong>${step.heading}</strong><p class=\"muted\">${step.body}</p>`;
-    steps.append(li);
-  });
-  sectionOne.append(headingOne, steps);
+const computeCompletedSets = (snapshot, setsLength) => {
+  if (snapshot.mode !== 'interval') return Math.max(setsLength || 1, 1);
+  if (snapshot.state === 'finished') return snapshot.totalSets;
+  const finishedSets = snapshot.phase === 'work' ? snapshot.currentSet - 1 : snapshot.currentSet;
+  return Math.max(Math.min(finishedSets, snapshot.totalSets), 0);
+};
 
-  const sectionTwo = document.createElement('div');
-  sectionTwo.className = 'run-howto__panel';
-  const headingTwo = document.createElement('h3');
-  headingTwo.textContent = 'フォームのコツ';
-  const tips = document.createElement('ul');
-  tips.className = 'muted';
-  quest.tips.forEach((tip) => {
-    const li = document.createElement('li');
-    li.textContent = tip;
-    tips.append(li);
-  });
-  sectionTwo.append(headingTwo, tips);
+const clampNumber = (value, min, max) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return min;
+  if (min == null && max == null) return numeric;
+  if (min == null) return Math.min(max, numeric);
+  if (max == null) return Math.max(min, numeric);
+  return Math.max(min, Math.min(max, numeric));
+};
 
-  return { sectionOne, sectionTwo };
+const buildSetInputs = (unit, limits, planSets, onChange) => {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'stack set-editor';
+
+  planSets.forEach((set, index) => {
+    const row = document.createElement('div');
+    row.className = 'row set-editor__row';
+
+    const label = document.createElement('span');
+    label.className = 'muted';
+    label.textContent = `セット ${index + 1}`;
+    row.append(label);
+
+    if (unit === 'time') {
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.min = limits.timeSeconds?.min ?? 0;
+      input.max = limits.timeSeconds?.max ?? 1800;
+      input.step = 5;
+      input.value = set.timeSeconds;
+      input.addEventListener('change', (event) => {
+        const next = clampNumber(event.target.value, limits.timeSeconds?.min, limits.timeSeconds?.max);
+        onChange(index, { timeSeconds: next });
+      });
+      row.append(input);
+      const unitLabel = document.createElement('span');
+      unitLabel.className = 'muted';
+      unitLabel.textContent = '秒';
+      row.append(unitLabel);
+    } else {
+      const weight = document.createElement('input');
+      weight.type = 'number';
+      weight.min = limits.weight?.min ?? 0;
+      weight.max = limits.weight?.max ?? 200;
+      weight.step = 1;
+      weight.value = set.weight;
+      weight.addEventListener('change', (event) => {
+        const next = clampNumber(event.target.value, limits.weight?.min, limits.weight?.max);
+        onChange(index, { weight: next, reps: set.reps });
+      });
+
+      const reps = document.createElement('input');
+      reps.type = 'number';
+      reps.min = limits.reps?.min ?? 1;
+      reps.max = limits.reps?.max ?? 100;
+      reps.step = 1;
+      reps.value = set.reps;
+      reps.addEventListener('change', (event) => {
+        const next = clampNumber(event.target.value, limits.reps?.min, limits.reps?.max);
+        onChange(index, { weight: set.weight, reps: next });
+      });
+
+      row.append(weight);
+      const weightLabel = document.createElement('span');
+      weightLabel.className = 'muted';
+      weightLabel.textContent = 'kg';
+      row.append(weightLabel);
+
+      row.append(reps);
+      const repLabel = document.createElement('span');
+      repLabel.className = 'muted';
+      repLabel.textContent = '回';
+      row.append(repLabel);
+    }
+
+    wrapper.append(row);
+  });
+
+  return wrapper;
+};
+
+const notifyCompletion = (message) => {
+  if (typeof Notification === 'undefined') return;
+  if (Notification.permission === 'granted') {
+    new Notification('タイマー完了', { body: message });
+  } else if (Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
 };
 
 export const renderRun = (params, { navigate, store, playSfx }) => {
   const quest = getQuestById(params.id);
   const settings = store.getSettings();
-  const { difficulty, sfxEnabled, sfxVolume, timerRestSeconds, timerSets } = settings;
-  const runPlan = store.getRunPlan();
+  const previousPlan = store.getLastPlan(params.id, settings.difficulty);
+  let runPlan = createPlanFromDefinition(quest, settings.difficulty, previousPlan);
+
+  const timerPrefs = store.getTimerPreferences();
+  let timerConfig = {
+    mode: timerPrefs.mode || runPlan.mode,
+    workSeconds: runPlan.unit === 'time' ? runPlan.sets[0]?.timeSeconds || runPlan.trainingSeconds : timerPrefs.workSeconds,
+    restSeconds: runPlan.restSeconds ?? timerPrefs.restSeconds,
+    sets: runPlan.unit === 'time' ? runPlan.sets.length : timerPrefs.sets,
+  };
+  timerConfig.sets = Math.max(timerConfig.sets || 1, 1);
+  timerConfig.mode = timerConfig.mode || 'interval';
+
+  const buildEngineConfig = () => ({
+    mode: timerConfig.mode,
+    workSeconds: timerConfig.workSeconds,
+    restSeconds: timerConfig.restSeconds,
+    sets: timerConfig.mode === 'interval' ? timerConfig.sets : 1,
+    workSets: timerConfig.mode === 'interval' ? runPlan.sets : [],
+  });
 
   const container = document.createElement('section');
   container.className = 'run-shell';
@@ -94,183 +186,345 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
     return container;
   }
 
-  const defaults = {
-    mode: 'timer',
-    trainingSeconds: runPlan.trainingSeconds ?? settings.timerTrainingSeconds ?? quest.estimatedMinutes * 60,
-    restSeconds: runPlan.restSeconds ?? timerRestSeconds,
-    sets: runPlan.sets ?? timerSets,
-  };
+  const engine = createTimerEngine(buildEngineConfig());
 
-  const resolvedPlan =
-    runPlan.questId === quest.id
-      ? {
-          ...defaults,
-          ...runPlan,
-        }
-      : { ...defaults, questId: quest.id };
-
-  const trainingSeconds = Math.max(resolvedPlan.trainingSeconds || quest.estimatedMinutes * 60, 1);
-  const restSeconds = Math.max(resolvedPlan.restSeconds ?? 0, 0);
-  const sets = Math.max(resolvedPlan.sets ?? 1, 1);
-  const mode = resolvedPlan.mode || 'timer';
-
-  let phase = mode === 'timer' ? 'train' : 'stopwatch';
-  let currentSet = 1;
-  let remaining = mode === 'timer' ? trainingSeconds : 0;
-  let elapsedStopwatch = 0;
-  let isRunning = false;
-  let intervalId = null;
-  let lastTick = null;
+  const metaBox = document.createElement('p');
+  metaBox.className = 'muted';
+  metaBox.textContent = `${settings.difficulty} / 音: ${settings.sfxEnabled ? 'ON' : 'OFF'} / 音量: ${(settings.sfxVolume * 100).toFixed(0)}%`;
 
   const timerBox = document.createElement('div');
   timerBox.className = 'run-timer';
-  const timerLabel = document.createElement('p');
-  timerLabel.className = 'muted';
-  timerLabel.textContent = `${mode === 'timer' ? 'インターバル' : 'ストップウォッチ'} / 難易度: ${
-    difficulty
-  } / 音: ${sfxEnabled ? 'ON' : 'OFF'} / 音量: ${(sfxVolume * 100).toFixed(0)}%`;
 
   const statusRow = document.createElement('div');
-  statusRow.className = 'run-timer__status';
+  statusRow.className = 'row run-timer__status';
   const phaseBadge = document.createElement('span');
-  phaseBadge.className = 'pill';
+  phaseBadge.className = 'pill pill--info';
   const setProgress = document.createElement('span');
   setProgress.className = 'muted';
-  statusRow.append(phaseBadge, setProgress);
+  const nextInfo = document.createElement('span');
+  nextInfo.className = 'muted';
+  statusRow.append(phaseBadge, setProgress, nextInfo);
 
   const timeDisplay = document.createElement('div');
   timeDisplay.className = 'run-timer__display';
-  timeDisplay.textContent = mode === 'timer' ? formatTime(remaining) : '00:00';
 
   const subMeta = document.createElement('p');
   subMeta.className = 'muted run-timer__meta';
-  subMeta.textContent =
-    mode === 'timer'
-      ? `トレーニング ${formatTime(trainingSeconds)} / 休憩 ${formatTime(restSeconds)} / ${sets} セット`
-      : '経過時間を計測中';
+  const updateMeta = () => {
+    const description =
+      timerConfig.mode === 'interval'
+        ? trainingConfig.descriptions.interval
+        : timerConfig.mode === 'timer'
+          ? trainingConfig.descriptions.timer
+          : trainingConfig.descriptions.stopwatch;
+    subMeta.textContent = `${description} / Work ${formatTime(timerConfig.workSeconds)}${
+      timerConfig.mode === 'interval' ? ` / Rest ${formatTime(timerConfig.restSeconds)} / ${timerConfig.sets} セット` : ''
+    }`;
+  };
+  updateMeta();
 
-  timerBox.append(timerLabel, statusRow, timeDisplay, subMeta);
+  const pointsBanner = document.createElement('p');
+  pointsBanner.className = 'muted run-points';
+  pointsBanner.textContent = `ポイント基準: 規定セット ${runPlan.baseSets}、上限 ${runPlan.maxSets}。チャレンジでポイント増。`;
 
-  const stopTimer = () => {
-    if (intervalId) {
-      clearInterval(intervalId);
-      intervalId = null;
+  const timerControls = document.createElement('div');
+  timerControls.className = 'run-timer__controls';
+
+  const modeField = document.createElement('label');
+  modeField.className = 'field';
+  const modeLabel = document.createElement('span');
+  modeLabel.textContent = 'タイマー種別';
+  const modeSelect = document.createElement('select');
+  [
+    { value: 'interval', label: 'インターバル' },
+    { value: 'timer', label: 'シンプルタイマー' },
+    { value: 'stopwatch', label: 'ストップウォッチ' },
+  ].forEach((option) => {
+    const el = document.createElement('option');
+    el.value = option.value;
+    el.textContent = option.label;
+    if (option.value === timerConfig.mode) el.selected = true;
+    modeSelect.append(el);
+  });
+  modeSelect.addEventListener('change', (event) => {
+    timerConfig.mode = event.target.value;
+    store.rememberTimerConfig(timerConfig);
+    engine.reset(buildEngineConfig());
+    completionRecorded = false;
+    toggleButton.textContent = '開始';
+    updateMeta();
+    updateDisplay(engine.getSnapshot());
+  });
+  modeField.append(modeLabel, modeSelect);
+
+  const workField = document.createElement('label');
+  workField.className = 'field';
+  const workLabel = document.createElement('span');
+  workLabel.textContent = 'トレーニング時間（秒）';
+  const workInput = document.createElement('input');
+  workInput.type = 'number';
+  workInput.min = trainingConfig.limits.trainingSeconds.min;
+  workInput.max = trainingConfig.limits.trainingSeconds.max;
+  workInput.value = timerConfig.workSeconds;
+  workInput.addEventListener('change', (event) => {
+    const next = clampNumber(event.target.value, trainingConfig.limits.trainingSeconds.min, trainingConfig.limits.trainingSeconds.max);
+    timerConfig.workSeconds = next;
+    if (runPlan.unit === 'time') {
+      runPlan.sets = runPlan.sets.map(() => ({ timeSeconds: next }));
+      runPlan.trainingSeconds = next;
+      refreshSetEditor();
     }
-    isRunning = false;
+    store.rememberTimerConfig(timerConfig);
+    engine.reset(buildEngineConfig());
+    updateMeta();
+    updateDisplay(engine.getSnapshot());
+  });
+  workField.append(workLabel, workInput);
+
+  const restField = document.createElement('label');
+  restField.className = 'field';
+  const restLabel = document.createElement('span');
+  restLabel.textContent = '休憩時間（秒）';
+  const restInput = document.createElement('input');
+  restInput.type = 'number';
+  restInput.min = trainingConfig.limits.restSeconds.min;
+  restInput.max = trainingConfig.limits.restSeconds.max;
+  restInput.value = timerConfig.restSeconds;
+  restInput.addEventListener('change', (event) => {
+    const next = clampNumber(event.target.value, trainingConfig.limits.restSeconds.min, trainingConfig.limits.restSeconds.max);
+    timerConfig.restSeconds = next;
+    runPlan.restSeconds = next;
+    store.rememberTimerConfig(timerConfig);
+    engine.reset(buildEngineConfig());
+    updateMeta();
+    updateDisplay(engine.getSnapshot());
+  });
+  restField.append(restLabel, restInput);
+
+  timerControls.append(modeField, workField, restField);
+
+  const timerNotice = document.createElement('p');
+  timerNotice.className = 'muted';
+
+  timerBox.append(metaBox, statusRow, timeDisplay, subMeta, timerNotice, pointsBanner, timerControls);
+
+  const planBox = document.createElement('div');
+  planBox.className = 'stack run-plan__box';
+  const planHeading = document.createElement('h3');
+  planHeading.textContent = 'ポイントアップチャレンジ';
+
+  const planLead = document.createElement('p');
+  planLead.className = 'muted';
+  planLead.textContent = `ベース: ${runPlan.baseSets} セット。上限 ${runPlan.maxSets} セットまで増量できます。`;
+
+  const setSliderField = document.createElement('label');
+  setSliderField.className = 'field';
+  const setSliderLabel = document.createElement('span');
+  setSliderLabel.textContent = 'セット数';
+  const setSlider = document.createElement('input');
+  setSlider.type = 'range';
+  setSlider.min = 1;
+  setSlider.max = runPlan.maxSets;
+  setSlider.value = runPlan.sets.length;
+  const setSliderValue = document.createElement('span');
+  setSliderValue.className = 'pill';
+  setSliderValue.textContent = `${runPlan.sets.length} セット`;
+
+  const setEditorContainer = document.createElement('div');
+
+  const refreshSetEditor = () => {
+    setEditorContainer.innerHTML = '';
+    setEditorContainer.append(
+      buildSetInputs(runPlan.unit, runPlan.limits, runPlan.sets, (index, updated) => {
+        runPlan.sets[index] = { ...runPlan.sets[index], ...updated };
+        if (runPlan.unit === 'time') {
+          timerConfig.workSeconds = runPlan.sets[0].timeSeconds;
+          store.rememberTimerConfig({ ...timerConfig, sets: runPlan.sets.length });
+          engine.reset(buildEngineConfig());
+        }
+        store.rememberPlan(runPlan.questId, runPlan.difficulty, runPlan);
+        updateMeta();
+      }),
+    );
   };
 
-  const resetTimer = () => {
-    stopTimer();
-    phase = mode === 'timer' ? 'train' : 'stopwatch';
-    currentSet = 1;
-    remaining = mode === 'timer' ? trainingSeconds : 0;
-    elapsedStopwatch = 0;
-    updateDisplay();
-  };
+  setSlider.addEventListener('input', (event) => {
+    const count = Number(event.target.value);
+    setSliderValue.textContent = `${count} セット`;
+  });
 
-  const { controls, toggleButton, resetButton } = createControls(
+  setSlider.addEventListener('change', (event) => {
+    const count = Number(event.target.value);
+    const baseSource = runPlan.baseDefinition;
+    while (runPlan.sets.length < count && runPlan.sets.length < runPlan.maxSets) {
+      const template = baseSource[runPlan.sets.length] || runPlan.sets[runPlan.sets.length - 1] || baseSource[0];
+      runPlan.sets.push({ ...template });
+    }
+    if (runPlan.sets.length > count) {
+      runPlan.sets = runPlan.sets.slice(0, count);
+    }
+    setSliderValue.textContent = `${runPlan.sets.length} セット`;
+    timerConfig.sets = runPlan.sets.length;
+    store.rememberTimerConfig(timerConfig);
+    engine.reset(buildEngineConfig());
+    completionRecorded = false;
+    refreshSetEditor();
+    store.rememberPlan(runPlan.questId, runPlan.difficulty, runPlan);
+    updateMeta();
+  });
+
+  setSliderField.append(setSliderLabel, setSlider, setSliderValue);
+  refreshSetEditor();
+
+  const howto = document.createElement('p');
+  howto.className = 'muted';
+  howto.textContent = runPlan.description;
+
+  planBox.append(planHeading, planLead, setSliderField, setEditorContainer, howto);
+
+  const { sectionOne, sectionTwo } = ((questInfo) => {
+    const sectionOneEl = document.createElement('div');
+    sectionOneEl.className = 'run-howto__panel';
+    const headingOne = document.createElement('h3');
+    headingOne.textContent = '手順';
+    const steps = document.createElement('ol');
+    steps.className = 'steps';
+    questInfo.steps.forEach((step) => {
+      const li = document.createElement('li');
+      li.innerHTML = `<strong>${step.heading}</strong><p class="muted">${step.body}</p>`;
+      steps.append(li);
+    });
+    sectionOneEl.append(headingOne, steps);
+
+    const sectionTwoEl = document.createElement('div');
+    sectionTwoEl.className = 'run-howto__panel';
+    const headingTwo = document.createElement('h3');
+    headingTwo.textContent = 'フォームのコツ';
+    const tips = document.createElement('ul');
+    tips.className = 'muted';
+    questInfo.tips.forEach((tip) => {
+      const li = document.createElement('li');
+      li.textContent = tip;
+      tips.append(li);
+    });
+    sectionTwoEl.append(headingTwo, tips);
+
+    return { sectionOne: sectionOneEl, sectionTwo: sectionTwoEl };
+  })(quest);
+
+  let completionRecorded = false;
+  let startTimestamp = null;
+
+  const { controls, toggleButton, completeButton } = createControls(
     navigate,
-    stopTimer,
-    resetTimer,
     quest.id,
     playSfx,
+    () => {
+      engine.reset(buildEngineConfig());
+      completionRecorded = false;
+      toggleButton.textContent = '開始';
+      completeButton.disabled = false;
+      pointsBanner.textContent = 'ポイント: 設定を調整してポイントを伸ばしましょう。';
+      timerNotice.textContent = '';
+      startTimestamp = null;
+      updateDisplay(engine.getSnapshot());
+    },
+    () => {
+      const snapshot = engine.getSnapshot();
+      if (snapshot.state === 'running') {
+        engine.pause();
+        playSfx('timer:stop');
+        toggleButton.textContent = '再開';
+        return;
+      }
+      startTimestamp = startTimestamp || Date.now();
+      engine.start(buildEngineConfig());
+      completionRecorded = false;
+      toggleButton.textContent = '一時停止';
+      playSfx('timer:start');
+    },
+    () => {
+      const snapshot = engine.getSnapshot();
+      engine.stop();
+      recordCompletion({ ...snapshot, finished: true });
+      playSfx('timer:complete');
+    },
   );
 
-  const complete = () => {
-    stopTimer();
-    phase = 'complete';
-    timeDisplay.textContent = '00:00';
-    phaseBadge.textContent = '完了';
-    setProgress.textContent = `${sets} / ${sets} セット`;
-    toggleButton.textContent = '開始';
-    playSfx('timer:complete');
-    alert('全セット完了！お疲れさまでした。');
+  const recordCompletion = (snapshot) => {
+    if (completionRecorded) return;
+    const completedSets = computeCompletedSets(snapshot, runPlan.sets.length);
+    const result = store.recordResult({
+      questId: quest.id,
+      difficulty: settings.difficulty,
+      mode: snapshot.mode,
+      trainingSeconds: timerConfig.workSeconds,
+      restSeconds: timerConfig.restSeconds,
+      sets: runPlan.sets,
+      completedSets,
+      elapsedSeconds: snapshot.elapsedSeconds,
+      finished: snapshot.state === 'finished' || snapshot.finished,
+      exerciseSlug: runPlan.exerciseSlug,
+      startTime: startTimestamp,
+      endTime: Date.now(),
+      plan: runPlan,
+    });
+    completionRecorded = true;
+    completeButton.disabled = true;
+    store.rememberPlan(runPlan.questId, runPlan.difficulty, runPlan);
+    store.rememberTimerConfig(timerConfig);
+    pointsBanner.textContent = `獲得ポイント: ${result.points} pts`;
+    timerNotice.textContent = '完了！計測結果を保存しました。';
+    notifyCompletion('セットを完了しました。お疲れさまです！');
   };
 
-  const updateDisplay = () => {
-    if (mode === 'stopwatch') {
-      phaseBadge.textContent = 'ストップウォッチ';
-      setProgress.textContent = '経過計測';
-      timeDisplay.textContent = formatTime(elapsedStopwatch);
+  const updateDisplay = (snapshot) => {
+    if (snapshot.mode === 'stopwatch') {
+      phaseBadge.textContent = snapshot.state === 'running' ? '計測中' : '停止中';
+      setProgress.textContent = `${runPlan.sets.length} セット入力済み`;
+      nextInfo.textContent = '次: 完了ボタンで終了';
+      timeDisplay.textContent = formatTime(snapshot.elapsedSeconds);
       return;
     }
 
-    const phaseLabel = phase === 'rest' ? '休憩中' : 'トレーニング中';
+    if (snapshot.mode === 'timer') {
+      phaseBadge.textContent = snapshot.state === 'running' ? 'カウント中' : '待機中';
+      setProgress.textContent = '1 / 1 セット';
+      nextInfo.textContent = '次: 完了通知';
+      timeDisplay.textContent = formatTime(snapshot.remainingSeconds || timerConfig.workSeconds);
+      return;
+    }
+
+    const phaseLabel = snapshot.phase === 'rest' ? '休憩中' : 'トレーニング中';
     phaseBadge.textContent = `${phaseLabel}`;
-    setProgress.textContent = `${currentSet} / ${sets} セット`;
-    timeDisplay.textContent = formatTime(remaining);
+    setProgress.textContent = `${snapshot.currentSet} / ${snapshot.totalSets} セット`;
+    nextInfo.textContent = `次: ${snapshot.next}`;
+    timeDisplay.textContent = formatTime(snapshot.remainingSeconds);
   };
 
-  const tick = () => {
-    if (!isRunning) return;
-    const now = Date.now();
-    const deltaSeconds = Math.floor((now - lastTick) / 1000);
-    if (deltaSeconds <= 0) return;
-
-    lastTick += deltaSeconds * 1000;
-
-    if (mode === 'stopwatch') {
-      elapsedStopwatch += deltaSeconds;
-      updateDisplay();
-      return;
-    }
-
-    remaining -= deltaSeconds;
-
-    while (remaining <= 0) {
-      const spill = Math.abs(remaining);
-      if (phase === 'train' && restSeconds > 0) {
-        phase = 'rest';
-        remaining = restSeconds - spill;
-      } else {
-        currentSet += 1;
-        if (currentSet > sets) {
-          complete();
-          return;
-        }
-        phase = 'train';
-        remaining = trainingSeconds - spill;
-      }
-    }
-
-    updateDisplay();
-  };
-
-  toggleButton.addEventListener('click', () => {
-    if (isRunning) {
-      stopTimer();
-      toggleButton.textContent = '再開';
-      playSfx('timer:stop');
-      return;
-    }
-
-    if (mode === 'timer' && phase === 'complete') {
-      resetTimer();
-    }
-
-    isRunning = true;
-    toggleButton.textContent = '一時停止';
-    playSfx('timer:start');
-    lastTick = Date.now();
-    intervalId = setInterval(tick, 1000);
+  engine.onTick((snapshot) => {
+    updateDisplay(snapshot);
   });
 
-  resetButton.addEventListener('click', () => {
-    resetTimer();
-    playSfx('timer:stop');
+  engine.onStateChange((snapshot) => {
+    updateDisplay(snapshot);
+    if (snapshot.state === 'finished') {
+      recordCompletion(snapshot);
+      toggleButton.textContent = '開始';
+      playSfx('timer:complete');
+    }
   });
 
-  const { sectionOne, sectionTwo } = createInstructions(quest);
-  updateDisplay();
+  updateDisplay(engine.getSnapshot());
 
   window.addEventListener(
     'hashchange',
     () => {
-      stopTimer();
+      engine.stop();
     },
     { once: true },
   );
 
-  container.append(timerBox, sectionOne, sectionTwo, controls);
+  container.append(timerBox, planBox, sectionOne, sectionTwo, controls);
   return container;
 };
