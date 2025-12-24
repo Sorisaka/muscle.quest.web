@@ -11,7 +11,8 @@ import {
 /*
   OAuth callback flow expectations
 
-  - PKCE (expected): /auth/v1/authorize -> /auth/callback.html?code=... -> exchangeCodeForSession() -> /auth/v1/token
+  - PKCE (expected): /auth/v1/authorize -> /auth/callback.html?code=... (+ optional Supabase-managed state)
+    -> exchangeCodeForSession() -> /auth/v1/token
   - Implicit fallback (observed): /auth/v1/authorize (no code_challenge) -> /auth/v1/callback#access_token=...
     -> no code to exchange, session remains null
 
@@ -228,13 +229,13 @@ async function run() {
 
   const exchangeUrl = new URL(callbackHref);
   exchangeUrl.searchParams.set('code', authParams.code);
-  if (authParams.state) exchangeUrl.searchParams.set('state', authParams.state);
 
   authLog('exchangeCodeForSession invoking', {
     url: sanitizeUrlForLog(exchangeUrl.toString()),
     codeSource: authParams.source,
     code: maskToken(authParams.code),
-    state: authParams.state ? `${authParams.state.slice(0, 4)}…${authParams.state.slice(-4)}` : null,
+    statePresent: Boolean(authParams.state),
+    stateForwarded: false,
   });
 
   let exchangeError = null;

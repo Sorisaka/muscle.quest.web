@@ -4,8 +4,8 @@
 // Flow note: this client now drives the PKCE OAuth flow end-to-end.
 // - signInWithOAuth generates a code_verifier + code_challenge and stores them in
 //   sessionStorage so the callback can exchange the authorization code.
-// - exchangeCodeForSession verifies state (when present), calls /auth/v1/token?grant_type=pkce,
-//   persists the session, and emits auth events for UI updates.
+// - exchangeCodeForSession calls /auth/v1/token?grant_type=pkce, persists the session, and emits
+//   auth events for UI updates.
 
 const SESSION_KEY_PREFIX = 'musclequest:auth:session:';
 const PKCE_KEY_PREFIX = 'musclequest:auth:pkce:';
@@ -171,12 +171,6 @@ function generateCodeVerifier() {
   return toBase64Url(bytes);
 }
 
-function generateState() {
-  const bytes = randomBytes(16);
-  if (!bytes) return null;
-  return toBase64Url(bytes);
-}
-
 function normalizeSession(response) {
   if (!response) return null;
   const nowSeconds = Math.floor(Date.now() / 1000);
@@ -283,23 +277,17 @@ function createAuthClient(supabaseUrl, supabaseKey, options = {}) {
         try {
           const codeVerifier = generateCodeVerifier();
           const codeChallenge = await sha256Base64Url(codeVerifier);
-          const state = generateState();
 
-          pkceState = { codeVerifier, redirectTo, state };
+          pkceState = { codeVerifier, redirectTo };
           savePkceState(pkceState);
 
           authorizeUrl.searchParams.set('flow_type', 'pkce');
           authorizeUrl.searchParams.set('code_challenge_method', 'S256');
           authorizeUrl.searchParams.set('code_challenge', codeChallenge);
-          if (state) authorizeUrl.searchParams.set('state', state);
         } catch (error) {
           clearPkceState();
           return { data: null, error };
         }
-      }
-
-      if (!isPkceEnabled && oauthOptions?.state) {
-        authorizeUrl.searchParams.set('state', oauthOptions.state);
       }
 
       const authorizeHref = authorizeUrl.toString();
@@ -314,20 +302,19 @@ function createAuthClient(supabaseUrl, supabaseKey, options = {}) {
     async exchangeCodeForSession(input) {
       const pkceState = readPkceState();
       const parsed = (() => {
-        if (!input) return { code: null, state: null, redirectTo: null };
+        if (!input) return { code: null, redirectTo: null };
         if (typeof input === 'string') {
           try {
             const url = new URL(input, window.location?.origin || undefined);
             const params = url.searchParams;
             const redirectTo = `${url.origin}${url.pathname}`;
-            return { code: params.get('code') || input, state: params.get('state'), redirectTo };
+            return { code: params.get('code') || input, redirectTo };
           } catch (_error) {
-            return { code: input, state: null, redirectTo: null };
+            return { code: input, redirectTo: null };
           }
         }
         return {
           code: input.code || null,
-          state: input.state || null,
           redirectTo: input.redirectTo || null,
         };
       })();
@@ -337,10 +324,6 @@ function createAuthClient(supabaseUrl, supabaseKey, options = {}) {
       }
 
       const redirectTo = normalizeUrl(pkceState?.redirectTo || parsed.redirectTo);
-      if (pkceState?.state && parsed.state && pkceState.state !== parsed.state) {
-        clearPkceState();
-        return { data: null, error: new Error('OAuth state mismatch.') };
-      }
 
       const usePkceGrant = Boolean(pkceState?.codeVerifier) || isPkceEnabled;
       const tokenUrl = usePkceGrant

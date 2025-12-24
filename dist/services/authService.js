@@ -8,7 +8,7 @@ import { authError, authLog, authWarn, sanitizeUrlForLog } from '../lib/authDebu
 
   - Expected PKCE
     1) signInWithOAuth() builds /auth/v1/authorize with a code_challenge.
-    2) Provider redirects to /auth/callback.html?code=...&state=...
+    2) Provider redirects to /auth/callback.html?code=... (Supabase may append its own state internally).
     3) callback.js exchanges the code via /auth/v1/token (grant_type=pkce) and persists the session.
 
   - Current implicit fallback (what we are observing)
