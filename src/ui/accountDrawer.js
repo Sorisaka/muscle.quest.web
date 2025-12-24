@@ -49,8 +49,15 @@ export const createAccountDrawer = ({
     meta.className = 'account-summary__meta';
     meta.textContent = status.isGuest
       ? 'ゲストとして利用中。データは端末にのみ保存されます。'
-      : 'ログイン中';
+      : status.email || 'ログイン中';
     summary.append(name, meta);
+
+    if (status.supabaseError && !status.supabaseReady) {
+      const warning = document.createElement('p');
+      warning.className = 'account-summary__meta muted';
+      warning.textContent = 'Supabase 設定を dist/config.js に追加してください。';
+      summary.append(warning);
+    }
 
     const metrics = document.createElement('div');
     metrics.className = 'account-metrics';
@@ -68,15 +75,14 @@ export const createAccountDrawer = ({
     if (status.isGuest) {
       const helper = document.createElement('p');
       helper.className = 'muted drawer-actions__note';
-      helper.textContent = 'ゲストとしての操作です。ログインするとクラウド連携予定です。';
+      helper.textContent = 'Supabase OAuth を使ってログインできます。';
 
       const loginBtn = document.createElement('button');
       loginBtn.type = 'button';
-      loginBtn.textContent = 'ログイン';
-      loginBtn.addEventListener('click', () => {
+      loginBtn.textContent = 'Google でログイン';
+      loginBtn.addEventListener('click', async () => {
         playSfx('ui:navigate');
-        alert('ダミーログイン: ローカルでログイン状態を切り替えます。');
-        accountState.login();
+        await accountState.login();
         closeDrawer();
       });
 
@@ -118,10 +124,9 @@ export const createAccountDrawer = ({
       const logoutBtn = document.createElement('button');
       logoutBtn.type = 'button';
       logoutBtn.textContent = 'ログアウト';
-      logoutBtn.addEventListener('click', () => {
+      logoutBtn.addEventListener('click', async () => {
         playSfx('ui:navigate');
-        alert('ダミーログアウト: ローカルのログイン状態を解除します。');
-        accountState.logout();
+        await accountState.logout();
         closeDrawer();
       });
 

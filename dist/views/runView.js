@@ -476,7 +476,6 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
     pointsBanner.textContent = `獲得ポイント: ${result.points} pts`;
     timerNotice.textContent = '完了！計測結果を保存しました。';
     notifyCompletion('セットを完了しました。お疲れさまです！');
-    alert(`完了！ ${result.points} ポイントを獲得しました。`);
   };
 
   const updateDisplay = (snapshot) => {
