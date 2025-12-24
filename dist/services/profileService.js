@@ -1,7 +1,7 @@
 import { authLog } from '../lib/authDebug.js';
 import { getSupabaseClient } from '../lib/supabaseClient.js';
 
-const PROFILES_COLUMNS = 'id,display_name,created_at,updated_at';
+const PROFILES_COLUMNS = 'id,display_name,points,completed_runs,last_result,created_at,updated_at';
 
 function requireClient() {
   const { client, error } = getSupabaseClient();

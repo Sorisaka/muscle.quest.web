@@ -17,6 +17,16 @@ const defaultSettings = {
   timerType: trainingConfig.defaults.timerType,
 };
 
+const defaultProfile = {
+  id: 'local-user',
+  displayName: 'Guest',
+  points: 0,
+  completedRuns: 0,
+  lastResult: null,
+};
+
+const isPromise = (value) => value && typeof value.then === 'function';
+
 const readSettings = () => {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return { ...defaultSettings };
@@ -37,13 +47,25 @@ const readSettings = () => {
   }
 };
 
-export const createStore = (driver = 'local') => {
+const resolveMaybeAsync = (value, onValue) => {
+  if (isPromise(value)) {
+    value
+      .then((result) => {
+        if (typeof onValue === 'function') onValue(result);
+      })
+      .catch((error) => console.warn('Async persistence operation failed', error));
+    return undefined;
+  }
+  return value;
+};
+
+export const createStore = (driver = 'supabase') => {
   const persistence = createPersistence(driver);
   let settings = readSettings();
   const settingsSubscribers = new Set();
   const profileSubscribers = new Set();
-  let profile = persistence.loadProfile();
-  let history = persistence.loadHistory();
+  let profile = defaultProfile;
+  let history = [];
   let runPlan = {
     questId: null,
     mode: settings.mode,
@@ -59,6 +81,42 @@ export const createStore = (driver = 'local') => {
   const notifyProfile = () => {
     profileSubscribers.forEach((callback) => callback(profile));
   };
+
+  const applyProfile = (nextProfile) => {
+    if (!nextProfile) return;
+    profile = { ...defaultProfile, ...nextProfile };
+    notifyProfile();
+  };
+
+  const applyHistory = (nextHistory) => {
+    if (!nextHistory) return;
+    history = Array.isArray(nextHistory) ? nextHistory : history;
+    notifyProfile();
+  };
+
+  const initialProfile = resolveMaybeAsync(persistence.loadProfile(), applyProfile);
+  if (initialProfile) {
+    profile = { ...defaultProfile, ...initialProfile };
+  }
+
+  const initialHistory = resolveMaybeAsync(persistence.loadHistory(), applyHistory);
+  if (initialHistory) {
+    history = Array.isArray(initialHistory) ? initialHistory : [];
+  }
+
+  if (typeof persistence.subscribe === 'function') {
+    persistence.subscribe(({ profile: nextProfile, history: nextHistory } = {}) => {
+      if (nextProfile) {
+        profile = { ...defaultProfile, ...nextProfile };
+      }
+      if (nextHistory) {
+        history = Array.isArray(nextHistory) ? nextHistory : history;
+      }
+      if (nextProfile || nextHistory) {
+        notifyProfile();
+      }
+    });
+  }
 
   const persistSettings = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
@@ -108,17 +166,26 @@ export const createStore = (driver = 'local') => {
   const getProfile = () => profile;
 
   const setProfileName = (name) => {
-    profile = persistence.updateDisplayName(name);
-    notifyProfile();
-    return profile;
+    const result = persistence.updateDisplayName(name);
+    const nextProfile = resolveMaybeAsync(result, applyProfile);
+    if (nextProfile) {
+      applyProfile(nextProfile);
+    }
+    return nextProfile || profile;
   };
 
   const recordResult = (result) => {
     const pointsResult = calculatePoints(result);
     const enriched = { ...result, points: pointsResult.total, breakdown: pointsResult.breakdown };
-    profile = persistence.recordResult(enriched);
-    history = persistence.loadHistory();
-    notifyProfile();
+    const resultProfile = resolveMaybeAsync(persistence.recordResult(enriched), applyProfile);
+    if (resultProfile) {
+      applyProfile(resultProfile);
+    }
+
+    const nextHistory = resolveMaybeAsync(persistence.loadHistory(), applyHistory);
+    if (nextHistory) {
+      applyHistory(nextHistory);
+    }
     return enriched;
   };
 

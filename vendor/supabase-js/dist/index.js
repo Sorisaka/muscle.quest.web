@@ -417,9 +417,155 @@ function createAuthClient(supabaseUrl, supabaseKey, options = {}) {
   return auth;
 }
 
+async function parseJsonResponse(response) {
+  const contentType = response?.headers?.get?.('content-type') || '';
+  if (contentType.includes('application/json')) {
+    return response.json().catch(() => null);
+  }
+  const text = await response.text().catch(() => null);
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch (_error) {
+    return text;
+  }
+}
+
+function createPostgrestClient(supabaseUrl, supabaseKey, auth) {
+  const normalizedUrl = normalizeUrl(supabaseUrl);
+
+  const resolveAccessToken = async () => {
+    if (typeof auth?.getSession !== 'function') return null;
+    const { data } = await auth.getSession();
+    return data?.session?.access_token || null;
+  };
+
+  class PostgrestQuery {
+    constructor(table) {
+      this.table = table;
+      this.method = 'GET';
+      this.params = {};
+      this.body = null;
+      this.headers = {};
+      this.single = false;
+    }
+
+    select(columns = '*') {
+      if (columns) {
+        this.params.select = columns;
+      }
+      return this;
+    }
+
+    eq(column, value) {
+      this.params[column] = `eq.${encodeURIComponent(value)}`;
+      return this;
+    }
+
+    order(column, options = {}) {
+      const ascending = options?.ascending !== false;
+      this.params.order = `${column}.${ascending ? 'asc' : 'desc'}`;
+      return this;
+    }
+
+    limit(count) {
+      if (Number.isFinite(count)) {
+        this.params.limit = count;
+      }
+      return this;
+    }
+
+    insert(values) {
+      this.method = 'POST';
+      this.body = values;
+      this.headers.Prefer = 'return=representation';
+      return this;
+    }
+
+    update(values) {
+      this.method = 'PATCH';
+      this.body = values;
+      this.headers.Prefer = 'return=representation';
+      return this;
+    }
+
+    maybeSingle() {
+      this.single = true;
+      this.headers.Accept = 'application/vnd.pgrst.object+json';
+      return this;
+    }
+
+    async execute() {
+      const url = new URL(`${normalizedUrl}/rest/v1/${this.table}`);
+      Object.entries(this.params || {}).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          url.searchParams.set(key, value);
+        }
+      });
+
+      const accessToken = await resolveAccessToken().catch(() => null);
+      const headers = { ...buildHeaders(supabaseKey, accessToken), ...this.headers };
+      const requestInit = { method: this.method, headers };
+
+      if (this.body !== null && this.body !== undefined && this.method !== 'GET') {
+        requestInit.body = JSON.stringify(this.body);
+      }
+
+      const response = await fetch(url.toString(), requestInit);
+      const data = await parseJsonResponse(response);
+
+      if (!response.ok) {
+        const message = data?.error_description || data?.message || data?.error || response.statusText;
+        return { data: null, error: new Error(message || 'Request failed') };
+      }
+
+      if (this.single) {
+        if (!data) return { data: null, error: null };
+        if (Array.isArray(data)) {
+          if (data.length === 0) return { data: null, error: null };
+          if (data.length === 1) return { data: data[0], error: null };
+          return { data: null, error: new Error('Multiple rows returned') };
+        }
+      }
+
+      return { data, error: null };
+    }
+
+    then(onFulfilled, onRejected) {
+      return this.execute().then(onFulfilled, onRejected);
+    }
+  }
+
+  const rpc = async (fn, args = {}) => {
+    const accessToken = await resolveAccessToken().catch(() => null);
+    const url = `${normalizedUrl}/rest/v1/rpc/${fn}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: buildHeaders(supabaseKey, accessToken),
+      body: JSON.stringify(args || {}),
+    });
+
+    const data = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const message = data?.error_description || data?.error || data?.message || response.statusText;
+      return { data: null, error: new Error(message || 'Request failed') };
+    }
+
+    return { data, error: null };
+  };
+
+  return {
+    from: (table) => new PostgrestQuery(table),
+    rpc,
+  };
+}
+
 export function createClient(supabaseUrl, supabaseKey, options = {}) {
   const auth = createAuthClient(supabaseUrl, supabaseKey, options.auth || {});
-  return { supabaseUrl: normalizeUrl(supabaseUrl), supabaseKey, auth };
+  const postgrest = createPostgrestClient(supabaseUrl, supabaseKey, auth);
+  return { supabaseUrl: normalizeUrl(supabaseUrl), supabaseKey, auth, ...postgrest };
 }
 
 export default { createClient };
