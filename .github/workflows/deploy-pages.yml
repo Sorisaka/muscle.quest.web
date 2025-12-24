@@ -16,6 +16,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: github-pages   # 追加：Environment secrets を build でも使う
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -50,7 +51,7 @@ jobs:
           fi
 
           mkdir -p dist
-          cat > dist/config.js << 'EOF'
+          cat > dist/config.js <<EOF
           window.__APP_CONFIG__ = {
             SUPABASE_URL: "${SUPABASE_URL}",
             SUPABASE_ANON_KEY: "${SUPABASE_ANON_KEY}",
