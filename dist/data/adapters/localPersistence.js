@@ -31,6 +31,18 @@ export const createLocalPersistence = () => {
   const loadHistory = () => readJson(HISTORY_KEY, []);
   const loadLastPlans = () => readJson(LAST_PLAN_KEY, {});
 
+  const replaceProfile = (nextProfile) => {
+    const safeProfile = { ...defaultProfile, ...(nextProfile || {}) };
+    writeJson(PROFILE_KEY, safeProfile);
+    return safeProfile;
+  };
+
+  const replaceHistory = (entries = []) => {
+    const safeHistory = Array.isArray(entries) ? entries.slice(0, 100) : [];
+    writeJson(HISTORY_KEY, safeHistory);
+    return safeHistory;
+  };
+
   const saveProfile = (profile) => {
     writeJson(PROFILE_KEY, profile);
   };
@@ -126,5 +138,7 @@ export const createLocalPersistence = () => {
     loadHistory,
     saveLastPlan,
     getLastPlan,
+    replaceHistory,
+    replaceProfile,
   };
 };

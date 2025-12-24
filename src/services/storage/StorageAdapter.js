@@ -1,7 +1,5 @@
 import { createLocalPersistence } from '../../data/adapters/localPersistence.js';
-// Supabase-backed persistence is currently handled directly by auth/profile services.
-// The storage adapter only provides local persistence and warns when a Supabase
-// driver is requested.
+import { createSupabaseAdapter } from '../supabase/supabaseAdapter.js';
 
 const REQUIRED_METHODS = [
   'loadProfile',
@@ -16,12 +14,7 @@ const REQUIRED_METHODS = [
 
 const adapterFactories = {
   local: () => createLocalPersistence(),
-  supabase: () => {
-    console.warn(
-      'Supabase storage driver is not available; falling back to local persistence. Profile sync uses profileService directly.'
-    );
-    return createLocalPersistence();
-  },
+  supabase: (options) => createSupabaseAdapter(options),
 };
 
 const ensureInterface = (adapter, driver) => {
