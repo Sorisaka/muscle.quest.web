@@ -162,7 +162,7 @@ as $$
       and (
         (
           p_scope = 'global'
-          and (wr.visibility = 'public' or wr.user_id = auth.uid())
+          and wr.visibility = 'public'
         )
         or (
           coalesce(p_scope, 'following') <> 'global'
