@@ -831,15 +831,20 @@ export const createSupabaseAdapter = (options = {}) => {
       .select('user_id,date,weight_kg,body_fat_pct,visibility,created_at,updated_at')
       .eq('user_id', userId || session.user.id);
 
-    if (fromDate) query = query.gte('date', fromDate);
-    if (toDate) query = query.lte('date', toDate);
+    const supportsRange = typeof query?.gte === 'function' && typeof query?.lte === 'function';
+    if (supportsRange) {
+      if (fromDate) query = query.gte('date', fromDate);
+      if (toDate) query = query.lte('date', toDate);
+    }
 
     return query.order('date', { ascending: true }).then(({ data, error }) => {
       if (error) {
         authWarn('body_metrics range fetch failed', error.message || error);
         return local.getBodyMetricsRange(userId, fromDate, toDate);
       }
-      return (data || []).map(mapBodyMetricRow);
+      const mapped = (data || []).map(mapBodyMetricRow);
+      if (supportsRange) return mapped;
+      return mapped.filter((row) => (!fromDate || row.date >= fromDate) && (!toDate || row.date <= toDate));
     });
   };
 
