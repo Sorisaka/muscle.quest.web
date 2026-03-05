@@ -61,6 +61,32 @@ on public.workout_runs
 for delete
 using (auth.uid() = user_id);
 
+-- B-2) profiles read policy for timeline author display names
+alter table if exists public.profiles enable row level security;
+
+DROP POLICY IF EXISTS "Users can view timeline-visible profiles" ON public.profiles;
+create policy "Users can view timeline-visible profiles"
+on public.profiles
+for select
+using (
+  auth.uid() = id
+  or (
+    auth.uid() is not null
+    and exists (
+      select 1
+      from public.workout_runs wr
+      where wr.user_id = public.profiles.id
+        and wr.visibility = 'public'
+    )
+  )
+  or exists (
+    select 1
+    from public.follows f
+    where f.follower_id = auth.uid()
+      and f.followee_id = public.profiles.id
+  )
+);
+
 -- C) likes RLS
 alter table if exists public.workout_run_likes enable row level security;
 

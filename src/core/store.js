@@ -120,7 +120,7 @@ export const createStore = (driver = 'supabase') => {
   const normalizeTimelineItem = (entry = {}) => ({
     runId: entry.runId ?? entry.run_id ?? null,
     userId: entry.userId ?? entry.user_id ?? null,
-    authorDisplayName: entry.authorDisplayName ?? entry.author_display_name ?? 'Unknown',
+    authorDisplayName: entry.authorDisplayName ?? entry.author_display_name ?? entry.displayName ?? entry.display_name ?? 'Unknown',
     createdAt: entry.createdAt ?? entry.created_at ?? null,
     publishedAt: entry.publishedAt ?? entry.published_at ?? null,
     visibility: entry.visibility || 'private',

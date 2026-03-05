@@ -22,6 +22,14 @@ where c.table_schema = 'public'
   and c.column_name in ('id', 'display_name')
 order by c.column_name;
 
+
+-- Profile RLS policy required for timeline author names
+select schemaname, tablename, policyname, cmd
+from pg_policies
+where schemaname = 'public'
+  and tablename = 'profiles'
+  and policyname = 'Users can view timeline-visible profiles';
+
 -- 2) Author display name integrity (RPC row user_id must match profiles.display_name)
 -- Requires authenticated context.
 select
