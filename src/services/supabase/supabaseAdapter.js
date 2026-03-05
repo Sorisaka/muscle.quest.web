@@ -11,6 +11,20 @@ const MIGRATION_FLAG_PREFIX = 'musclequest:migration:';
 
 const isPromise = (value) => value && typeof value.then === 'function';
 
+
+const buildEqFilter = (value) => `eq.${encodeURIComponent(value)}`;
+
+const safeMaybeSingle = async (query) => {
+  const result = await query;
+  if (result?.error) return result;
+  if (Array.isArray(result?.data)) {
+    if (result.data.length === 0) return { data: null, error: null };
+    if (result.data.length === 1) return { data: result.data[0], error: null };
+  }
+  return result;
+};
+
+
 const mapHistoryRow = (row) => {
   const result = row?.result || {};
   const createdAt = row?.created_at ? new Date(row.created_at).getTime() : Date.now();
@@ -56,6 +70,63 @@ export const createSupabaseAdapter = (options = {}) => {
   };
 
   const defaultName = () => runtimeConfig.profileDisplayName || 'Guest';
+
+
+  const upsertWithFallback = async ({ table, keys, payload, selectColumns = '*' }) => {
+    if (!client || !session?.user?.id) {
+      return { data: null, error: new Error('Supabase client unavailable.') };
+    }
+
+    let query = client.from(table).select(selectColumns);
+    Object.entries(keys || {}).forEach(([key, value]) => {
+      query = query.eq(key, value);
+    });
+
+    const existing = await safeMaybeSingle(query.maybeSingle());
+    if (existing.error) return existing;
+
+    if (existing.data) {
+      let updateQuery = client.from(table).update(payload);
+      Object.entries(keys || {}).forEach(([key, value]) => {
+        updateQuery = updateQuery.eq(key, value);
+      });
+      return safeMaybeSingle(updateQuery.select(selectColumns).maybeSingle());
+    }
+
+    return safeMaybeSingle(client.from(table).insert(payload).select(selectColumns).maybeSingle());
+  };
+
+  const deleteWithFallback = async ({ table, keys }) => {
+    if (!client || !session?.user?.id) {
+      return { data: null, error: new Error('Supabase client unavailable.') };
+    }
+
+    const sessionResult = await getSession();
+    const token = sessionResult?.data?.session?.access_token || null;
+    const url = new URL(`${client.supabaseUrl}/rest/v1/${table}`);
+    Object.entries(keys || {}).forEach(([key, value]) => {
+      url.searchParams.set(key, buildEqFilter(value));
+    });
+
+    try {
+      const response = await fetch(url.toString(), {
+        method: 'DELETE',
+        headers: {
+          apikey: client.supabaseKey,
+          Authorization: `Bearer ${token || client.supabaseKey}`,
+          Prefer: 'return=minimal',
+        },
+      });
+      if (!response.ok) {
+        const text = await response.text().catch(() => '');
+        return { data: null, error: new Error(text || `delete failed (${response.status})`) };
+      }
+      return { data: null, error: null };
+    } catch (error) {
+      return { data: null, error };
+    }
+  };
+
 
   const mapProfileRow = (row) => ({
     id: row?.id || session?.user?.id || profile?.id || 'supabase-user',
@@ -435,12 +506,12 @@ export const createSupabaseAdapter = (options = {}) => {
       return local.setWeeklyPlan(userId, weekday, items);
     }
 
-    return client
-      .from('weekly_plans')
-      .upsert({ user_id: session.user.id, weekday, items: Array.isArray(items) ? items : [] }, { onConflict: 'user_id,weekday' })
-      .select('items')
-      .maybeSingle()
-      .then(({ data, error }) => {
+    return upsertWithFallback({
+      table: 'weekly_plans',
+      keys: { user_id: session.user.id, weekday },
+      payload: { user_id: session.user.id, weekday, items: Array.isArray(items) ? items : [] },
+      selectColumns: 'items',
+    }).then(({ data, error }) => {
         if (error) {
           authWarn('weekly_plans upsert failed', error.message || error);
           return local.setWeeklyPlan(userId, weekday, items);
@@ -474,12 +545,12 @@ export const createSupabaseAdapter = (options = {}) => {
       return local.setSpecialPlan(userId, date, items);
     }
 
-    return client
-      .from('special_plans')
-      .upsert({ user_id: session.user.id, date, items: Array.isArray(items) ? items : [] }, { onConflict: 'user_id,date' })
-      .select('items')
-      .maybeSingle()
-      .then(({ data, error }) => {
+    return upsertWithFallback({
+      table: 'special_plans',
+      keys: { user_id: session.user.id, date },
+      payload: { user_id: session.user.id, date, items: Array.isArray(items) ? items : [] },
+      selectColumns: 'items',
+    }).then(({ data, error }) => {
         if (error) {
           authWarn('special_plans upsert failed', error.message || error);
           return local.setSpecialPlan(userId, date, items);
@@ -512,12 +583,10 @@ export const createSupabaseAdapter = (options = {}) => {
       return local.unfollowUser(followerId, followeeId);
     }
 
-    return client
-      .from('follows')
-      .delete()
-      .eq('follower_id', followerId)
-      .eq('followee_id', followeeId)
-      .then(({ error }) => {
+    return deleteWithFallback({
+      table: 'follows',
+      keys: { follower_id: followerId, followee_id: followeeId },
+    }).then(({ error }) => {
         if (error) {
           authWarn('follows delete failed', error.message || error);
           return local.unfollowUser(followerId, followeeId);
