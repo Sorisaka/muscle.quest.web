@@ -59,7 +59,7 @@ const mapHistoryRow = (row) => {
 const mapTimelineRow = (row) => ({
   runId: row?.run_id ?? row?.runId ?? null,
   userId: row?.user_id ?? row?.userId ?? null,
-  authorDisplayName: row?.author_display_name ?? row?.authorDisplayName ?? null,
+  authorDisplayName: row?.author_display_name ?? row?.authorDisplayName ?? row?.display_name ?? row?.displayName ?? null,
   createdAt: row?.created_at ?? row?.createdAt ?? null,
   publishedAt: row?.published_at ?? row?.publishedAt ?? null,
   visibility: normalizePostVisibility(row?.visibility, 'private'),

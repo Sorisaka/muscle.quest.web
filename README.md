@@ -130,3 +130,14 @@ All primary hash routes can be checked without extra tooling:
    - `#/account`
 3. The header updates to confirm the active route and description.
 4. Keep the devtools console open and ensure there are no MIME type errors for `config.js` or module-resolution errors (e.g., `@supabase/supabase-js`). The build now ships `dist/config.js` automatically (dummy values) and serves `vendor/supabase-js` from `dist/vendor/` so the bundle loads without missing-script failures.
+
+
+## タイムライン仕様（タブ定義）
+- `global`（全体公開）: **非フォロー相手の public 投稿のみ**（自分の投稿は除外）
+- `following`（フォロー中）: **フォロー相手の public/private 投稿 + 自分の投稿**
+
+## タイムライン UI 検証手順
+1. `#/timeline` 初回表示時に、現在スコープ（デフォルト following）が自動ロードされること
+2. 2回目以降（同一セッション・同一スコープ）は自動再取得されず、`更新` ボタン押下時のみ再取得されること
+3. `following` ↔ `global` 切替直後に、前タブの投稿が残らないこと（残像がないこと）
+4. `global` が 0 件の場合でも、空状態（投稿なし）として表示されること
