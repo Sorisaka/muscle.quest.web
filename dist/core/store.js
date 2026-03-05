@@ -1,9 +1,10 @@
 import { trainingConfig } from '../data/trainingConfig.js';
 import { createPersistence } from '../data/persistence.js';
-import { calculatePoints } from './points.js';
-import { aggregatePoints, calculateStreak } from './history.js';
+import { calculateCalories, calculatePoints } from './points.js';
+import { aggregateCalories, calculateStreak } from './history.js';
 
 const STORAGE_KEY = 'musclequest:settings';
+const TODO_STATE_KEY = 'musclequest:todoState';
 
 const defaultSettings = {
   language: 'en',
@@ -20,12 +21,24 @@ const defaultSettings = {
 const defaultProfile = {
   id: 'local-user',
   displayName: 'Guest',
-  points: 0,
+  totalCalories: 0,
   completedRuns: 0,
   lastResult: null,
 };
 
 const isPromise = (value) => value && typeof value.then === 'function';
+
+const readTodoState = () => {
+  try {
+    return JSON.parse(localStorage.getItem(TODO_STATE_KEY) || '{}');
+  } catch (error) {
+    return {};
+  }
+};
+
+const writeTodoState = (value) => {
+  localStorage.setItem(TODO_STATE_KEY, JSON.stringify(value || {}));
+};
 
 const readSettings = () => {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -73,6 +86,9 @@ export const createStore = (driver = 'supabase') => {
     restSeconds: settings.timerRestSeconds,
     sets: settings.timerSets,
   };
+  let weeklyPlan = {};
+  let specialPlans = {};
+  let todoState = readTodoState();
 
   const notifySettings = () => {
     settingsSubscribers.forEach((callback) => callback(settings));
@@ -174,9 +190,28 @@ export const createStore = (driver = 'supabase') => {
     return nextProfile || profile;
   };
 
+
+  const saveProfileSettings = (partialProfile = {}) => {
+    const mergedProfile = { ...profile, ...partialProfile };
+    const result = persistence.saveProfile(mergedProfile);
+    const nextProfile = resolveMaybeAsync(result, applyProfile);
+    if (nextProfile) {
+      applyProfile(nextProfile);
+      return nextProfile;
+    }
+    return result || mergedProfile;
+  };
+
   const recordResult = (result) => {
-    const pointsResult = calculatePoints(result);
-    const enriched = { ...result, points: pointsResult.total, breakdown: pointsResult.breakdown };
+    const calorieResult = calculateCalories(result, profile);
+    const legacyPoints = calculatePoints(result, profile);
+    const enriched = {
+      ...result,
+      calories: calorieResult.total,
+      breakdown: calorieResult.breakdown,
+      points: legacyPoints.total,
+      calorieBreakdown: calorieResult.breakdown,
+    };
     const resultProfile = resolveMaybeAsync(persistence.recordResult(enriched), applyProfile);
     if (resultProfile) {
       applyProfile(resultProfile);
@@ -194,9 +229,106 @@ export const createStore = (driver = 'supabase') => {
   const getHistory = () => history;
 
   const getPointSummary = () => ({
-    totals: aggregatePoints(history),
+    totals: aggregateCalories(history),
     streak: calculateStreak(history),
   });
+
+  const getCalorieSummary = () => ({
+    totals: aggregateCalories(history),
+    streak: calculateStreak(history),
+  });
+
+
+  const loadWeeklyPlan = (userId) => {
+    const result = persistence.getWeeklyPlan(userId);
+    return resolveMaybeAsync(result, (next) => {
+      weeklyPlan = next || {};
+      notifyProfile();
+    }) || weeklyPlan;
+  };
+
+  const saveWeeklyPlan = (userId, weekday, items) => {
+    const result = persistence.setWeeklyPlan(userId, weekday, items);
+    const sync = resolveMaybeAsync(result, (savedItems) => {
+      weeklyPlan = { ...weeklyPlan, [String(weekday)]: savedItems || [] };
+      notifyProfile();
+    });
+    if (sync) {
+      weeklyPlan = { ...weeklyPlan, [String(weekday)]: sync || [] };
+      notifyProfile();
+    }
+    return sync || items;
+  };
+
+  const loadSpecialPlan = (userId, date) => {
+    const result = persistence.getSpecialPlan(userId, date);
+    return resolveMaybeAsync(result, (items) => {
+      specialPlans = { ...specialPlans, [date]: items || [] };
+      notifyProfile();
+    }) || specialPlans[date] || null;
+  };
+
+  const saveSpecialPlan = (userId, date, items) => {
+    const result = persistence.setSpecialPlan(userId, date, items);
+    const sync = resolveMaybeAsync(result, (savedItems) => {
+      specialPlans = { ...specialPlans, [date]: savedItems || [] };
+      notifyProfile();
+    });
+    if (sync) {
+      specialPlans = { ...specialPlans, [date]: sync || [] };
+      notifyProfile();
+    }
+    return sync || items;
+  };
+
+  const getTodayPlan = (userId, now = new Date()) => {
+    const weekday = now.getDay();
+    const dateKey = now.toISOString().slice(0, 10);
+    const special = specialPlans[dateKey];
+    const weekly = weeklyPlan[String(weekday)] || [];
+    const items = Array.isArray(special) && special.length ? special : weekly;
+    return {
+      dateKey,
+      weekday,
+      source: Array.isArray(special) && special.length ? 'special' : 'weekly',
+      items,
+    };
+  };
+
+  const getTodoStateForDate = (dateKey) => todoState[dateKey] || {};
+
+  const setTodoDone = (dateKey, index, done) => {
+    const current = { ...(todoState[dateKey] || {}) };
+    current[index] = Boolean(done);
+    todoState = { ...todoState, [dateKey]: current };
+    writeTodoState(todoState);
+    notifyProfile();
+    return current;
+  };
+
+
+  const followUser = (followerId, followeeId) => persistence.followUser(followerId, followeeId);
+
+  const unfollowUser = (followerId, followeeId) => persistence.unfollowUser(followerId, followeeId);
+
+  const getFollowing = (userId) => persistence.getFollowing(userId);
+
+  const getFollowers = (userId) => persistence.getFollowers(userId);
+
+  const listVisibleWorkouts = (viewerId, targetUserId) => persistence.listVisibleWorkouts(viewerId, targetUserId);
+
+  const updateWorkoutPost = (runId, updates) => {
+    const result = persistence.updateWorkoutPost(runId, updates);
+    const sync = resolveMaybeAsync(result, () => {
+      const nextHistory = resolveMaybeAsync(persistence.loadHistory(), applyHistory);
+      if (nextHistory) applyHistory(nextHistory);
+    });
+    if (sync) {
+      const nextHistory = resolveMaybeAsync(persistence.loadHistory(), applyHistory);
+      if (nextHistory) applyHistory(nextHistory);
+    }
+    return sync || result;
+  };
 
   const subscribeSettings = (callback) => {
     settingsSubscribers.add(callback);
@@ -219,11 +351,26 @@ export const createStore = (driver = 'supabase') => {
     getLastPlan,
     getProfile,
     setProfileName,
+    saveProfileSettings,
     recordResult,
     getLeaderboard,
     subscribeProfile,
     getHistory,
     getPointSummary,
+    getCalorieSummary,
+    loadWeeklyPlan,
+    saveWeeklyPlan,
+    loadSpecialPlan,
+    saveSpecialPlan,
+    getTodayPlan,
+    getTodoStateForDate,
+    setTodoDone,
+    followUser,
+    unfollowUser,
+    getFollowing,
+    getFollowers,
+    listVisibleWorkouts,
+    updateWorkoutPost,
     getTimerPreferences,
   };
 };

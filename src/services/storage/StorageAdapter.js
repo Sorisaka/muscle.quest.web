@@ -10,6 +10,16 @@ const REQUIRED_METHODS = [
   'loadHistory',
   'saveLastPlan',
   'getLastPlan',
+  'getWeeklyPlan',
+  'setWeeklyPlan',
+  'getSpecialPlan',
+  'setSpecialPlan',
+  'followUser',
+  'unfollowUser',
+  'getFollowing',
+  'getFollowers',
+  'listVisibleWorkouts',
+  'updateWorkoutPost',
 ];
 
 const adapterFactories = {

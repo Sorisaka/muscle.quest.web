@@ -1,8 +1,11 @@
-import { aggregatePoints } from '../../core/history.js';
+import { aggregateCalories } from '../../core/history.js';
 
 const PROFILE_KEY = 'musclequest:profile';
 const HISTORY_KEY = 'musclequest:history';
 const LAST_PLAN_KEY = 'musclequest:lastPlans';
+const WEEKLY_PLAN_KEY = 'musclequest:weeklyPlans';
+const SPECIAL_PLAN_KEY = 'musclequest:specialPlans';
+const FOLLOWS_KEY = 'musclequest:follows';
 
 const readJson = (key, fallback) => {
   try {
@@ -21,6 +24,7 @@ const writeJson = (key, value) => {
 const defaultProfile = {
   id: 'local-user',
   displayName: 'Guest',
+  totalCalories: 0,
   points: 0,
   completedRuns: 0,
   lastResult: null,
@@ -30,6 +34,9 @@ export const createLocalPersistence = () => {
   const loadProfile = () => readJson(PROFILE_KEY, { ...defaultProfile });
   const loadHistory = () => readJson(HISTORY_KEY, []);
   const loadLastPlans = () => readJson(LAST_PLAN_KEY, {});
+  const loadWeeklyPlans = () => readJson(WEEKLY_PLAN_KEY, {});
+  const loadSpecialPlans = () => readJson(SPECIAL_PLAN_KEY, {});
+  const loadFollows = () => readJson(FOLLOWS_KEY, []);
 
   const replaceProfile = (nextProfile) => {
     const safeProfile = { ...defaultProfile, ...(nextProfile || {}) };
@@ -44,7 +51,9 @@ export const createLocalPersistence = () => {
   };
 
   const saveProfile = (profile) => {
-    writeJson(PROFILE_KEY, profile);
+    const next = { ...defaultProfile, ...(profile || {}) };
+    writeJson(PROFILE_KEY, next);
+    return next;
   };
 
   const saveLastPlan = (questId, difficulty, plan) => {
@@ -67,23 +76,32 @@ export const createLocalPersistence = () => {
     const profile = loadProfile();
     const history = loadHistory();
     const timestamp = Date.now();
+    const calories = Number(result.calories || 0);
     const nextProfile = {
       ...profile,
-      points: profile.points + result.points,
+      totalCalories: (profile.totalCalories || 0) + calories,
+      points: profile.points || 0,
       completedRuns: profile.completedRuns + 1,
       lastResult: { ...result, recordedAt: timestamp },
     };
 
     history.unshift({
+      id: result.id || `${timestamp}:${Math.random().toString(36).slice(2, 8)}`,
+      user_id: profile.id || 'local-user',
       questId: result.questId,
       exerciseSlug: result.exerciseSlug,
-      points: result.points,
+      calories,
+      points: result.points || 0,
       mode: result.mode,
       difficulty: result.difficulty,
       sets: result.sets,
       startTime: result.startTime,
       endTime: result.endTime,
       timestamp,
+      visibility: result.visibility || 'private',
+      published_at: result.published_at || ((result.visibility && result.visibility !== 'private') ? new Date(timestamp).toISOString() : null),
+      note: result.note || null,
+      breakdown: result.breakdown || null,
     });
 
     writeJson(PROFILE_KEY, nextProfile);
@@ -92,6 +110,31 @@ export const createLocalPersistence = () => {
       saveLastPlan(result.questId, result.difficulty, result.plan);
     }
     return nextProfile;
+  };
+
+
+  const getWeeklyPlan = () => loadWeeklyPlans();
+
+  const setWeeklyPlan = (_userId, weekday, items = []) => {
+    if (weekday == null) return [];
+    const weekly = loadWeeklyPlans();
+    weekly[String(weekday)] = Array.isArray(items) ? items : [];
+    writeJson(WEEKLY_PLAN_KEY, weekly);
+    return weekly[String(weekday)];
+  };
+
+  const getSpecialPlan = (_userId, date) => {
+    if (!date) return null;
+    const special = loadSpecialPlans();
+    return special[date] || null;
+  };
+
+  const setSpecialPlan = (_userId, date, items = []) => {
+    if (!date) return null;
+    const special = loadSpecialPlans();
+    special[date] = Array.isArray(items) ? items : [];
+    writeJson(SPECIAL_PLAN_KEY, special);
+    return special[date];
   };
 
   const updateDisplayName = (name) => {
@@ -104,29 +147,89 @@ export const createLocalPersistence = () => {
   const loadLeaderboard = (period = 'overall') => {
     const profile = loadProfile();
     const history = loadHistory();
-    const totals = aggregatePoints(history);
+    const totals = aggregateCalories(history);
     const bots = [
-      { id: 'atlas', displayName: 'Atlas', points: 3200, daily: 140, weekly: 860, monthly: 2100 },
-      { id: 'valkyrie', displayName: 'Valkyrie', points: 2500, daily: 110, weekly: 640, monthly: 1600 },
-      { id: 'nova', displayName: 'Nova', points: 1800, daily: 80, weekly: 420, monthly: 1100 },
+      { id: 'atlas', displayName: 'Atlas', calories: 3200, daily: 140, weekly: 860, monthly: 2100 },
+      { id: 'valkyrie', displayName: 'Valkyrie', calories: 2500, daily: 110, weekly: 640, monthly: 1600 },
+      { id: 'nova', displayName: 'Nova', calories: 1800, daily: 80, weekly: 420, monthly: 1100 },
     ];
-    const getPeriodPoints = (entry) => {
+
+    const getPeriodCalories = (entry) => {
       if (entry.id === profile.id) {
         if (period === 'daily') return totals.daily || 0;
         if (period === 'weekly') return totals.weekly || 0;
         if (period === 'monthly') return totals.monthly || 0;
       }
-      if (period === 'daily') return entry.daily ?? entry.points ?? 0;
-      if (period === 'weekly') return entry.weekly ?? entry.points ?? 0;
-      if (period === 'monthly') return entry.monthly ?? entry.points ?? 0;
-      return entry.points || 0;
+      if (period === 'daily') return entry.daily ?? entry.calories ?? 0;
+      if (period === 'weekly') return entry.weekly ?? entry.calories ?? 0;
+      if (period === 'monthly') return entry.monthly ?? entry.calories ?? 0;
+      return entry.calories || 0;
     };
 
-    const entries = [...bots, profile];
+    const entries = [...bots, { ...profile, calories: profile.totalCalories || 0 }];
     return entries
-      .map((entry) => ({ ...entry, points: Math.max(getPeriodPoints(entry), 0) }))
-      .sort((a, b) => b.points - a.points)
+      .map((entry) => ({ ...entry, calories: Math.max(getPeriodCalories(entry), 0) }))
+      .sort((a, b) => b.calories - a.calories)
       .slice(0, 20);
+  };
+
+
+  const followUser = (followerId, followeeId) => {
+    if (!followerId || !followeeId || followerId === followeeId) return false;
+    const follows = loadFollows();
+    const exists = follows.some((row) => row.follower_id === followerId && row.followee_id === followeeId);
+    if (!exists) {
+      follows.push({ follower_id: followerId, followee_id: followeeId, created_at: new Date().toISOString() });
+      writeJson(FOLLOWS_KEY, follows);
+    }
+    return true;
+  };
+
+  const unfollowUser = (followerId, followeeId) => {
+    const follows = loadFollows();
+    const next = follows.filter((row) => !(row.follower_id === followerId && row.followee_id === followeeId));
+    writeJson(FOLLOWS_KEY, next);
+    return true;
+  };
+
+  const getFollowing = (userId) => loadFollows().filter((row) => row.follower_id === userId).map((row) => row.followee_id);
+
+  const getFollowers = (userId) => loadFollows().filter((row) => row.followee_id === userId).map((row) => row.follower_id);
+
+  const canView = (viewerId, entry) => {
+    if (!entry) return false;
+    if (viewerId && entry.user_id === viewerId) return true;
+    if (entry.visibility === 'public') return true;
+    if (entry.visibility === 'followers') {
+      const follows = loadFollows();
+      return follows.some((row) => row.follower_id === viewerId && row.followee_id === entry.user_id);
+    }
+    return false;
+  };
+
+  const listVisibleWorkouts = (viewerId, targetUserId) => {
+    const history = loadHistory();
+    return history
+      .filter((entry) => !targetUserId || entry.user_id === targetUserId)
+      .filter((entry) => canView(viewerId, entry));
+  };
+
+  const updateWorkoutPost = (runId, updates = {}) => {
+    if (!runId) return null;
+    const history = loadHistory();
+    const idx = history.findIndex((entry) => entry.id === runId);
+    if (idx < 0) return null;
+    const visibility = updates.visibility || history[idx].visibility || 'private';
+    const publishedAt = visibility === 'private' ? null : (updates.published_at || history[idx].published_at || new Date().toISOString());
+    const next = {
+      ...history[idx],
+      visibility,
+      published_at: publishedAt,
+      note: typeof updates.note === 'string' ? updates.note : history[idx].note,
+    };
+    history[idx] = next;
+    writeJson(HISTORY_KEY, history);
+    return next;
   };
 
   return {
@@ -138,6 +241,16 @@ export const createLocalPersistence = () => {
     loadHistory,
     saveLastPlan,
     getLastPlan,
+    getWeeklyPlan,
+    setWeeklyPlan,
+    getSpecialPlan,
+    setSpecialPlan,
+    followUser,
+    unfollowUser,
+    getFollowing,
+    getFollowers,
+    listVisibleWorkouts,
+    updateWorkoutPost,
     replaceHistory,
     replaceProfile,
   };

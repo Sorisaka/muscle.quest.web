@@ -225,7 +225,7 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
 
   const pointsBanner = document.createElement('p');
   pointsBanner.className = 'muted run-points';
-  pointsBanner.textContent = `ポイント基準: 規定セット ${runPlan.baseSets}、上限 ${runPlan.maxSets}。チャレンジでポイント増。`;
+  pointsBanner.textContent = `消費カロリー基準: 規定セット ${runPlan.baseSets}、上限 ${runPlan.maxSets}。チャレンジで消費カロリー増。`;
 
   const timerControls = document.createElement('div');
   timerControls.className = 'run-timer__controls';
@@ -301,7 +301,43 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   });
   restField.append(restLabel, restInput);
 
-  timerControls.append(modeField, workField, restField);
+
+  let postVisibility = 'private';
+  let postNote = '';
+
+  const visibilityField = document.createElement('label');
+  visibilityField.className = 'field';
+  const visibilityLabel = document.createElement('span');
+  visibilityLabel.textContent = '公開範囲';
+  const visibilitySelect = document.createElement('select');
+  [
+    { value: 'private', label: 'private' },
+    { value: 'followers', label: 'followers' },
+    { value: 'public', label: 'public' },
+  ].forEach((option) => {
+    const el = document.createElement('option');
+    el.value = option.value;
+    el.textContent = option.label;
+    visibilitySelect.append(el);
+  });
+  visibilitySelect.addEventListener('change', (event) => {
+    postVisibility = event.target.value;
+  });
+  visibilityField.append(visibilityLabel, visibilitySelect);
+
+  const noteField = document.createElement('label');
+  noteField.className = 'field';
+  const noteLabel = document.createElement('span');
+  noteLabel.textContent = 'メモ';
+  const noteInput = document.createElement('input');
+  noteInput.type = 'text';
+  noteInput.placeholder = '任意メモ';
+  noteInput.addEventListener('input', (event) => {
+    postNote = event.target.value;
+  });
+  noteField.append(noteLabel, noteInput);
+
+  timerControls.append(modeField, workField, restField, visibilityField, noteField);
 
   const timerNotice = document.createElement('p');
   timerNotice.className = 'muted';
@@ -311,7 +347,7 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   const planBox = document.createElement('div');
   planBox.className = 'stack run-plan__box';
   const planHeading = document.createElement('h3');
-  planHeading.textContent = 'ポイントアップチャレンジ';
+  planHeading.textContent = '消費カロリーアップチャレンジ';
 
   const planLead = document.createElement('p');
   planLead.className = 'muted';
@@ -424,7 +460,7 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
       completionRecorded = false;
       toggleButton.textContent = '開始';
       completeButton.disabled = false;
-      pointsBanner.textContent = 'ポイント: 設定を調整してポイントを伸ばしましょう。';
+      pointsBanner.textContent = '消費カロリー: 設定を調整して消費カロリーを伸ばしましょう。';
       timerNotice.textContent = '';
       startTimestamp = null;
       updateDisplay(engine.getSnapshot());
@@ -468,12 +504,15 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
       startTime: startTimestamp,
       endTime: Date.now(),
       plan: runPlan,
+      visibility: postVisibility,
+      published_at: postVisibility === 'private' ? null : new Date().toISOString(),
+      note: postNote,
     });
     completionRecorded = true;
     completeButton.disabled = true;
     store.rememberPlan(runPlan.questId, runPlan.difficulty, runPlan);
     store.rememberTimerConfig(timerConfig);
-    pointsBanner.textContent = `獲得ポイント: ${result.points} pts`;
+    pointsBanner.textContent = `獲得消費カロリー: ${result.calories} kcal`;
     timerNotice.textContent = '完了！計測結果を保存しました。';
     notifyCompletion('セットを完了しました。お疲れさまです！');
   };

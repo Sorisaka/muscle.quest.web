@@ -16,11 +16,11 @@ const createRankRow = (position, entry, selfId) => {
   name.textContent = entry.displayName || entry.id || 'Anonymous';
   const points = document.createElement('span');
   points.className = 'muted';
-  points.textContent = `${entry.points} pts`;
+  points.textContent = `${entry.calories ?? 0} kcal`;
   user.append(name, points);
 
   const total = document.createElement('strong');
-  total.textContent = `${entry.points} pts`;
+  total.textContent = `${entry.calories ?? 0} kcal`;
 
   row.append(badge, user, total);
   return row;
@@ -53,7 +53,7 @@ export const renderRank = (params, { navigate, store, playSfx }) => {
 
   const description = document.createElement('p');
   description.className = 'muted';
-  description.textContent = 'ローカル保存されたポイントとサンプル順位を表示します。将来的に Supabase へ差し替え可能なアダプタ構造です。';
+  description.textContent = 'ローカル保存された消費カロリーとサンプル順位を表示します。将来的に Supabase へ差し替え可能なアダプタ構造です。';
 
   const periods = [
     { id: 'daily', label: '本日' },

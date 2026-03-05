@@ -129,7 +129,7 @@ export const renderQuest = (params, { navigate, store, playSfx }) => {
 
   const start = document.createElement('button');
   start.type = 'button';
-  start.textContent = '開始する（編集してポイントUP）';
+  start.textContent = '開始する（編集して消費カロリーUP）';
   start.addEventListener('click', () => {
     store.rememberPlan(quest.id, settings.difficulty, plan);
     playSfx('ui:navigate');

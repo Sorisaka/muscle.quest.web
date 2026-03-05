@@ -60,7 +60,7 @@ export const createAccountState = (store) => {
 
   const getStatus = () => {
     const profile = store.getProfile();
-    const pointSummary = store.getPointSummary();
+    const calorieSummary = store.getCalorieSummary ? store.getCalorieSummary() : store.getPointSummary();
     const loggedIn = Boolean(state.session && state.supabaseReady && !state.supabaseError);
 
     return {
@@ -74,10 +74,11 @@ export const createAccountState = (store) => {
       id: loggedIn ? state.session?.user?.id || state.profile?.id : profile?.id || 'local-user',
       email: state.session?.user?.email || null,
       displayName: deriveDisplayName(),
+      calories: profile?.totalCalories || profile?.total_calories || 0,
       points: profile?.points || 0,
       completedRuns: profile?.completedRuns || 0,
-      streak: pointSummary.streak || 0,
-      totals: pointSummary.totals || { daily: 0, weekly: 0, monthly: 0 },
+      streak: calorieSummary.streak || 0,
+      totals: calorieSummary.totals || { daily: 0, weekly: 0, monthly: 0 },
     };
   };
 

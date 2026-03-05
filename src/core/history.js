@@ -10,15 +10,23 @@ const isWithinDays = (timestamp, days, now = Date.now()) => {
   return diff >= 0 && diff <= limit;
 };
 
-export const aggregatePoints = (history, now = Date.now()) => {
+const getCaloriesValue = (item) => {
+  const calories = Number(item?.calories);
+  return Number.isFinite(calories) ? calories : 0;
+};
+
+export const aggregateCalories = (history, now = Date.now()) => {
   const total = { daily: 0, weekly: 0, monthly: 0 };
   history.forEach((item) => {
-    if (isWithinDays(item.timestamp, 1, now)) total.daily += item.points || 0;
-    if (isWithinDays(item.timestamp, 7, now)) total.weekly += item.points || 0;
-    if (isWithinDays(item.timestamp, 30, now)) total.monthly += item.points || 0;
+    const value = getCaloriesValue(item);
+    if (isWithinDays(item.timestamp, 1, now)) total.daily += value;
+    if (isWithinDays(item.timestamp, 7, now)) total.weekly += value;
+    if (isWithinDays(item.timestamp, 30, now)) total.monthly += value;
   });
   return total;
 };
+
+export const aggregatePoints = (history, now = Date.now()) => aggregateCalories(history, now);
 
 export const calculateStreak = (history, now = Date.now()) => {
   const daysWithWork = new Set(history.map((entry) => startOfDay(entry.timestamp)));
