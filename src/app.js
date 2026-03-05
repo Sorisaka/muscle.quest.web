@@ -9,6 +9,7 @@ import { renderQuest } from './views/questView.js';
 import { renderRun } from './views/runView.js';
 import { renderRank } from './views/rankView.js';
 import { renderAccount } from './views/accountView.js';
+import { renderTimeline } from './views/timelineView.js';
 import { createAccountDrawer } from './ui/accountDrawer.js';
 
 const titleEl = document.querySelector('[data-route-title]');
@@ -70,6 +71,12 @@ const routes = [
     title: 'Account',
     description: 'プロフィールと消費カロリーの概要。',
     render: renderAccount,
+  },
+  {
+    path: '#/timeline',
+    title: 'Timeline',
+    description: 'フォロー/公開投稿のタイムライン',
+    render: renderTimeline,
   },
 ];
 

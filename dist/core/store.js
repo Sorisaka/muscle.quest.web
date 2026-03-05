@@ -91,6 +91,25 @@ export const createStore = (driver = 'supabase') => {
   let weeklyPlan = {};
   let specialPlans = {};
   let todoState = readTodoState();
+  let timeline = {
+    scope: 'following',
+    items: [],
+    nextBefore: null,
+    loading: false,
+    error: null,
+    loadedOnceByScope: {
+      following: false,
+      global: false,
+    },
+    itemsByScope: {
+      following: [],
+      global: [],
+    },
+    nextBeforeByScope: {
+      following: null,
+      global: null,
+    },
+  };
 
   const notifySettings = () => {
     settingsSubscribers.forEach((callback) => callback(settings));
@@ -110,6 +129,74 @@ export const createStore = (driver = 'supabase') => {
     if (!nextHistory) return;
     history = Array.isArray(nextHistory) ? nextHistory : history;
     notifyProfile();
+  };
+
+  const normalizeTimelineItem = (entry = {}) => ({
+    runId: entry.runId ?? entry.run_id ?? null,
+    userId: entry.userId ?? entry.user_id ?? null,
+    authorDisplayName: entry.authorDisplayName ?? entry.author_display_name ?? entry.displayName ?? entry.display_name ?? 'Unknown',
+    createdAt: entry.createdAt ?? entry.created_at ?? null,
+    publishedAt: entry.publishedAt ?? entry.published_at ?? null,
+    visibility: entry.visibility || 'private',
+    calories: Number(entry.calories || 0),
+    note: entry.note || null,
+    result: entry.result || null,
+    likeCount: Number(entry.likeCount ?? entry.like_count ?? 0),
+    liked: Boolean(entry.liked),
+  });
+
+  const deriveNextBefore = (items = []) => {
+    if (!Array.isArray(items) || !items.length) return null;
+    const last = items[items.length - 1];
+    return last?.publishedAt || last?.createdAt || null;
+  };
+
+  const applyTimeline = (scope, items = [], options = {}) => {
+    const normalizedScope = scope || timeline.scope || 'following';
+    const shouldAppend = Boolean(options.append);
+    const previousItems = Array.isArray(timeline.itemsByScope?.[normalizedScope])
+      ? timeline.itemsByScope[normalizedScope]
+      : [];
+    const normalizedItems = Array.isArray(items) ? items.map(normalizeTimelineItem) : [];
+    const nextItems = shouldAppend
+      ? [
+        ...previousItems,
+        ...normalizedItems.filter((entry) => !previousItems.some((prev) => prev.runId === entry.runId)),
+      ]
+      : normalizedItems;
+
+    const nextLoaded = {
+      following: Boolean(timeline.loadedOnceByScope?.following),
+      global: Boolean(timeline.loadedOnceByScope?.global),
+      ...(options.loadedOnceByScope || {}),
+    };
+
+    if (options.markLoaded) {
+      nextLoaded[normalizedScope] = true;
+    }
+
+    const nextBefore = shouldAppend
+      ? deriveNextBefore(nextItems)
+      : (options.nextBefore ?? deriveNextBefore(nextItems));
+
+    timeline = {
+      scope: normalizedScope,
+      items: nextItems,
+      nextBefore,
+      loading: typeof options.loading === 'boolean' ? options.loading : timeline.loading,
+      error: options.error ?? null,
+      loadedOnceByScope: nextLoaded,
+      itemsByScope: {
+        following: normalizedScope === 'following' ? nextItems : (timeline.itemsByScope?.following || []),
+        global: normalizedScope === 'global' ? nextItems : (timeline.itemsByScope?.global || []),
+      },
+      nextBeforeByScope: {
+        following: normalizedScope === 'following' ? nextBefore : (timeline.nextBeforeByScope?.following || null),
+        global: normalizedScope === 'global' ? nextBefore : (timeline.nextBeforeByScope?.global || null),
+      },
+    };
+    notifyProfile();
+    return timeline;
   };
 
   const initialProfile = resolveMaybeAsync(persistence.loadProfile(), applyProfile);
@@ -332,6 +419,99 @@ export const createStore = (driver = 'supabase') => {
     return sync || result;
   };
 
+
+  const fetchTimeline = ({ scope = 'following', limit = 30, before = null, force = false } = {}) => {
+    const normalizedScope = scope || 'following';
+    const isHeadLoad = before == null;
+    const alreadyLoaded = timeline.loadedOnceByScope?.[normalizedScope] === true;
+
+    if (isHeadLoad && !force && alreadyLoaded) {
+      return Promise.resolve(applyTimeline(normalizedScope, timeline.itemsByScope?.[normalizedScope] || [], {
+        loading: false,
+        error: null,
+        nextBefore: timeline.nextBeforeByScope?.[normalizedScope] || null,
+      }));
+    }
+
+    if (isHeadLoad) {
+      applyTimeline(normalizedScope, [], {
+        loading: true,
+        error: null,
+      });
+    } else {
+      applyTimeline(normalizedScope, timeline.itemsByScope?.[normalizedScope] || [], {
+        loading: true,
+        error: null,
+        nextBefore: timeline.nextBeforeByScope?.[normalizedScope] || null,
+      });
+    }
+
+    return Promise.resolve(persistence.getTimeline({ scope: normalizedScope, limit, before, force }))
+      .then((items) => applyTimeline(normalizedScope, items || [], {
+        append: !isHeadLoad,
+        loading: false,
+        error: null,
+        markLoaded: isHeadLoad,
+      }))
+      .catch((error) => {
+        const fallbackItems = isHeadLoad ? [] : (timeline.itemsByScope?.[normalizedScope] || []);
+        applyTimeline(normalizedScope, fallbackItems, {
+          loading: false,
+          error: error?.message || 'タイムライン取得に失敗しました。',
+          nextBefore: timeline.nextBeforeByScope?.[normalizedScope] || null,
+        });
+        throw error;
+      });
+  };
+
+  const toggleLike = (runId) => {
+    if (!runId) return { runId, liked: false, likeCount: 0 };
+
+    const previous = timeline.items.slice();
+    const idx = previous.findIndex((item) => item.runId === runId);
+
+    if (idx >= 0) {
+      const target = previous[idx];
+      const optimisticLiked = !target.liked;
+      const optimisticCount = Math.max(0, Number(target.likeCount || 0) + (optimisticLiked ? 1 : -1));
+      const optimisticItems = previous.slice();
+      optimisticItems[idx] = { ...target, liked: optimisticLiked, likeCount: optimisticCount };
+      applyTimeline(timeline.scope, optimisticItems);
+    }
+
+    const result = persistence.toggleLike(runId);
+    const sync = resolveMaybeAsync(result, (next) => {
+      if (!next) return;
+      const targetIndex = timeline.items.findIndex((item) => item.runId === runId);
+      if (targetIndex < 0) return;
+      const items = timeline.items.slice();
+      items[targetIndex] = {
+        ...items[targetIndex],
+        liked: Boolean(next.liked),
+        likeCount: Number(next.likeCount ?? items[targetIndex].likeCount ?? 0),
+      };
+      applyTimeline(timeline.scope, items);
+    });
+
+    if (sync) {
+      const targetIndex = timeline.items.findIndex((item) => item.runId === runId);
+      if (targetIndex >= 0) {
+        const items = timeline.items.slice();
+        items[targetIndex] = {
+          ...items[targetIndex],
+          liked: Boolean(sync.liked),
+          likeCount: Number(sync.likeCount ?? items[targetIndex].likeCount ?? 0),
+        };
+        applyTimeline(timeline.scope, items);
+      }
+      return sync;
+    }
+
+    return { runId, liked: idx >= 0 ? !previous[idx].liked : false, likeCount: idx >= 0 ? Math.max(0, Number(previous[idx].likeCount || 0) + (!previous[idx].liked ? 1 : -1)) : 0 };
+  };
+
+  const getTimelineState = () => timeline;
+
   const subscribeSettings = (callback) => {
     settingsSubscribers.add(callback);
     return () => settingsSubscribers.delete(callback);
@@ -373,6 +553,9 @@ export const createStore = (driver = 'supabase') => {
     getFollowers,
     listVisibleWorkouts,
     updateWorkoutPost,
+    fetchTimeline,
+    toggleLike,
+    getTimelineState,
     getTimerPreferences,
   };
 };

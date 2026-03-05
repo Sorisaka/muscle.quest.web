@@ -700,3 +700,32 @@ section.panel {
     font-size: 2rem;
   }
 }
+
+.timeline-card {
+  gap: 0.7rem;
+}
+
+.timeline-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.timeline-card__meta,
+.timeline-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.like-button {
+  min-width: 84px;
+}
+
+.like-button.is-liked {
+  background: #8b1f3a;
+  border-color: #b4234a;
+}

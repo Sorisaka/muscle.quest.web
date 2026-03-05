@@ -96,7 +96,17 @@ export const createAccountDrawer = ({
         closeDrawer();
       });
 
-      actions.append(helper, loginBtn, settingsLink);
+      const timelineLink = document.createElement('button');
+      timelineLink.type = 'button';
+      timelineLink.className = 'ghost';
+      timelineLink.textContent = 'Timeline';
+      timelineLink.addEventListener('click', () => {
+        playSfx('ui:navigate');
+        navigate('#/timeline');
+        closeDrawer();
+      });
+
+      actions.append(helper, loginBtn, timelineLink, settingsLink);
     } else {
       const idRow = document.createElement('p');
       idRow.className = 'account-summary__meta account-summary__id';
@@ -121,6 +131,16 @@ export const createAccountDrawer = ({
         closeDrawer();
       });
 
+      const timelineLink = document.createElement('button');
+      timelineLink.type = 'button';
+      timelineLink.className = 'ghost';
+      timelineLink.textContent = 'Timeline';
+      timelineLink.addEventListener('click', () => {
+        playSfx('ui:navigate');
+        navigate('#/timeline');
+        closeDrawer();
+      });
+
       const logoutBtn = document.createElement('button');
       logoutBtn.type = 'button';
       logoutBtn.textContent = 'ログアウト';
@@ -130,7 +150,7 @@ export const createAccountDrawer = ({
         closeDrawer();
       });
 
-      actions.append(idRow, accountButton, settingsLink, logoutBtn);
+      actions.append(idRow, accountButton, timelineLink, settingsLink, logoutBtn);
     }
 
     body.append(summary, metrics, actions);

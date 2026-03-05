@@ -22,6 +22,8 @@ const REQUIRED_METHODS = [
   'getFollowers',
   'listVisibleWorkouts',
   'updateWorkoutPost',
+  'getTimeline',
+  'toggleLike',
 ];
 
 const adapterFactories = {

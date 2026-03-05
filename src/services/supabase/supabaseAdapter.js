@@ -55,6 +55,21 @@ const mapHistoryRow = (row) => {
   };
 };
 
+
+const mapTimelineRow = (row) => ({
+  runId: row?.run_id ?? row?.runId ?? null,
+  userId: row?.user_id ?? row?.userId ?? null,
+  authorDisplayName: row?.author_display_name ?? row?.authorDisplayName ?? row?.display_name ?? row?.displayName ?? null,
+  createdAt: row?.created_at ?? row?.createdAt ?? null,
+  publishedAt: row?.published_at ?? row?.publishedAt ?? null,
+  visibility: normalizePostVisibility(row?.visibility, 'private'),
+  calories: Number(row?.calories ?? 0),
+  note: row?.note ?? null,
+  result: row?.result ?? null,
+  likeCount: Number(row?.like_count ?? row?.likeCount ?? 0),
+  liked: Boolean(row?.liked),
+});
+
 export const createSupabaseAdapter = (options = {}) => {
   const local = createLocalPersistence();
   const runtimeConfig = getRuntimeConfig(options.runtimeConfig || {});
@@ -668,6 +683,53 @@ export const createSupabaseAdapter = (options = {}) => {
     });
   };
 
+
+  const getTimeline = ({ scope = 'following', limit = 30, before = null } = {}) => {
+    const safeLimit = Math.max(Number(limit) || 30, 1);
+    const beforeValue = before ? new Date(before).toISOString() : null;
+
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.getTimeline({ scope, limit: safeLimit, before: beforeValue });
+    }
+
+    return client
+      .rpc('get_timeline', {
+        p_scope: scope || 'following',
+        p_limit: safeLimit,
+        p_before: beforeValue,
+      })
+      .then(({ data, error }) => {
+        if (error) {
+          authWarn('get_timeline failed', error.message || error);
+          return local.getTimeline({ scope, limit: safeLimit, before: beforeValue });
+        }
+        return (data || []).map(mapTimelineRow);
+      });
+  };
+
+  const toggleLike = (runId) => {
+    if (!runId) return { runId, liked: false, likeCount: 0 };
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.toggleLike(runId);
+    }
+
+    return client
+      .rpc('toggle_like', { p_run_id: runId })
+      .then(({ data, error }) => {
+        if (error) {
+          authWarn('toggle_like failed', error.message || error);
+          return local.toggleLike(runId);
+        }
+        const row = Array.isArray(data) ? data[0] : data;
+        if (!row) return { runId, liked: false, likeCount: 0 };
+        return {
+          runId: row.run_id ?? runId,
+          liked: Boolean(row.liked),
+          likeCount: Number(row.like_count ?? 0),
+        };
+      });
+  };
+
   const updateWorkoutPost = (runId, updates = {}) => {
     if (!runId) return null;
     const nextVisibility = normalizePostVisibility(updates.visibility || 'private', 'private');
@@ -725,6 +787,8 @@ export const createSupabaseAdapter = (options = {}) => {
     getFollowers,
     listVisibleWorkouts,
     updateWorkoutPost,
+    getTimeline,
+    toggleLike,
     subscribe,
     destroy,
   };
