@@ -24,6 +24,7 @@ const defaultProfile = {
   totalCalories: 0,
   completedRuns: 0,
   lastResult: null,
+  account_visibility: 'private',
   default_visibility: 'private',
 };
 

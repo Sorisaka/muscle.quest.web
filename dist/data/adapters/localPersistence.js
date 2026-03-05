@@ -1,5 +1,5 @@
 import { aggregateCalories } from '../../core/history.js';
-import { resolveVisibility } from '../../core/visibility.js';
+import { normalizeAccountVisibility, normalizePostVisibility, resolvePostVisibility } from '../../core/visibility.js';
 
 const PROFILE_KEY = 'musclequest:profile';
 const HISTORY_KEY = 'musclequest:history';
@@ -29,7 +29,7 @@ const defaultProfile = {
   points: 0,
   completedRuns: 0,
   lastResult: null,
-  default_visibility: 'private',
+  account_visibility: 'private',
 };
 
 export const createLocalPersistence = () => {
@@ -42,6 +42,9 @@ export const createLocalPersistence = () => {
 
   const replaceProfile = (nextProfile) => {
     const safeProfile = { ...defaultProfile, ...(nextProfile || {}) };
+    const accountVisibility = normalizeAccountVisibility(safeProfile.account_visibility || safeProfile.default_visibility, 'private');
+    safeProfile.account_visibility = accountVisibility;
+    safeProfile.default_visibility = accountVisibility;
     writeJson(PROFILE_KEY, safeProfile);
     return safeProfile;
   };
@@ -54,6 +57,9 @@ export const createLocalPersistence = () => {
 
   const saveProfile = (profile) => {
     const next = { ...defaultProfile, ...(profile || {}) };
+    const accountVisibility = normalizeAccountVisibility(next.account_visibility || next.default_visibility, 'private');
+    next.account_visibility = accountVisibility;
+    next.default_visibility = accountVisibility;
     writeJson(PROFILE_KEY, next);
     return next;
   };
@@ -91,7 +97,7 @@ export const createLocalPersistence = () => {
       lastResult: { ...result, recordedAt: timestamp },
     };
 
-    const effectiveVisibility = resolveVisibility(profile.default_visibility, result.visibilityOverride);
+    const effectiveVisibility = resolvePostVisibility(profile.account_visibility || profile.default_visibility, result.visibilityOverride);
 
     history.unshift({
       id: result.id || `${timestamp}:${Math.random().toString(36).slice(2, 8)}`,
@@ -107,7 +113,7 @@ export const createLocalPersistence = () => {
       endTime: result.endTime,
       timestamp,
       visibility: effectiveVisibility,
-      published_at: effectiveVisibility === 'private' ? null : (result.published_at || new Date(timestamp).toISOString()),
+      published_at: effectiveVisibility === 'archived' ? null : (result.published_at || new Date(timestamp).toISOString()),
       note: result.note || null,
       breakdown: result.breakdown || null,
     });
@@ -207,8 +213,8 @@ export const createLocalPersistence = () => {
   const canView = (viewerId, entry) => {
     if (!entry) return false;
     if (viewerId && entry.user_id === viewerId) return true;
-    if (entry.visibility === 'public') return true;
-    if (entry.visibility === 'followers') {
+    if (normalizePostVisibility(entry.visibility) === 'public') return true;
+    if (normalizePostVisibility(entry.visibility) === 'private') {
       const follows = loadFollows();
       return follows.some((row) => row.follower_id === viewerId && row.followee_id === entry.user_id);
     }
@@ -228,8 +234,8 @@ export const createLocalPersistence = () => {
     const history = loadHistory();
     const idx = history.findIndex((entry) => entry.id === runId);
     if (idx < 0) return null;
-    const visibility = resolveVisibility(profile.default_visibility, updates.visibility || history[idx].visibility || 'private');
-    const publishedAt = visibility === 'private' ? null : (updates.published_at || history[idx].published_at || new Date().toISOString());
+    const visibility = resolvePostVisibility(profile.account_visibility || profile.default_visibility, updates.visibility || history[idx].visibility || 'private');
+    const publishedAt = visibility === 'archived' ? null : (updates.published_at || history[idx].published_at || new Date().toISOString());
     const next = {
       ...history[idx],
       visibility,

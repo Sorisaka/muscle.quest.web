@@ -322,19 +322,19 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   const publishPublic = document.createElement('button');
   publishPublic.type = 'button';
   publishPublic.className = 'ghost';
-  publishPublic.textContent = '全体公開で投稿';
-
-  const publishFollowers = document.createElement('button');
-  publishFollowers.type = 'button';
-  publishFollowers.className = 'ghost';
-  publishFollowers.textContent = 'フォロワーのみで投稿';
+  publishPublic.textContent = '公開で投稿';
 
   const publishPrivate = document.createElement('button');
   publishPrivate.type = 'button';
   publishPrivate.className = 'ghost';
-  publishPrivate.textContent = '非公開で投稿';
+  publishPrivate.textContent = 'フォロワーのみで投稿';
 
-  postActions.append(publishPublic, publishFollowers, publishPrivate);
+  const publishArchived = document.createElement('button');
+  publishArchived.type = 'button';
+  publishArchived.className = 'ghost';
+  publishArchived.textContent = 'アーカイブ（自分のみ）';
+
+  postActions.append(publishPublic, publishPrivate, publishArchived);
 
   timerControls.append(modeField, workField, restField, noteField, postActions);
 
@@ -523,16 +523,16 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
     postWorkout({ ...snapshot, finished: true }, 'public');
   });
 
-  publishFollowers.addEventListener('click', () => {
-    const snapshot = engine.getSnapshot();
-    engine.stop();
-    postWorkout({ ...snapshot, finished: true }, 'followers');
-  });
-
   publishPrivate.addEventListener('click', () => {
     const snapshot = engine.getSnapshot();
     engine.stop();
     postWorkout({ ...snapshot, finished: true }, 'private');
+  });
+
+  publishArchived.addEventListener('click', () => {
+    const snapshot = engine.getSnapshot();
+    engine.stop();
+    postWorkout({ ...snapshot, finished: true }, 'archived');
   });
 
   const updateDisplay = (snapshot) => {

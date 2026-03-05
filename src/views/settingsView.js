@@ -21,7 +21,6 @@ const CATEGORY_OPTIONS = [
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const ACCOUNT_VIS_OPTIONS = [
   { value: 'private', label: 'private' },
-  { value: 'followers', label: 'followers' },
   { value: 'public', label: 'public' },
 ];
 
@@ -44,7 +43,7 @@ const profileDefaults = {
   arm_length_m_mode: 'auto',
   leg_length_m_mode: 'auto',
   torso_length_m_mode: 'auto',
-  default_visibility: 'private',
+  account_visibility: 'private',
 };
 
 const toTextValue = (value, digits = 3) => {
@@ -56,6 +55,7 @@ const toTextValue = (value, digits = 3) => {
 const normalizeDraft = (profile = {}) => ({
   ...profileDefaults,
   ...profile,
+  account_visibility: profile?.account_visibility || profile?.default_visibility || 'private',
   height_cm: profile?.height_cm ?? '',
   weight_kg: profile?.weight_kg ?? '',
 });
@@ -338,14 +338,14 @@ export const renderSettings = (_params, { store, navigate, playSfx }) => {
     );
 
     baseFields.append(
-      createSelectField('既定の公開範囲', draft.default_visibility || 'private', ACCOUNT_VIS_OPTIONS, (value) => {
-        draft.default_visibility = value;
+      createSelectField('アカウント公開範囲', draft.account_visibility || 'private', ACCOUNT_VIS_OPTIONS, (value) => {
+        draft.account_visibility = value;
       }),
     );
 
     const visHint = document.createElement('p');
     visHint.className = 'muted';
-    visHint.textContent = '「投稿」ボタンはこの既定設定に従い、投稿時に上書きもできます。';
+    visHint.textContent = '通常の「投稿」はこの設定をデフォルトに使います。投稿ごとに public/private/archived へ上書きできます。';
     baseFields.append(visHint);
 
     profileCard.append(baseFields);
@@ -500,7 +500,7 @@ export const renderSettings = (_params, { store, navigate, playSfx }) => {
       arm_length_m_mode: draft.arm_length_m_mode || 'auto',
       leg_length_m_mode: draft.leg_length_m_mode || 'auto',
       torso_length_m_mode: draft.torso_length_m_mode || 'auto',
-      default_visibility: draft.default_visibility || 'private',
+      account_visibility: draft.account_visibility || 'private',
     };
 
     const result = await Promise.resolve(store.saveProfileSettings(payload));

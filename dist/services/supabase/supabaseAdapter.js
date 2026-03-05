@@ -3,9 +3,9 @@ import { getRuntimeConfig, hasSupabaseCredentials } from '../../lib/runtimeConfi
 import { authWarn } from '../../lib/authDebug.js';
 import { getSupabaseClient } from '../../lib/supabaseClient.js';
 import { getSession, onAuthStateChange } from '../authService.js';
-import { resolveVisibility } from '../../core/visibility.js';
+import { normalizeAccountVisibility, normalizePostVisibility, resolvePostVisibility } from '../../core/visibility.js';
 
-const PROFILE_COLUMNS = 'id,display_name,default_visibility,points,total_calories,completed_runs,last_result,height_cm,weight_kg,sex,step_length_m,arm_length_m,leg_length_m,torso_length_m,step_length_m_mode,arm_length_m_mode,leg_length_m_mode,torso_length_m_mode,updated_at';
+const PROFILE_COLUMNS = 'id,display_name,account_visibility,default_visibility,points,total_calories,completed_runs,last_result,height_cm,weight_kg,sex,step_length_m,arm_length_m,leg_length_m,torso_length_m,step_length_m_mode,arm_length_m_mode,leg_length_m_mode,torso_length_m_mode,updated_at';
 const HISTORY_LIMIT = 100;
 const MIGRATION_FLAG_PREFIX = 'musclequest:migration:';
 
@@ -26,7 +26,7 @@ const mapHistoryRow = (row) => {
     sets: result.sets || null,
     startTime: result.startTime || result.start_time || null,
     endTime: result.endTime || result.end_time || null,
-    visibility: row?.visibility || result.visibility || 'private',
+    visibility: normalizePostVisibility(row?.visibility || result.visibility, 'private'),
     published_at: row?.published_at || result.published_at || null,
     note: row?.note || result.note || null,
     timestamp: createdAt,
@@ -60,7 +60,8 @@ export const createSupabaseAdapter = (options = {}) => {
   const mapProfileRow = (row) => ({
     id: row?.id || session?.user?.id || profile?.id || 'supabase-user',
     displayName: row?.display_name || row?.displayName || session?.user?.email || defaultName(),
-    default_visibility: row?.default_visibility || row?.defaultVisibility || 'private',
+    account_visibility: normalizeAccountVisibility(row?.account_visibility || row?.default_visibility || row?.defaultVisibility, 'private'),
+    default_visibility: normalizeAccountVisibility(row?.account_visibility || row?.default_visibility || row?.defaultVisibility, 'private'),
     points: row?.points ?? 0,
     totalCalories: row?.total_calories ?? row?.totalCalories ?? 0,
     completedRuns: row?.completed_runs ?? row?.completedRuns ?? 0,
@@ -300,7 +301,7 @@ export const createSupabaseAdapter = (options = {}) => {
 
     const payload = {
       display_name: mergedProfile.displayName,
-      default_visibility: mergedProfile.default_visibility,
+      account_visibility: normalizeAccountVisibility(mergedProfile.account_visibility || mergedProfile.default_visibility, 'private'),
       height_cm: mergedProfile.height_cm,
       weight_kg: mergedProfile.weight_kg,
       sex: mergedProfile.sex,
@@ -375,11 +376,11 @@ export const createSupabaseAdapter = (options = {}) => {
       return persistResultLocally(result);
     }
 
-    const effectiveVisibility = resolveVisibility(profile.default_visibility, result.visibilityOverride ?? result.visibility ?? null);
+    const effectiveVisibility = resolvePostVisibility(profile.account_visibility || profile.default_visibility, result.visibilityOverride ?? result.visibility ?? null);
     const payload = {
       ...result,
       visibility: effectiveVisibility,
-      published_at: effectiveVisibility === 'private' ? null : (result.published_at || new Date().toISOString()),
+      published_at: effectiveVisibility === 'archived' ? null : (result.published_at || new Date().toISOString()),
       note: result.note || null,
       timestamp: result.endTime || Date.now(),
     };
@@ -584,8 +585,9 @@ export const createSupabaseAdapter = (options = {}) => {
         .map(mapHistoryRow)
         .filter((entry) => {
           if (entry.user_id === viewerId) return true;
-          if (entry.visibility === 'public') return true;
-          if (entry.visibility === 'followers') return followingSet.has(entry.user_id);
+          const vis = normalizePostVisibility(entry.visibility, 'private');
+          if (vis === 'public') return true;
+          if (vis === 'private') return followingSet.has(entry.user_id);
           return false;
         });
     });
@@ -593,8 +595,8 @@ export const createSupabaseAdapter = (options = {}) => {
 
   const updateWorkoutPost = (runId, updates = {}) => {
     if (!runId) return null;
-    const nextVisibility = updates.visibility || 'private';
-    const nextPublishedAt = nextVisibility === 'private' ? null : (updates.published_at || new Date().toISOString());
+    const nextVisibility = normalizePostVisibility(updates.visibility || 'private', 'private');
+    const nextPublishedAt = nextVisibility === 'archived' ? null : (updates.published_at || new Date().toISOString());
 
     if (!supabaseEnabled || !session?.user?.id) {
       return local.updateWorkoutPost(runId, { ...updates, visibility: nextVisibility, published_at: nextPublishedAt });

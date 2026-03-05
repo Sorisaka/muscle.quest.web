@@ -260,7 +260,7 @@ const createPostVisibilityCard = (status, store) => {
       label.textContent = `${entry.exerciseSlug || entry.questId || 'workout'} / ${entry.calories || 0} kcal`;
 
       const visibility = document.createElement('select');
-      ['private', 'followers', 'public'].forEach((value) => {
+      ['public', 'private', 'archived'].forEach((value) => {
         const option = document.createElement('option');
         option.value = value;
         option.textContent = value;
@@ -280,7 +280,7 @@ const createPostVisibilityCard = (status, store) => {
         await Promise.resolve(store.updateWorkoutPost(entry.id, {
           visibility: visibility.value,
           note: note.value,
-          published_at: visibility.value === 'private' ? null : (entry.published_at || new Date().toISOString()),
+          published_at: visibility.value === 'archived' ? null : (entry.published_at || new Date().toISOString()),
         }));
         renderList();
       });
