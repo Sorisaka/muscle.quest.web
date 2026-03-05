@@ -1,5 +1,6 @@
 import { aggregateCalories } from '../../core/history.js';
 import { normalizeAccountVisibility, normalizePostVisibility, resolvePostVisibility } from '../../core/visibility.js';
+import { toDateKey } from '../../lib/dateKey.js';
 
 const PROFILE_KEY = 'musclequest:profile';
 const HISTORY_KEY = 'musclequest:history';
@@ -8,6 +9,8 @@ const WEEKLY_PLAN_KEY = 'musclequest:weeklyPlans';
 const SPECIAL_PLAN_KEY = 'musclequest:specialPlans';
 const FOLLOWS_KEY = 'musclequest:follows';
 const LIKES_KEY = 'musclequest:likesByRunId';
+const BODY_METRICS_KEY = 'musclequest:bodyMetrics';
+const BODY_METRICS_NS = 'mq:bodyMetrics';
 
 const readJson = (key, fallback) => {
   try {
@@ -41,6 +44,13 @@ export const createLocalPersistence = () => {
   const loadSpecialPlans = () => readJson(SPECIAL_PLAN_KEY, {});
   const loadFollows = () => readJson(FOLLOWS_KEY, []);
   const loadLikes = () => readJson(LIKES_KEY, {});
+  const getBodyMetricsStorageKey = (userId) => `${BODY_METRICS_NS}:${userId || loadProfile().id || 'local-user'}`;
+  const loadBodyMetricsData = (userId) => {
+    const scoped = readJson(getBodyMetricsStorageKey(userId), null);
+    if (Array.isArray(scoped)) return scoped;
+    const legacy = readJson(BODY_METRICS_KEY, []);
+    return Array.isArray(legacy) ? legacy : [];
+  };
 
   const replaceProfile = (nextProfile) => {
     const safeProfile = { ...defaultProfile, ...(nextProfile || {}) };
@@ -284,6 +294,92 @@ export const createLocalPersistence = () => {
       .map(({ __sortAt, ...entry }) => entry);
   };
 
+
+
+  const normalizeBodyMetric = (metric = {}) => ({
+    date: metric.date || metric.dateKey || null,
+    weight_kg: metric.weight_kg == null ? null : Number(metric.weight_kg),
+    body_fat_pct: metric.body_fat_pct == null ? null : Number(metric.body_fat_pct),
+    visibility: metric.visibility || 'private',
+    updated_at: metric.updated_at || new Date().toISOString(),
+  });
+
+  const upsertBodyMetric = (userId, metric = {}) => {
+    const normalized = normalizeBodyMetric(metric);
+    if (!normalized.date) return null;
+    const rows = loadBodyMetricsData(userId);
+    const next = Array.isArray(rows) ? rows.slice() : [];
+    const idx = next.findIndex((row) => row.date === normalized.date);
+    if (idx >= 0) next[idx] = { ...next[idx], ...normalized };
+    else next.push(normalized);
+    next.sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    writeJson(getBodyMetricsStorageKey(userId), next);
+    return normalized;
+  };
+
+  const deleteBodyMetric = (userId, date) => {
+    if (!date) return false;
+    const rows = loadBodyMetricsData(userId);
+    const next = (Array.isArray(rows) ? rows : []).filter((row) => row?.date !== date);
+    writeJson(getBodyMetricsStorageKey(userId), next);
+    return true;
+  };
+
+  const getBodyMetricsRange = (userId, fromDate, toDate) => {
+    const rows = loadBodyMetricsData(userId);
+    return (Array.isArray(rows) ? rows : [])
+      .filter((entry) => entry && entry.date)
+      .filter((entry) => (!fromDate || entry.date >= fromDate) && (!toDate || entry.date <= toDate))
+      .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  };
+
+  const getWorkoutDateKey = (entry = {}) => {
+    const source = entry?.timestamp
+      || entry?.result?.timestamp
+      || entry?.endTime
+      || entry?.result?.endTime
+      || entry?.created_at
+      || entry?.published_at
+      || null;
+    return source ? toDateKey(source) : null;
+  };
+
+  const getWorkoutsByDate = (_userId, date) => {
+    if (!date) return [];
+    const history = loadHistory();
+    return history.filter((entry) => getWorkoutDateKey(entry) === date);
+  };
+
+  const listWorkoutDatesInMonth = (_userId, year, month) => {
+    const mm = String(month).padStart(2, '0');
+    const prefix = `${year}-${mm}-`;
+    const history = loadHistory();
+    const dateSet = new Set();
+    history.forEach((entry) => {
+      const dateKey = getWorkoutDateKey(entry);
+      if (dateKey && dateKey.startsWith(prefix)) dateSet.add(dateKey);
+    });
+    return Array.from(dateSet).sort((a, b) => a.localeCompare(b));
+  };
+
+  // backward compatibility for existing callers
+  const loadBodyMetrics = (userId) => getBodyMetricsRange(userId, null, null)
+    .map((entry) => ({
+      dateKey: entry.date,
+      weightKg: entry.weight_kg,
+      bodyFatPct: entry.body_fat_pct,
+      visibility: entry.visibility,
+      recordedAt: entry.updated_at,
+    }));
+
+  const saveBodyMetric = (userId, entry = {}) => upsertBodyMetric(userId, {
+    date: entry.date || entry.dateKey,
+    weight_kg: entry.weight_kg ?? entry.weightKg,
+    body_fat_pct: entry.body_fat_pct ?? entry.bodyFatPct,
+    visibility: entry.visibility,
+    updated_at: entry.updated_at || entry.recordedAt,
+  });
+
   const toggleLike = (runId) => {
     if (!runId) {
       return { runId, liked: false, likeCount: 0 };
@@ -319,6 +415,13 @@ export const createLocalPersistence = () => {
     updateWorkoutPost,
     getTimeline,
     toggleLike,
+    upsertBodyMetric,
+    deleteBodyMetric,
+    getBodyMetricsRange,
+    getWorkoutsByDate,
+    listWorkoutDatesInMonth,
+    loadBodyMetrics,
+    saveBodyMetric,
     replaceHistory,
     replaceProfile,
   };

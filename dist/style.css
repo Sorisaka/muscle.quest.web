@@ -729,3 +729,74 @@ section.panel {
   background: #8b1f3a;
   border-color: #b4234a;
 }
+
+.history-chart {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.history-chart__row {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.history-chart__bars {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.history-chart__bar {
+  border-radius: 8px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+  color: #0b1220;
+}
+
+.history-chart__bar--weight {
+  background: #93c5fd;
+}
+
+.history-chart__bar--fat {
+  background: #fca5a5;
+}
+
+.history-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.history-calendar__cell {
+  min-height: 38px;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  background: #0f1623;
+  color: #e5e7eb;
+}
+
+.history-calendar__cell--blank {
+  opacity: 0.25;
+}
+
+.history-calendar__cell--active {
+  background: #14532d;
+  border-color: #166534;
+}
+
+.sparkline {
+  width: 100%;
+}
+
+.sparkline svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #0f1623;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+}
+
+.history-calendar__cell--selected {
+  outline: 2px solid #60a5fa;
+  outline-offset: -2px;
+}

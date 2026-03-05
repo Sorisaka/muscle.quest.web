@@ -10,6 +10,7 @@ import { renderRun } from './views/runView.js';
 import { renderRank } from './views/rankView.js';
 import { renderAccount } from './views/accountView.js';
 import { renderTimeline } from './views/timelineView.js';
+import { renderHistory, renderHistoryDay } from './views/historyView.js';
 import { createAccountDrawer } from './ui/accountDrawer.js';
 
 const titleEl = document.querySelector('[data-route-title]');
@@ -78,6 +79,18 @@ const routes = [
     description: 'フォロー/公開投稿のタイムライン',
     render: renderTimeline,
   },
+  {
+    path: '#/history',
+    title: 'History',
+    description: '体重・体脂肪率とトレーニング履歴カレンダー',
+    render: renderHistory,
+  },
+  {
+    path: '#/history/:date',
+    title: (params) => `History / ${params.date}`,
+    description: '日付別のトレーニング詳細',
+    render: renderHistoryDay,
+  },
 ];
 
 const renderShell = (match) => {
@@ -89,14 +102,15 @@ const renderShell = (match) => {
   titleEl.textContent = routeTitle;
   pathEl.textContent = fullPath;
 
-  const view = route.render(params, { navigate: router.navigate, store, playSfx, accountState });
-  outlet.innerHTML = '';
-  outlet.append(view);
-
-  const descriptionEl = document.querySelector('[data-route-description]');
-  if (descriptionEl) {
-    descriptionEl.textContent = routeDescription;
-  }
+  const viewResult = route.render(params, { navigate: router.navigate, store, playSfx, accountState });
+  Promise.resolve(viewResult).then((view) => {
+    outlet.innerHTML = '';
+    if (view) outlet.append(view);
+    const descriptionEl = document.querySelector('[data-route-description]');
+    if (descriptionEl) {
+      descriptionEl.textContent = routeDescription;
+    }
+  });
 };
 
 const init = () => {
