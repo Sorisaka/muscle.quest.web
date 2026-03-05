@@ -24,6 +24,7 @@ const defaultProfile = {
   totalCalories: 0,
   completedRuns: 0,
   lastResult: null,
+  default_visibility: 'private',
 };
 
 const isPromise = (value) => value && typeof value.then === 'function';
@@ -193,7 +194,7 @@ export const createStore = (driver = 'supabase') => {
 
   const saveProfileSettings = (partialProfile = {}) => {
     const mergedProfile = { ...profile, ...partialProfile };
-    const result = persistence.saveProfile(mergedProfile);
+    const result = persistence.updateProfile(profile.id, mergedProfile);
     const nextProfile = resolveMaybeAsync(result, applyProfile);
     if (nextProfile) {
       applyProfile(nextProfile);

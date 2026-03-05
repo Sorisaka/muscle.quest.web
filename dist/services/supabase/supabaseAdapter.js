@@ -3,8 +3,9 @@ import { getRuntimeConfig, hasSupabaseCredentials } from '../../lib/runtimeConfi
 import { authWarn } from '../../lib/authDebug.js';
 import { getSupabaseClient } from '../../lib/supabaseClient.js';
 import { getSession, onAuthStateChange } from '../authService.js';
+import { resolveVisibility } from '../../core/visibility.js';
 
-const PROFILE_COLUMNS = 'id,display_name,points,total_calories,completed_runs,last_result,height_cm,weight_kg,sex,step_length_m,arm_length_m,leg_length_m,torso_length_m,step_length_m_mode,arm_length_m_mode,leg_length_m_mode,torso_length_m_mode,updated_at';
+const PROFILE_COLUMNS = 'id,display_name,default_visibility,points,total_calories,completed_runs,last_result,height_cm,weight_kg,sex,step_length_m,arm_length_m,leg_length_m,torso_length_m,step_length_m_mode,arm_length_m_mode,leg_length_m_mode,torso_length_m_mode,updated_at';
 const HISTORY_LIMIT = 100;
 const MIGRATION_FLAG_PREFIX = 'musclequest:migration:';
 
@@ -59,6 +60,7 @@ export const createSupabaseAdapter = (options = {}) => {
   const mapProfileRow = (row) => ({
     id: row?.id || session?.user?.id || profile?.id || 'supabase-user',
     displayName: row?.display_name || row?.displayName || session?.user?.email || defaultName(),
+    default_visibility: row?.default_visibility || row?.defaultVisibility || 'private',
     points: row?.points ?? 0,
     totalCalories: row?.total_calories ?? row?.totalCalories ?? 0,
     completedRuns: row?.completed_runs ?? row?.completedRuns ?? 0,
@@ -152,6 +154,7 @@ export const createSupabaseAdapter = (options = {}) => {
       const { data, error } = await client.rpc('add_workout_result', {
         p_points: payload.points,
         p_calories: payload.calories || 0,
+        p_visibility: payload.visibility || null,
         p_result: payload,
       });
 
@@ -162,7 +165,7 @@ export const createSupabaseAdapter = (options = {}) => {
     const fallbackInsertAndUpdate = async () => {
       const insertResult = await client
         .from('workout_runs')
-        .insert({ user_id: session.user.id, points: payload.points, calories: payload.calories || 0, result: payload })
+        .insert({ user_id: session.user.id, points: payload.points, calories: payload.calories || 0, visibility: payload.visibility, published_at: payload.published_at, note: payload.note, result: payload })
         .select('id')
         .maybeSingle();
 
@@ -284,6 +287,10 @@ export const createSupabaseAdapter = (options = {}) => {
     return profile;
   };
 
+  const getProfile = (_userId) => loadProfile();
+
+  const updateProfile = (_userId, patch = {}) => saveProfile({ ...(patch || {}) });
+
   const saveProfile = (nextProfile = {}) => {
     const mergedProfile = { ...profile, ...(nextProfile || {}) };
     if (!supabaseEnabled || !session?.user?.id) {
@@ -293,6 +300,7 @@ export const createSupabaseAdapter = (options = {}) => {
 
     const payload = {
       display_name: mergedProfile.displayName,
+      default_visibility: mergedProfile.default_visibility,
       height_cm: mergedProfile.height_cm,
       weight_kg: mergedProfile.weight_kg,
       sex: mergedProfile.sex,
@@ -367,13 +375,15 @@ export const createSupabaseAdapter = (options = {}) => {
       return persistResultLocally(result);
     }
 
+    const effectiveVisibility = resolveVisibility(profile.default_visibility, result.visibilityOverride ?? result.visibility ?? null);
     const payload = {
       ...result,
-      visibility: result.visibility || 'private',
-      published_at: result.visibility && result.visibility !== 'private' ? (result.published_at || new Date().toISOString()) : null,
+      visibility: effectiveVisibility,
+      published_at: effectiveVisibility === 'private' ? null : (result.published_at || new Date().toISOString()),
       note: result.note || null,
       timestamp: result.endTime || Date.now(),
     };
+
     const syncPromise = addResultWithFallback(payload)
       .then(async (nextProfile) => {
         if (nextProfile) {
@@ -619,6 +629,8 @@ export const createSupabaseAdapter = (options = {}) => {
     ready: supabaseEnabled,
     error: ready ? null : 'Supabase not configured',
     loadProfile,
+    getProfile,
+    updateProfile,
     saveProfile,
     recordResult,
     updateDisplayName,

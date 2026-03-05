@@ -3,6 +3,8 @@ import { createSupabaseAdapter } from '../supabase/supabaseAdapter.js';
 
 const REQUIRED_METHODS = [
   'loadProfile',
+  'getProfile',
+  'updateProfile',
   'saveProfile',
   'recordResult',
   'updateDisplayName',

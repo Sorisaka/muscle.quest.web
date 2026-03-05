@@ -1,7 +1,7 @@
 import { authLog } from '../lib/authDebug.js';
 import { getSupabaseClient } from '../lib/supabaseClient.js';
 
-const PROFILES_COLUMNS = 'id,display_name,points,total_calories,completed_runs,last_result,height_cm,weight_kg,sex,step_length_m,arm_length_m,leg_length_m,torso_length_m,step_length_m_mode,arm_length_m_mode,leg_length_m_mode,torso_length_m_mode,created_at,updated_at';
+const PROFILES_COLUMNS = 'id,display_name,default_visibility,points,total_calories,completed_runs,last_result,height_cm,weight_kg,sex,step_length_m,arm_length_m,leg_length_m,torso_length_m,step_length_m_mode,arm_length_m_mode,leg_length_m_mode,torso_length_m_mode,created_at,updated_at';
 
 function requireClient() {
   const { client, error } = getSupabaseClient();

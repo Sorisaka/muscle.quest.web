@@ -63,6 +63,7 @@ points廃止までの移行で、フロント/永続化の参照名を以下で�
 ### Phase3: 公開範囲 + フォロー
 1. `follows` テーブル追加SQL（`follower_id`, `followee_id`, unique制約）。
 2. 閲覧可能範囲I/Fを `visibility` 前提で追加（自分/公開/フォロー限定）。
+   - v2方針: `profiles.default_visibility` + 投稿 `visibilityOverride` で実効公開範囲を決定。
 3. supabase adapterに follow/unfollow・可視履歴取得メソッドを追加（`getFollowing/getFollowers/listVisibleWorkouts`）。
 4. local driverは同名I/Fで擬似実装し、UI検証を可能にする。
 5. visibility/published_at の運用ルールを `docs/privacy_and_follow.md` に固定する。

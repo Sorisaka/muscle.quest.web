@@ -43,7 +43,7 @@ const createControls = (navigate, questId, playSfx, onReset, onToggle, onComplet
 
   const completeButton = document.createElement('button');
   completeButton.type = 'button';
-  completeButton.textContent = '完了して記録';
+  completeButton.textContent = '投稿';
   completeButton.addEventListener('click', onComplete);
 
   controls.append(stopButton, resetButton, toggleButton, completeButton);
@@ -302,28 +302,7 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   restField.append(restLabel, restInput);
 
 
-  let postVisibility = 'private';
   let postNote = '';
-
-  const visibilityField = document.createElement('label');
-  visibilityField.className = 'field';
-  const visibilityLabel = document.createElement('span');
-  visibilityLabel.textContent = '公開範囲';
-  const visibilitySelect = document.createElement('select');
-  [
-    { value: 'private', label: 'private' },
-    { value: 'followers', label: 'followers' },
-    { value: 'public', label: 'public' },
-  ].forEach((option) => {
-    const el = document.createElement('option');
-    el.value = option.value;
-    el.textContent = option.label;
-    visibilitySelect.append(el);
-  });
-  visibilitySelect.addEventListener('change', (event) => {
-    postVisibility = event.target.value;
-  });
-  visibilityField.append(visibilityLabel, visibilitySelect);
 
   const noteField = document.createElement('label');
   noteField.className = 'field';
@@ -337,7 +316,27 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   });
   noteField.append(noteLabel, noteInput);
 
-  timerControls.append(modeField, workField, restField, visibilityField, noteField);
+  const postActions = document.createElement('div');
+  postActions.className = 'hero__actions';
+
+  const publishPublic = document.createElement('button');
+  publishPublic.type = 'button';
+  publishPublic.className = 'ghost';
+  publishPublic.textContent = '全体公開で投稿';
+
+  const publishFollowers = document.createElement('button');
+  publishFollowers.type = 'button';
+  publishFollowers.className = 'ghost';
+  publishFollowers.textContent = 'フォロワーのみで投稿';
+
+  const publishPrivate = document.createElement('button');
+  publishPrivate.type = 'button';
+  publishPrivate.className = 'ghost';
+  publishPrivate.textContent = '非公開で投稿';
+
+  postActions.append(publishPublic, publishFollowers, publishPrivate);
+
+  timerControls.append(modeField, workField, restField, noteField, postActions);
 
   const timerNotice = document.createElement('p');
   timerNotice.className = 'muted';
@@ -482,12 +481,12 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
     () => {
       const snapshot = engine.getSnapshot();
       engine.stop();
-      recordCompletion({ ...snapshot, finished: true });
+      postWorkout({ ...snapshot, finished: true }, null);
       playSfx('timer:complete');
     },
   );
 
-  const recordCompletion = (snapshot) => {
+  const postWorkout = (snapshot, visibilityOverride = null) => {
     if (completionRecorded) return;
     const completedSets = computeCompletedSets(snapshot, runPlan.sets.length);
     const result = store.recordResult({
@@ -504,8 +503,8 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
       startTime: startTimestamp,
       endTime: Date.now(),
       plan: runPlan,
-      visibility: postVisibility,
-      published_at: postVisibility === 'private' ? null : new Date().toISOString(),
+      visibilityOverride,
+      published_at: visibilityOverride ? new Date().toISOString() : null,
       note: postNote,
     });
     completionRecorded = true;
@@ -516,6 +515,25 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
     timerNotice.textContent = '完了！計測結果を保存しました。';
     notifyCompletion('セットを完了しました。お疲れさまです！');
   };
+
+
+  publishPublic.addEventListener('click', () => {
+    const snapshot = engine.getSnapshot();
+    engine.stop();
+    postWorkout({ ...snapshot, finished: true }, 'public');
+  });
+
+  publishFollowers.addEventListener('click', () => {
+    const snapshot = engine.getSnapshot();
+    engine.stop();
+    postWorkout({ ...snapshot, finished: true }, 'followers');
+  });
+
+  publishPrivate.addEventListener('click', () => {
+    const snapshot = engine.getSnapshot();
+    engine.stop();
+    postWorkout({ ...snapshot, finished: true }, 'private');
+  });
 
   const updateDisplay = (snapshot) => {
     if (snapshot.mode === 'stopwatch') {
@@ -548,8 +566,8 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   engine.onStateChange((snapshot) => {
     updateDisplay(snapshot);
     if (snapshot.state === 'finished') {
-      recordCompletion(snapshot);
       toggleButton.textContent = '開始';
+      timerNotice.textContent = '完了！投稿ボタンで保存してください。';
       playSfx('timer:complete');
     }
   });

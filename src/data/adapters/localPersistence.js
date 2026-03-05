@@ -1,4 +1,5 @@
 import { aggregateCalories } from '../../core/history.js';
+import { resolveVisibility } from '../../core/visibility.js';
 
 const PROFILE_KEY = 'musclequest:profile';
 const HISTORY_KEY = 'musclequest:history';
@@ -28,6 +29,7 @@ const defaultProfile = {
   points: 0,
   completedRuns: 0,
   lastResult: null,
+  default_visibility: 'private',
 };
 
 export const createLocalPersistence = () => {
@@ -65,6 +67,10 @@ export const createLocalPersistence = () => {
     return plan;
   };
 
+  const getProfile = (_userId) => loadProfile();
+
+  const updateProfile = (_userId, patch = {}) => saveProfile({ ...loadProfile(), ...(patch || {}) });
+
   const getLastPlan = (questId, difficulty) => {
     if (!questId || !difficulty) return null;
     const plans = loadLastPlans();
@@ -85,6 +91,8 @@ export const createLocalPersistence = () => {
       lastResult: { ...result, recordedAt: timestamp },
     };
 
+    const effectiveVisibility = resolveVisibility(profile.default_visibility, result.visibilityOverride);
+
     history.unshift({
       id: result.id || `${timestamp}:${Math.random().toString(36).slice(2, 8)}`,
       user_id: profile.id || 'local-user',
@@ -98,8 +106,8 @@ export const createLocalPersistence = () => {
       startTime: result.startTime,
       endTime: result.endTime,
       timestamp,
-      visibility: result.visibility || 'private',
-      published_at: result.published_at || ((result.visibility && result.visibility !== 'private') ? new Date(timestamp).toISOString() : null),
+      visibility: effectiveVisibility,
+      published_at: effectiveVisibility === 'private' ? null : (result.published_at || new Date(timestamp).toISOString()),
       note: result.note || null,
       breakdown: result.breakdown || null,
     });
@@ -216,10 +224,11 @@ export const createLocalPersistence = () => {
 
   const updateWorkoutPost = (runId, updates = {}) => {
     if (!runId) return null;
+    const profile = loadProfile();
     const history = loadHistory();
     const idx = history.findIndex((entry) => entry.id === runId);
     if (idx < 0) return null;
-    const visibility = updates.visibility || history[idx].visibility || 'private';
+    const visibility = resolveVisibility(profile.default_visibility, updates.visibility || history[idx].visibility || 'private');
     const publishedAt = visibility === 'private' ? null : (updates.published_at || history[idx].published_at || new Date().toISOString());
     const next = {
       ...history[idx],
@@ -234,6 +243,8 @@ export const createLocalPersistence = () => {
 
   return {
     loadProfile,
+    getProfile,
+    updateProfile,
     saveProfile,
     recordResult,
     updateDisplayName,
