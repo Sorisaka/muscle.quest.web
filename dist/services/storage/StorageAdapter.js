@@ -3,6 +3,8 @@ import { createSupabaseAdapter } from '../supabase/supabaseAdapter.js';
 
 const REQUIRED_METHODS = [
   'loadProfile',
+  'getProfile',
+  'updateProfile',
   'saveProfile',
   'recordResult',
   'updateDisplayName',
@@ -10,6 +12,16 @@ const REQUIRED_METHODS = [
   'loadHistory',
   'saveLastPlan',
   'getLastPlan',
+  'getWeeklyPlan',
+  'setWeeklyPlan',
+  'getSpecialPlan',
+  'setSpecialPlan',
+  'followUser',
+  'unfollowUser',
+  'getFollowing',
+  'getFollowers',
+  'listVisibleWorkouts',
+  'updateWorkoutPost',
 ];
 
 const adapterFactories = {

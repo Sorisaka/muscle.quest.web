@@ -43,7 +43,7 @@ const createControls = (navigate, questId, playSfx, onReset, onToggle, onComplet
 
   const completeButton = document.createElement('button');
   completeButton.type = 'button';
-  completeButton.textContent = '完了して記録';
+  completeButton.textContent = '投稿';
   completeButton.addEventListener('click', onComplete);
 
   controls.append(stopButton, resetButton, toggleButton, completeButton);
@@ -225,7 +225,7 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
 
   const pointsBanner = document.createElement('p');
   pointsBanner.className = 'muted run-points';
-  pointsBanner.textContent = `ポイント基準: 規定セット ${runPlan.baseSets}、上限 ${runPlan.maxSets}。チャレンジでポイント増。`;
+  pointsBanner.textContent = `消費カロリー基準: 規定セット ${runPlan.baseSets}、上限 ${runPlan.maxSets}。チャレンジで消費カロリー増。`;
 
   const timerControls = document.createElement('div');
   timerControls.className = 'run-timer__controls';
@@ -301,7 +301,42 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   });
   restField.append(restLabel, restInput);
 
-  timerControls.append(modeField, workField, restField);
+
+  let postNote = '';
+
+  const noteField = document.createElement('label');
+  noteField.className = 'field';
+  const noteLabel = document.createElement('span');
+  noteLabel.textContent = 'メモ';
+  const noteInput = document.createElement('input');
+  noteInput.type = 'text';
+  noteInput.placeholder = '任意メモ';
+  noteInput.addEventListener('input', (event) => {
+    postNote = event.target.value;
+  });
+  noteField.append(noteLabel, noteInput);
+
+  const postActions = document.createElement('div');
+  postActions.className = 'hero__actions';
+
+  const publishPublic = document.createElement('button');
+  publishPublic.type = 'button';
+  publishPublic.className = 'ghost';
+  publishPublic.textContent = '公開で投稿';
+
+  const publishPrivate = document.createElement('button');
+  publishPrivate.type = 'button';
+  publishPrivate.className = 'ghost';
+  publishPrivate.textContent = 'フォロワーのみで投稿';
+
+  const publishArchived = document.createElement('button');
+  publishArchived.type = 'button';
+  publishArchived.className = 'ghost';
+  publishArchived.textContent = 'アーカイブ（自分のみ）';
+
+  postActions.append(publishPublic, publishPrivate, publishArchived);
+
+  timerControls.append(modeField, workField, restField, noteField, postActions);
 
   const timerNotice = document.createElement('p');
   timerNotice.className = 'muted';
@@ -311,7 +346,7 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   const planBox = document.createElement('div');
   planBox.className = 'stack run-plan__box';
   const planHeading = document.createElement('h3');
-  planHeading.textContent = 'ポイントアップチャレンジ';
+  planHeading.textContent = '消費カロリーアップチャレンジ';
 
   const planLead = document.createElement('p');
   planLead.className = 'muted';
@@ -424,7 +459,7 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
       completionRecorded = false;
       toggleButton.textContent = '開始';
       completeButton.disabled = false;
-      pointsBanner.textContent = 'ポイント: 設定を調整してポイントを伸ばしましょう。';
+      pointsBanner.textContent = '消費カロリー: 設定を調整して消費カロリーを伸ばしましょう。';
       timerNotice.textContent = '';
       startTimestamp = null;
       updateDisplay(engine.getSnapshot());
@@ -446,12 +481,12 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
     () => {
       const snapshot = engine.getSnapshot();
       engine.stop();
-      recordCompletion({ ...snapshot, finished: true });
+      postWorkout({ ...snapshot, finished: true }, null);
       playSfx('timer:complete');
     },
   );
 
-  const recordCompletion = (snapshot) => {
+  const postWorkout = (snapshot, visibilityOverride = null) => {
     if (completionRecorded) return;
     const completedSets = computeCompletedSets(snapshot, runPlan.sets.length);
     const result = store.recordResult({
@@ -468,15 +503,37 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
       startTime: startTimestamp,
       endTime: Date.now(),
       plan: runPlan,
+      visibilityOverride,
+      published_at: visibilityOverride ? new Date().toISOString() : null,
+      note: postNote,
     });
     completionRecorded = true;
     completeButton.disabled = true;
     store.rememberPlan(runPlan.questId, runPlan.difficulty, runPlan);
     store.rememberTimerConfig(timerConfig);
-    pointsBanner.textContent = `獲得ポイント: ${result.points} pts`;
+    pointsBanner.textContent = `獲得消費カロリー: ${result.calories} kcal`;
     timerNotice.textContent = '完了！計測結果を保存しました。';
     notifyCompletion('セットを完了しました。お疲れさまです！');
   };
+
+
+  publishPublic.addEventListener('click', () => {
+    const snapshot = engine.getSnapshot();
+    engine.stop();
+    postWorkout({ ...snapshot, finished: true }, 'public');
+  });
+
+  publishPrivate.addEventListener('click', () => {
+    const snapshot = engine.getSnapshot();
+    engine.stop();
+    postWorkout({ ...snapshot, finished: true }, 'private');
+  });
+
+  publishArchived.addEventListener('click', () => {
+    const snapshot = engine.getSnapshot();
+    engine.stop();
+    postWorkout({ ...snapshot, finished: true }, 'archived');
+  });
 
   const updateDisplay = (snapshot) => {
     if (snapshot.mode === 'stopwatch') {
@@ -509,8 +566,8 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   engine.onStateChange((snapshot) => {
     updateDisplay(snapshot);
     if (snapshot.state === 'finished') {
-      recordCompletion(snapshot);
       toggleButton.textContent = '開始';
+      timerNotice.textContent = '完了！投稿ボタンで保存してください。';
       playSfx('timer:complete');
     }
   });

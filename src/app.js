@@ -56,19 +56,19 @@ const routes = [
   {
     path: '#/rank/:board',
     title: (params) => `Rank / ${params.board}`,
-    description: 'ポイントとローカルランキングを確認します。',
+    description: '消費カロリーとローカルランキングを確認します。',
     render: renderRank,
   },
   {
     path: '#/rank',
     title: 'Rank',
-    description: 'ポイントとローカルランキングを確認します。',
+    description: '消費カロリーとローカルランキングを確認します。',
     render: renderRank,
   },
   {
     path: '#/account',
     title: 'Account',
-    description: 'プロフィールとポイントの概要。',
+    description: 'プロフィールと消費カロリーの概要。',
     render: renderAccount,
   },
 ];

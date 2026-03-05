@@ -130,7 +130,7 @@ const createStatsCards = (status, navigate, playSfx) => {
   const statsGrid = document.createElement('div');
   statsGrid.className = 'account-metrics-grid';
   statsGrid.append(
-    createMetricRow('総保有ポイント', `${status.points} pts`),
+    createMetricRow('総保有消費カロリー', `${status.calories} kcal`),
     createMetricRow('完了クエスト', `${status.completedRuns || 0} 件`),
     createMetricRow('ストリーク', `${status.streak} 日`),
   );
@@ -139,13 +139,13 @@ const createStatsCards = (status, navigate, playSfx) => {
   const totalsCard = document.createElement('div');
   totalsCard.className = 'card account-card';
   const totalsTitle = document.createElement('h3');
-  totalsTitle.textContent = '期間別ポイント';
+  totalsTitle.textContent = '期間別消費カロリー';
   const totalsGrid = document.createElement('div');
   totalsGrid.className = 'account-metrics-grid';
   totalsGrid.append(
-    createMetricRow('本日', `${status.totals.daily || 0} pts`, { muted: true }),
-    createMetricRow('直近7日', `${status.totals.weekly || 0} pts`, { muted: true }),
-    createMetricRow('直近30日', `${status.totals.monthly || 0} pts`, { muted: true }),
+    createMetricRow('本日', `${status.totals.daily || 0} kcal`, { muted: true }),
+    createMetricRow('直近7日', `${status.totals.weekly || 0} kcal`, { muted: true }),
+    createMetricRow('直近30日', `${status.totals.monthly || 0} kcal`, { muted: true }),
   );
   totalsCard.append(totalsTitle, totalsGrid);
 
@@ -174,7 +174,128 @@ const createStatsCards = (status, navigate, playSfx) => {
   return [statsCard, totalsCard, actions];
 };
 
-export const renderAccount = (_params, { navigate, accountState, playSfx }) => {
+
+const createSocialCard = (status, store, playSfx) => {
+  const card = document.createElement('div');
+  card.className = 'card account-card';
+  const title = document.createElement('h3');
+  title.textContent = 'フォロー';
+
+  const followerCount = document.createElement('p');
+  followerCount.className = 'muted';
+  const followingCount = document.createElement('p');
+  followingCount.className = 'muted';
+
+  const targetField = document.createElement('input');
+  targetField.type = 'text';
+  targetField.placeholder = 'ユーザーIDを入力';
+
+  const feedback = document.createElement('p');
+  feedback.className = 'muted';
+
+  const actions = document.createElement('div');
+  actions.className = 'hero__actions';
+
+  const refreshCounts = async () => {
+    const followers = await Promise.resolve(store.getFollowers(status.id));
+    const following = await Promise.resolve(store.getFollowing(status.id));
+    followerCount.textContent = `フォロワー: ${(followers || []).length}`;
+    followingCount.textContent = `フォロー中: ${(following || []).length}`;
+  };
+
+  const followBtn = document.createElement('button');
+  followBtn.type = 'button';
+  followBtn.textContent = 'フォロー';
+  followBtn.addEventListener('click', async () => {
+    const targetId = targetField.value.trim();
+    if (!targetId) return;
+    playSfx('ui:select');
+    await Promise.resolve(store.followUser(status.id, targetId));
+    feedback.textContent = `${targetId} をフォローしました。`;
+    refreshCounts();
+  });
+
+  const unfollowBtn = document.createElement('button');
+  unfollowBtn.type = 'button';
+  unfollowBtn.className = 'ghost';
+  unfollowBtn.textContent = 'フォロー解除';
+  unfollowBtn.addEventListener('click', async () => {
+    const targetId = targetField.value.trim();
+    if (!targetId) return;
+    playSfx('ui:select');
+    await Promise.resolve(store.unfollowUser(status.id, targetId));
+    feedback.textContent = `${targetId} のフォローを解除しました。`;
+    refreshCounts();
+  });
+
+  actions.append(followBtn, unfollowBtn);
+  card.append(title, followerCount, followingCount, targetField, actions, feedback);
+  refreshCounts();
+  return card;
+};
+
+const createPostVisibilityCard = (status, store) => {
+  const card = document.createElement('div');
+  card.className = 'card account-card';
+  const title = document.createElement('h3');
+  title.textContent = '投稿公開設定（最近の履歴）';
+  const list = document.createElement('div');
+  list.className = 'stack';
+
+  const renderList = () => {
+    list.innerHTML = '';
+    const items = (store.getHistory() || []).slice(0, 5);
+    if (!items.length) {
+      const empty = document.createElement('p');
+      empty.className = 'muted';
+      empty.textContent = '履歴がまだありません。';
+      list.append(empty);
+      return;
+    }
+
+    items.forEach((entry) => {
+      const row = document.createElement('div');
+      row.className = 'card stack';
+      const label = document.createElement('p');
+      label.textContent = `${entry.exerciseSlug || entry.questId || 'workout'} / ${entry.calories || 0} kcal`;
+
+      const visibility = document.createElement('select');
+      ['public', 'private', 'archived'].forEach((value) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        if ((entry.visibility || 'private') === value) option.selected = true;
+        visibility.append(option);
+      });
+
+      const note = document.createElement('input');
+      note.type = 'text';
+      note.value = entry.note || '';
+      note.placeholder = 'note';
+
+      const save = document.createElement('button');
+      save.type = 'button';
+      save.textContent = '保存';
+      save.addEventListener('click', async () => {
+        await Promise.resolve(store.updateWorkoutPost(entry.id, {
+          visibility: visibility.value,
+          note: note.value,
+          published_at: visibility.value === 'archived' ? null : (entry.published_at || new Date().toISOString()),
+        }));
+        renderList();
+      });
+
+      row.append(label, visibility, note, save);
+      list.append(row);
+    });
+  };
+
+  renderList();
+  card.append(title, list);
+  return card;
+};
+
+export const renderAccount = (_params, { navigate, accountState, playSfx, store }) => {
   const container = document.createElement('section');
   container.className = 'stack account-view';
 
@@ -235,6 +356,8 @@ export const renderAccount = (_params, { navigate, accountState, playSfx }) => {
     content.append(createProfileCard(status, accountState, playSfx));
     const stats = createStatsCards(status, navigate, playSfx);
     content.append(...stats);
+    content.append(createSocialCard(status, store, playSfx));
+    content.append(createPostVisibilityCard(status, store));
   };
 
   renderState(accountState.getStatus());
