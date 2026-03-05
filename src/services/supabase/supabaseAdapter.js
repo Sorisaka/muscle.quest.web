@@ -868,19 +868,25 @@ export const createSupabaseAdapter = (options = {}) => {
     const from = startOfDay(date).toISOString();
     const to = endOfDay(date).toISOString();
 
-    return client
+    let query = client
       .from('workout_runs')
       .select('id,user_id,created_at,points,calories,visibility,published_at,note,result')
-      .eq('user_id', userId || session.user.id)
-      .gte('created_at', from)
-      .lte('created_at', to)
+      .eq('user_id', userId || session.user.id);
+
+    const supportsRange = typeof query?.gte === 'function' && typeof query?.lte === 'function';
+    if (supportsRange) {
+      query = query.gte('created_at', from).lte('created_at', to);
+    }
+
+    return query
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (error) {
           authWarn('workout_runs by date fetch failed', error.message || error);
           return local.getWorkoutsByDate(userId, date);
         }
-        return (data || []).map(mapHistoryRow).filter((entry) => getWorkoutDateKey(entry) === date);
+        const mapped = (data || []).map(mapHistoryRow).filter((entry) => getWorkoutDateKey(entry) === date);
+        return mapped;
       });
   };
 
@@ -895,19 +901,27 @@ export const createSupabaseAdapter = (options = {}) => {
       ? `${year + 1}-01-01`
       : `${year}-${String(month + 1).padStart(2, '0')}-01`;
 
-    return client
+    let query = client
       .from('workout_runs')
       .select('id,user_id,created_at,points,calories,visibility,published_at,note,result')
-      .eq('user_id', userId || session.user.id)
-      .gte('created_at', startOfDay(first).toISOString())
-      .lt('created_at', startOfDay(nextMonth).toISOString())
+      .eq('user_id', userId || session.user.id);
+
+    const supportsRange = typeof query?.gte === 'function' && typeof query?.lt === 'function';
+    if (supportsRange) {
+      query = query.gte('created_at', startOfDay(first).toISOString())
+        .lt('created_at', startOfDay(nextMonth).toISOString());
+    }
+
+    return query
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (error) {
           authWarn('workout_runs month dates fetch failed', error.message || error);
           return local.listWorkoutDatesInMonth(userId, year, month);
         }
-        const set = new Set((data || []).map(mapHistoryRow).map(getWorkoutDateKey).filter(Boolean));
+        const mapped = (data || []).map(mapHistoryRow).map(getWorkoutDateKey).filter(Boolean);
+        const monthPrefix = `${year}-${mm}-`;
+        const set = new Set(mapped.filter((dateKey) => dateKey.startsWith(monthPrefix)));
         return Array.from(set).sort((a, b) => a.localeCompare(b));
       });
   };
