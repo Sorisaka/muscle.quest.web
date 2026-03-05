@@ -22,6 +22,9 @@
 - `supabase/sql/006_functions_add_workout_result.sql`
 - `supabase/sql/007_verification.sql`
 
+- `supabase/sql/phase5_body_metrics.sql`
+  - Phase5 の `body_metrics` テーブル作成（PK: `(user_id, date)`）と RLS（owner のみ select/insert/update/delete）
+
 - `supabase/sql/009_timeline_scope_alignment.sql`
   - `get_timeline` をスコープ仕様に合わせて更新
     - `global`: 非フォロー相手の `public` のみ（自分除外）

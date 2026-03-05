@@ -24,6 +24,13 @@ const REQUIRED_METHODS = [
   'updateWorkoutPost',
   'getTimeline',
   'toggleLike',
+  'upsertBodyMetric',
+  'deleteBodyMetric',
+  'getBodyMetricsRange',
+  'getWorkoutsByDate',
+  'listWorkoutDatesInMonth',
+  'loadBodyMetrics',
+  'saveBodyMetric',
 ];
 
 const adapterFactories = {

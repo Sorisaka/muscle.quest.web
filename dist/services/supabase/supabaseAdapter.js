@@ -4,6 +4,7 @@ import { authWarn } from '../../lib/authDebug.js';
 import { getSupabaseClient } from '../../lib/supabaseClient.js';
 import { getSession, onAuthStateChange } from '../authService.js';
 import { normalizeAccountVisibility, normalizePostVisibility, resolvePostVisibility } from '../../core/visibility.js';
+import { toDateKey, startOfDay, endOfDay } from '../../lib/dateKey.js';
 
 const PROFILE_COLUMNS = 'id,display_name,account_visibility,default_visibility,points,total_calories,completed_runs,last_result,height_cm,weight_kg,sex,step_length_m,arm_length_m,leg_length_m,torso_length_m,step_length_m_mode,arm_length_m_mode,leg_length_m_mode,torso_length_m_mode,updated_at';
 const HISTORY_LIMIT = 100;
@@ -761,6 +762,187 @@ export const createSupabaseAdapter = (options = {}) => {
       });
   };
 
+
+
+  const toBodyMetricPayload = (metric = {}) => ({
+    user_id: session?.user?.id,
+    date: metric.date || metric.dateKey,
+    weight_kg: metric.weight_kg == null ? (metric.weightKg == null ? null : Number(metric.weightKg)) : Number(metric.weight_kg),
+    body_fat_pct: metric.body_fat_pct == null ? (metric.bodyFatPct == null ? null : Number(metric.bodyFatPct)) : Number(metric.body_fat_pct),
+    visibility: metric.visibility || 'private',
+  });
+
+  const mapBodyMetricRow = (row = {}) => ({
+    date: row.date,
+    weight_kg: row.weight_kg == null ? null : Number(row.weight_kg),
+    body_fat_pct: row.body_fat_pct == null ? null : Number(row.body_fat_pct),
+    visibility: row.visibility || 'private',
+    created_at: row.created_at || null,
+    updated_at: row.updated_at || null,
+  });
+
+  const upsertBodyMetric = (userId, metric = {}) => {
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.upsertBodyMetric(userId, metric);
+    }
+
+    const payload = toBodyMetricPayload(metric);
+    if (!payload.date) return null;
+
+    return client
+      .from('body_metrics')
+      .upsert(payload, { onConflict: 'user_id,date' })
+      .select('user_id,date,weight_kg,body_fat_pct,visibility,created_at,updated_at')
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error) {
+          authWarn('body_metrics upsert failed', error.message || error);
+          return local.upsertBodyMetric(userId, metric);
+        }
+        return data ? mapBodyMetricRow(data) : mapBodyMetricRow(payload);
+      });
+  };
+
+  const deleteBodyMetric = (userId, date) => {
+    if (!date) return false;
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.deleteBodyMetric(userId, date);
+    }
+
+    return deleteWithFallback({
+      table: 'body_metrics',
+      keys: { user_id: session.user.id, date },
+    }).then(({ error }) => {
+      if (error) {
+        authWarn('body_metrics delete failed', error.message || error);
+        return local.deleteBodyMetric(userId, date);
+      }
+      return true;
+    });
+  };
+
+  const getBodyMetricsRange = (userId, fromDate, toDate) => {
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.getBodyMetricsRange(userId, fromDate, toDate);
+    }
+
+    let query = client
+      .from('body_metrics')
+      .select('user_id,date,weight_kg,body_fat_pct,visibility,created_at,updated_at')
+      .eq('user_id', userId || session.user.id);
+
+    const supportsRange = typeof query?.gte === 'function' && typeof query?.lte === 'function';
+    if (supportsRange) {
+      if (fromDate) query = query.gte('date', fromDate);
+      if (toDate) query = query.lte('date', toDate);
+    }
+
+    return query.order('date', { ascending: true }).then(({ data, error }) => {
+      if (error) {
+        authWarn('body_metrics range fetch failed', error.message || error);
+        return local.getBodyMetricsRange(userId, fromDate, toDate);
+      }
+      const mapped = (data || []).map(mapBodyMetricRow);
+      if (supportsRange) return mapped;
+      return mapped.filter((row) => (!fromDate || row.date >= fromDate) && (!toDate || row.date <= toDate));
+    });
+  };
+
+  const getWorkoutDateKey = (entry = {}) => {
+    const source = entry?.timestamp
+      || entry?.result?.timestamp
+      || entry?.endTime
+      || entry?.result?.endTime
+      || entry?.created_at
+      || entry?.published_at
+      || null;
+    return source ? toDateKey(source) : null;
+  };
+
+  const getWorkoutsByDate = (userId, date) => {
+    if (!date) return [];
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.getWorkoutsByDate(userId, date);
+    }
+
+    const from = startOfDay(date).toISOString();
+    const to = endOfDay(date).toISOString();
+
+    let query = client
+      .from('workout_runs')
+      .select('id,user_id,created_at,points,calories,visibility,published_at,note,result')
+      .eq('user_id', userId || session.user.id);
+
+    const supportsRange = typeof query?.gte === 'function' && typeof query?.lte === 'function';
+    if (supportsRange) {
+      query = query.gte('created_at', from).lte('created_at', to);
+    }
+
+    return query
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (error) {
+          authWarn('workout_runs by date fetch failed', error.message || error);
+          return local.getWorkoutsByDate(userId, date);
+        }
+        const mapped = (data || []).map(mapHistoryRow).filter((entry) => getWorkoutDateKey(entry) === date);
+        return mapped;
+      });
+  };
+
+  const listWorkoutDatesInMonth = (userId, year, month) => {
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.listWorkoutDatesInMonth(userId, year, month);
+    }
+
+    const mm = String(month).padStart(2, '0');
+    const first = `${year}-${mm}-01`;
+    const nextMonth = month === 12
+      ? `${year + 1}-01-01`
+      : `${year}-${String(month + 1).padStart(2, '0')}-01`;
+
+    let query = client
+      .from('workout_runs')
+      .select('id,user_id,created_at,points,calories,visibility,published_at,note,result')
+      .eq('user_id', userId || session.user.id);
+
+    const supportsRange = typeof query?.gte === 'function' && typeof query?.lt === 'function';
+    if (supportsRange) {
+      query = query.gte('created_at', startOfDay(first).toISOString())
+        .lt('created_at', startOfDay(nextMonth).toISOString());
+    }
+
+    return query
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (error) {
+          authWarn('workout_runs month dates fetch failed', error.message || error);
+          return local.listWorkoutDatesInMonth(userId, year, month);
+        }
+        const mapped = (data || []).map(mapHistoryRow).map(getWorkoutDateKey).filter(Boolean);
+        const monthPrefix = `${year}-${mm}-`;
+        const set = new Set(mapped.filter((dateKey) => dateKey.startsWith(monthPrefix)));
+        return Array.from(set).sort((a, b) => a.localeCompare(b));
+      });
+  };
+
+  // backward compatibility
+  const loadBodyMetrics = (userId) => Promise.resolve(getBodyMetricsRange(userId, null, null)).then((rows) => (rows || []).map((entry) => ({
+    dateKey: entry.date,
+    weightKg: entry.weight_kg,
+    bodyFatPct: entry.body_fat_pct,
+    visibility: entry.visibility,
+    recordedAt: entry.updated_at || entry.created_at,
+  })));
+
+  const saveBodyMetric = (userId, entry = {}) => upsertBodyMetric(userId, {
+    date: entry.date || entry.dateKey,
+    weight_kg: entry.weight_kg ?? entry.weightKg,
+    body_fat_pct: entry.body_fat_pct ?? entry.bodyFatPct,
+    visibility: entry.visibility,
+    updated_at: entry.updated_at || entry.recordedAt,
+  });
+
   const destroy = () => authUnsubscribe && authUnsubscribe();
 
   return {
@@ -789,6 +971,13 @@ export const createSupabaseAdapter = (options = {}) => {
     updateWorkoutPost,
     getTimeline,
     toggleLike,
+    upsertBodyMetric,
+    deleteBodyMetric,
+    getBodyMetricsRange,
+    getWorkoutsByDate,
+    listWorkoutDatesInMonth,
+    loadBodyMetrics,
+    saveBodyMetric,
     subscribe,
     destroy,
   };

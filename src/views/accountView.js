@@ -169,7 +169,16 @@ const createStatsCards = (status, navigate, playSfx) => {
     navigate('#/settings');
   });
 
-  actions.append(toRank, toSettings);
+  const toHistory = document.createElement('button');
+  toHistory.type = 'button';
+  toHistory.className = 'ghost';
+  toHistory.textContent = '履歴を見る';
+  toHistory.addEventListener('click', () => {
+    playSfx('ui:navigate');
+    navigate('#/history');
+  });
+
+  actions.append(toRank, toSettings, toHistory);
 
   return [statsCard, totalsCard, actions];
 };

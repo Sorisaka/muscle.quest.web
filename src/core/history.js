@@ -1,8 +1,6 @@
-const startOfDay = (timestamp) => {
-  const date = new Date(timestamp);
-  date.setHours(0, 0, 0, 0);
-  return date.getTime();
-};
+import { startOfLocalDayTimestamp } from './dateKey.js';
+
+const startOfDay = (timestamp) => startOfLocalDayTimestamp(timestamp);
 
 const isWithinDays = (timestamp, days, now = Date.now()) => {
   const diff = now - timestamp;

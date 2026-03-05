@@ -1,0 +1,21 @@
+# Phase5 実装前調査メモ（差分最小）
+
+- 既存永続化 I/F の起点は `src/services/storage/StorageAdapter.js` の `REQUIRED_METHODS`。
+  - `localPersistence` と `supabaseAdapter` はこの契約で同等メソッドを提供し、`src/core/store.js` が呼び出す。
+- Phase5 で追加する永続化 I/F（local/supabase 共通で実装）
+  - `upsertBodyMetric(userId, metric)` : 体重・体脂肪率の日次保存（同日 upsert）
+  - `deleteBodyMetric(userId, date)` : 指定日の体重・体脂肪率を削除
+  - `getBodyMetricsRange(userId, fromDate, toDate)` : 期間内の体重・体脂肪率取得（date 昇順）
+  - `getWorkoutsByDate(userId, date)` : 指定日（YYYY-MM-DD）のトレーニング一覧取得
+  - `listWorkoutDatesInMonth(userId, year, month)` : その月にトレーニング実施がある日付一覧取得
+- workout_runs の日付判定（トレーニング日）の固定ルール
+  - 優先順: `timestamp` -> `result.timestamp` -> `endTime`/`result.endTime` -> `created_at` -> `published_at`
+  - 取得クエリは性能上 `created_at` の日付範囲で絞り、最終判定は上記ルールで `YYYY-MM-DD` へ丸めて一致判定する。
+  - 統一関数: `src/lib/dateKey.js`（Date/string/epoch -> `YYYY-MM-DD`）
+- UI 追加ルート（最小）
+  - `#/history` : 体重・体脂肪率グラフ + トレーニングカレンダー（月表示）
+  - `#/history/:date` : 日付詳細（当日のトレーニング一覧、前日/翌日ボタン）
+- Supabase 側追加
+  - `body_metrics` テーブルを migration で追加（`user_id`,`date`,`weight_kg`,`body_fat_pct`,`visibility`、`primary key(user_id, date)`）
+  - RLS で本人のみ select/insert/update/delete 可
+- 既存データ破壊は行わず、追加テーブルのみで対応（DROP/列削除なし）

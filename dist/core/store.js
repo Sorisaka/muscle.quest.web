@@ -91,6 +91,7 @@ export const createStore = (driver = 'supabase') => {
   let weeklyPlan = {};
   let specialPlans = {};
   let todoState = readTodoState();
+  let workoutDatesMonthCache = new Map();
   let timeline = {
     scope: 'following',
     items: [],
@@ -227,6 +228,15 @@ export const createStore = (driver = 'supabase') => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
   };
 
+
+  const resolveCurrentUserId = () => profile?.id || defaultProfile.id || 'local-user';
+
+  const clearWorkoutDatesMonthCache = () => {
+    workoutDatesMonthCache = new Map();
+  };
+
+  const getMonthCacheKey = (userId, year, month) => `${userId}:${year}-${String(month).padStart(2, '0')}`;
+
   const getSettings = () => settings;
 
   const updateSettings = (partial) => {
@@ -310,6 +320,7 @@ export const createStore = (driver = 'supabase') => {
     if (nextHistory) {
       applyHistory(nextHistory);
     }
+    clearWorkoutDatesMonthCache();
     return enriched;
   };
 
@@ -395,6 +406,61 @@ export const createStore = (driver = 'supabase') => {
     return current;
   };
 
+
+
+  const upsertBodyMetric = (dateKey, metric = {}) => {
+    if (!dateKey) return null;
+    const userId = resolveCurrentUserId();
+    const payload = { date: dateKey, ...(metric || {}) };
+    clearWorkoutDatesMonthCache();
+    return persistence.upsertBodyMetric(userId, payload);
+  };
+
+  const deleteBodyMetric = (dateKey) => {
+    if (!dateKey) return false;
+    const userId = resolveCurrentUserId();
+    clearWorkoutDatesMonthCache();
+    return persistence.deleteBodyMetric(userId, dateKey);
+  };
+
+  const getBodyMetricsRange = (fromDateKey = null, toDateKey = null) => {
+    const userId = resolveCurrentUserId();
+    return persistence.getBodyMetricsRange(userId, fromDateKey, toDateKey);
+  };
+
+  const getWorkoutsByDate = (dateKey) => {
+    const userId = resolveCurrentUserId();
+    return persistence.getWorkoutsByDate(userId, dateKey);
+  };
+
+  const listWorkoutDatesInMonth = (year, month) => {
+    const userId = resolveCurrentUserId();
+    const key = getMonthCacheKey(userId, year, month);
+    if (workoutDatesMonthCache.has(key)) {
+      return workoutDatesMonthCache.get(key);
+    }
+    const result = persistence.listWorkoutDatesInMonth(userId, year, month);
+    const sync = resolveMaybeAsync(result, (dates) => {
+      workoutDatesMonthCache.set(key, Array.isArray(dates) ? dates : []);
+    });
+    if (sync) {
+      workoutDatesMonthCache.set(key, Array.isArray(sync) ? sync : []);
+      return workoutDatesMonthCache.get(key);
+    }
+    return result;
+  };
+
+  // backward compatibility for existing UI code
+  const getBodyMetrics = () => persistence.loadBodyMetrics(resolveCurrentUserId());
+
+  const saveBodyMetric = (entry = {}) => {
+    const dateKey = entry?.date || entry?.dateKey;
+    return upsertBodyMetric(dateKey, {
+      weight_kg: entry?.weight_kg ?? entry?.weightKg,
+      body_fat_pct: entry?.body_fat_pct ?? entry?.bodyFatPct,
+      visibility: entry?.visibility,
+    });
+  };
 
   const followUser = (followerId, followeeId) => persistence.followUser(followerId, followeeId);
 
@@ -557,5 +623,12 @@ export const createStore = (driver = 'supabase') => {
     toggleLike,
     getTimelineState,
     getTimerPreferences,
+    upsertBodyMetric,
+    deleteBodyMetric,
+    getBodyMetricsRange,
+    getWorkoutsByDate,
+    listWorkoutDatesInMonth,
+    getBodyMetrics,
+    saveBodyMetric,
   };
 };
