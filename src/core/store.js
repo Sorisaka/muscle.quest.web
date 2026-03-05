@@ -95,6 +95,20 @@ export const createStore = (driver = 'supabase') => {
     scope: 'following',
     items: [],
     nextBefore: null,
+    loading: false,
+    error: null,
+    loadedOnceByScope: {
+      following: false,
+      global: false,
+    },
+    itemsByScope: {
+      following: [],
+      global: [],
+    },
+    nextBeforeByScope: {
+      following: null,
+      global: null,
+    },
   };
 
   const notifySettings = () => {
@@ -137,11 +151,49 @@ export const createStore = (driver = 'supabase') => {
     return last?.publishedAt || last?.createdAt || null;
   };
 
-  const applyTimeline = (scope, items = []) => {
+  const applyTimeline = (scope, items = [], options = {}) => {
+    const normalizedScope = scope || timeline.scope || 'following';
+    const shouldAppend = Boolean(options.append);
+    const previousItems = Array.isArray(timeline.itemsByScope?.[normalizedScope])
+      ? timeline.itemsByScope[normalizedScope]
+      : [];
+    const normalizedItems = Array.isArray(items) ? items.map(normalizeTimelineItem) : [];
+    const nextItems = shouldAppend
+      ? [
+        ...previousItems,
+        ...normalizedItems.filter((entry) => !previousItems.some((prev) => prev.runId === entry.runId)),
+      ]
+      : normalizedItems;
+
+    const nextLoaded = {
+      following: Boolean(timeline.loadedOnceByScope?.following),
+      global: Boolean(timeline.loadedOnceByScope?.global),
+      ...(options.loadedOnceByScope || {}),
+    };
+
+    if (options.markLoaded) {
+      nextLoaded[normalizedScope] = true;
+    }
+
+    const nextBefore = shouldAppend
+      ? deriveNextBefore(nextItems)
+      : (options.nextBefore ?? deriveNextBefore(nextItems));
+
     timeline = {
-      scope: scope || timeline.scope || 'following',
-      items: Array.isArray(items) ? items.map(normalizeTimelineItem) : [],
-      nextBefore: deriveNextBefore(items),
+      scope: normalizedScope,
+      items: nextItems,
+      nextBefore,
+      loading: typeof options.loading === 'boolean' ? options.loading : timeline.loading,
+      error: options.error ?? null,
+      loadedOnceByScope: nextLoaded,
+      itemsByScope: {
+        following: normalizedScope === 'following' ? nextItems : (timeline.itemsByScope?.following || []),
+        global: normalizedScope === 'global' ? nextItems : (timeline.itemsByScope?.global || []),
+      },
+      nextBeforeByScope: {
+        following: normalizedScope === 'following' ? nextBefore : (timeline.nextBeforeByScope?.following || null),
+        global: normalizedScope === 'global' ? nextBefore : (timeline.nextBeforeByScope?.global || null),
+      },
     };
     notifyProfile();
     return timeline;
@@ -368,13 +420,48 @@ export const createStore = (driver = 'supabase') => {
   };
 
 
-  const fetchTimeline = ({ scope = 'following', limit = 30, before = null } = {}) => {
-    const result = persistence.getTimeline({ scope, limit, before });
-    const sync = resolveMaybeAsync(result, (items) => applyTimeline(scope, items || []));
-    if (sync) {
-      return applyTimeline(scope, sync || []);
+  const fetchTimeline = ({ scope = 'following', limit = 30, before = null, force = false } = {}) => {
+    const normalizedScope = scope || 'following';
+    const isHeadLoad = before == null;
+    const alreadyLoaded = timeline.loadedOnceByScope?.[normalizedScope] === true;
+
+    if (isHeadLoad && !force && alreadyLoaded) {
+      return Promise.resolve(applyTimeline(normalizedScope, timeline.itemsByScope?.[normalizedScope] || [], {
+        loading: false,
+        error: null,
+        nextBefore: timeline.nextBeforeByScope?.[normalizedScope] || null,
+      }));
     }
-    return timeline;
+
+    if (isHeadLoad) {
+      applyTimeline(normalizedScope, [], {
+        loading: true,
+        error: null,
+      });
+    } else {
+      applyTimeline(normalizedScope, timeline.itemsByScope?.[normalizedScope] || [], {
+        loading: true,
+        error: null,
+        nextBefore: timeline.nextBeforeByScope?.[normalizedScope] || null,
+      });
+    }
+
+    return Promise.resolve(persistence.getTimeline({ scope: normalizedScope, limit, before, force }))
+      .then((items) => applyTimeline(normalizedScope, items || [], {
+        append: !isHeadLoad,
+        loading: false,
+        error: null,
+        markLoaded: isHeadLoad,
+      }))
+      .catch((error) => {
+        const fallbackItems = isHeadLoad ? [] : (timeline.itemsByScope?.[normalizedScope] || []);
+        applyTimeline(normalizedScope, fallbackItems, {
+          loading: false,
+          error: error?.message || 'タイムライン取得に失敗しました。',
+          nextBefore: timeline.nextBeforeByScope?.[normalizedScope] || null,
+        });
+        throw error;
+      });
   };
 
   const toggleLike = (runId) => {

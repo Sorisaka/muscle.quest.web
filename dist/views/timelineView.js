@@ -16,8 +16,23 @@ const getExerciseCountLabel = (result) => {
 const normalizeTimelineResponse = (timelineState) => {
   const state = timelineState || {};
   return {
+    scope: state.scope || 'following',
     items: Array.isArray(state.items) ? state.items : [],
     nextBefore: state.nextBefore || null,
+    loading: Boolean(state.loading),
+    error: state.error || null,
+    loadedOnceByScope: {
+      following: Boolean(state.loadedOnceByScope?.following),
+      global: Boolean(state.loadedOnceByScope?.global),
+    },
+    itemsByScope: {
+      following: Array.isArray(state.itemsByScope?.following) ? state.itemsByScope.following : [],
+      global: Array.isArray(state.itemsByScope?.global) ? state.itemsByScope.global : [],
+    },
+    nextBeforeByScope: {
+      following: state.nextBeforeByScope?.following || null,
+      global: state.nextBeforeByScope?.global || null,
+    },
   };
 };
 
@@ -38,7 +53,13 @@ export const renderTimeline = (_params, { navigate, playSfx, store }) => {
     playSfx('ui:navigate');
     navigate('#/');
   });
-  header.append(heading, back);
+
+  const refreshButton = document.createElement('button');
+  refreshButton.type = 'button';
+  refreshButton.className = 'ghost';
+  refreshButton.textContent = '更新';
+
+  header.append(heading, refreshButton, back);
 
   const tabs = document.createElement('div');
   tabs.className = 'tabs';
@@ -58,10 +79,41 @@ export const renderTimeline = (_params, { navigate, playSfx, store }) => {
   let items = [];
   let nextBefore = null;
   let loading = false;
+  let error = null;
+  let loadedOnceByScope = { following: false, global: false };
+  let itemsByScope = { following: [], global: [] };
+  let nextBeforeByScope = { following: null, global: null };
   let likeBusy = new Set();
+
+  const syncFromStore = () => {
+    const parsed = normalizeTimelineResponse(store.getTimelineState());
+    scope = parsed.scope;
+    items = parsed.items;
+    nextBefore = parsed.nextBefore;
+    loading = parsed.loading;
+    error = parsed.error;
+    loadedOnceByScope = parsed.loadedOnceByScope;
+    itemsByScope = parsed.itemsByScope;
+    nextBeforeByScope = parsed.nextBeforeByScope;
+  };
+
+  const updateActiveTab = () => {
+    tabs.querySelectorAll('.tab').forEach((el) => {
+      const active = el.dataset.scope === scope;
+      el.classList.toggle('is-active', active);
+    });
+  };
 
   const renderCards = () => {
     list.innerHTML = '';
+
+    if (loading && !items.length) {
+      const busy = document.createElement('p');
+      busy.className = 'muted';
+      busy.textContent = 'タイムラインを読み込み中...';
+      list.append(busy);
+      return;
+    }
 
     if (!items.length) {
       const empty = document.createElement('p');
@@ -116,29 +168,21 @@ export const renderTimeline = (_params, { navigate, playSfx, store }) => {
       likeButton.type = 'button';
       likeButton.className = `like-button ${item.liked ? 'is-liked' : ''}`.trim();
       likeButton.textContent = `${item.liked ? '♥' : '♡'} ${Number(item.likeCount || 0)}`;
-      likeButton.disabled = likeBusy.has(item.runId);
+      likeButton.disabled = likeBusy.has(item.runId) || loading;
       likeButton.addEventListener('click', async () => {
         if (likeBusy.has(item.runId)) return;
         likeBusy = new Set([...likeBusy, item.runId]);
-        renderCards();
-        errorText.textContent = '';
+        render();
         try {
-          const next = await Promise.resolve(store.toggleLike(item.runId));
-          items = items.map((entry) => {
-            if (entry.runId !== item.runId) return entry;
-            return {
-              ...entry,
-              liked: Boolean(next?.liked),
-              likeCount: Number(next?.likeCount ?? entry.likeCount ?? 0),
-            };
-          });
-        } catch (error) {
-          errorText.textContent = 'Like の更新に失敗しました。時間をおいて再試行してください。';
+          await Promise.resolve(store.toggleLike(item.runId));
+          syncFromStore();
+        } catch (likeError) {
+          error = 'Like の更新に失敗しました。時間をおいて再試行してください。';
         } finally {
           const nextBusy = new Set(likeBusy);
           nextBusy.delete(item.runId);
           likeBusy = nextBusy;
-          renderCards();
+          render();
         }
       });
 
@@ -148,33 +192,36 @@ export const renderTimeline = (_params, { navigate, playSfx, store }) => {
     });
   };
 
-  const loadTimeline = async ({ append = false } = {}) => {
+  const render = () => {
+    updateActiveTab();
+    errorText.textContent = error || '';
+    refreshButton.disabled = loading;
+    refreshButton.textContent = loading ? '更新中...' : '更新';
+    loadMore.disabled = loading || !nextBefore;
+    loadMore.style.display = nextBefore ? '' : 'none';
+    renderCards();
+  };
+
+  const loadTimeline = async ({ append = false, force = false } = {}) => {
     if (loading) return;
-    loading = true;
-    loadMore.disabled = true;
-    errorText.textContent = '';
+    error = null;
+    render();
     try {
-      const response = await Promise.resolve(store.fetchTimeline({
+      const pending = Promise.resolve(store.fetchTimeline({
         scope,
         limit: 20,
         before: append ? nextBefore : null,
+        force,
       }));
-      const parsed = normalizeTimelineResponse(response);
-      if (append) {
-        const seen = new Set(items.map((entry) => entry.runId));
-        const merged = parsed.items.filter((entry) => !seen.has(entry.runId));
-        items = [...items, ...merged];
-      } else {
-        items = parsed.items;
-      }
-      nextBefore = parsed.nextBefore;
-      renderCards();
-      loadMore.style.display = nextBefore ? '' : 'none';
-    } catch (error) {
-      errorText.textContent = 'タイムライン取得に失敗しました。';
-    } finally {
-      loading = false;
-      loadMore.disabled = false;
+      syncFromStore();
+      render();
+      await pending;
+      syncFromStore();
+      render();
+    } catch (timelineError) {
+      syncFromStore();
+      error = timelineError?.message || error || 'タイムライン取得に失敗しました。';
+      render();
     }
   };
 
@@ -186,19 +233,30 @@ export const renderTimeline = (_params, { navigate, playSfx, store }) => {
   scopes.forEach((candidate) => {
     const tab = document.createElement('button');
     tab.type = 'button';
+    tab.dataset.scope = candidate.id;
     tab.className = `tab ${scope === candidate.id ? 'is-active' : ''}`.trim();
     tab.textContent = candidate.label;
     tab.addEventListener('click', () => {
       if (scope === candidate.id || loading) return;
       playSfx('ui:navigate');
       scope = candidate.id;
-      items = [];
-      nextBefore = null;
-      tabs.querySelectorAll('.tab').forEach((el) => el.classList.remove('is-active'));
-      tab.classList.add('is-active');
+      const loaded = Boolean(loadedOnceByScope[candidate.id]);
+      if (loaded) {
+        const state = normalizeTimelineResponse(store.getTimelineState());
+        items = state.itemsByScope[scope] || [];
+        nextBefore = state.nextBeforeByScope[scope] || null;
+        loading = false;
+        error = null;
+        render();
+        return;
+      }
       loadTimeline({ append: false });
     });
     tabs.append(tab);
+  });
+
+  refreshButton.addEventListener('click', () => {
+    loadTimeline({ append: false, force: true });
   });
 
   loadMore.addEventListener('click', () => {
@@ -206,6 +264,12 @@ export const renderTimeline = (_params, { navigate, playSfx, store }) => {
   });
 
   container.append(header, tabs, errorText, list, loadMore);
-  loadTimeline({ append: false });
+
+  syncFromStore();
+  render();
+  if (!loadedOnceByScope[scope]) {
+    loadTimeline({ append: false });
+  }
+
   return container;
 };
