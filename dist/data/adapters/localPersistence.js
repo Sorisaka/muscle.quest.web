@@ -7,6 +7,7 @@ const LAST_PLAN_KEY = 'musclequest:lastPlans';
 const WEEKLY_PLAN_KEY = 'musclequest:weeklyPlans';
 const SPECIAL_PLAN_KEY = 'musclequest:specialPlans';
 const FOLLOWS_KEY = 'musclequest:follows';
+const LIKES_KEY = 'musclequest:likesByRunId';
 
 const readJson = (key, fallback) => {
   try {
@@ -39,6 +40,7 @@ export const createLocalPersistence = () => {
   const loadWeeklyPlans = () => readJson(WEEKLY_PLAN_KEY, {});
   const loadSpecialPlans = () => readJson(SPECIAL_PLAN_KEY, {});
   const loadFollows = () => readJson(FOLLOWS_KEY, []);
+  const loadLikes = () => readJson(LIKES_KEY, {});
 
   const replaceProfile = (nextProfile) => {
     const safeProfile = { ...defaultProfile, ...(nextProfile || {}) };
@@ -247,6 +249,53 @@ export const createLocalPersistence = () => {
     return next;
   };
 
+  const getTimeline = ({ scope: _scope = 'following', limit = 30, before = null } = {}) => {
+    const profile = loadProfile();
+    const history = loadHistory();
+    const likesByRunId = loadLikes();
+    const beforeTime = before ? new Date(before).getTime() : null;
+    const safeLimit = Math.max(Number(limit) || 30, 1);
+
+    return history
+      .filter((entry) => entry.user_id === profile.id)
+      .map((entry) => {
+        const createdAt = entry.created_at || new Date(entry.timestamp || Date.now()).toISOString();
+        const publishedAt = entry.published_at || null;
+        const sortAt = new Date(publishedAt || createdAt).getTime();
+        const liked = Boolean(likesByRunId[String(entry.id)]);
+        return {
+          runId: entry.id,
+          userId: entry.user_id,
+          authorDisplayName: profile.displayName || 'Guest',
+          createdAt,
+          publishedAt,
+          visibility: entry.visibility || 'private',
+          calories: Number(entry.calories || 0),
+          note: entry.note || null,
+          result: entry.result || null,
+          likeCount: liked ? 1 : 0,
+          liked,
+          __sortAt: sortAt,
+        };
+      })
+      .filter((entry) => (beforeTime == null ? true : entry.__sortAt < beforeTime))
+      .sort((a, b) => b.__sortAt - a.__sortAt)
+      .slice(0, safeLimit)
+      .map(({ __sortAt, ...entry }) => entry);
+  };
+
+  const toggleLike = (runId) => {
+    if (!runId) {
+      return { runId, liked: false, likeCount: 0 };
+    }
+    const key = String(runId);
+    const likesByRunId = loadLikes();
+    const nextLiked = !Boolean(likesByRunId[key]);
+    likesByRunId[key] = nextLiked;
+    writeJson(LIKES_KEY, likesByRunId);
+    return { runId, liked: nextLiked, likeCount: nextLiked ? 1 : 0 };
+  };
+
   return {
     loadProfile,
     getProfile,
@@ -268,6 +317,8 @@ export const createLocalPersistence = () => {
     getFollowers,
     listVisibleWorkouts,
     updateWorkoutPost,
+    getTimeline,
+    toggleLike,
     replaceHistory,
     replaceProfile,
   };
