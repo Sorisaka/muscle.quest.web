@@ -14,14 +14,22 @@ const isPromise = (value) => value && typeof value.then === 'function';
 
 const buildEqFilter = (value) => `eq.${encodeURIComponent(value)}`;
 
-const safeMaybeSingle = async (query) => {
-  const result = await query;
+const normalizeSingleResult = (result) => {
   if (result?.error) return result;
   if (Array.isArray(result?.data)) {
     if (result.data.length === 0) return { data: null, error: null };
-    if (result.data.length === 1) return { data: result.data[0], error: null };
+    return { data: result.data[0], error: null };
   }
   return result;
+};
+
+const fetchSingleByKeys = async (client, table, keys, selectColumns = '*') => {
+  let query = client.from(table).select(selectColumns).limit(1);
+  Object.entries(keys || {}).forEach(([key, value]) => {
+    query = query.eq(key, value);
+  });
+  const result = await query;
+  return normalizeSingleResult(result);
 };
 
 
@@ -77,12 +85,7 @@ export const createSupabaseAdapter = (options = {}) => {
       return { data: null, error: new Error('Supabase client unavailable.') };
     }
 
-    let query = client.from(table).select(selectColumns);
-    Object.entries(keys || {}).forEach(([key, value]) => {
-      query = query.eq(key, value);
-    });
-
-    const existing = await safeMaybeSingle(query.maybeSingle());
+    const existing = await fetchSingleByKeys(client, table, keys, selectColumns);
     if (existing.error) return existing;
 
     if (existing.data) {
@@ -90,10 +93,12 @@ export const createSupabaseAdapter = (options = {}) => {
       Object.entries(keys || {}).forEach(([key, value]) => {
         updateQuery = updateQuery.eq(key, value);
       });
-      return safeMaybeSingle(updateQuery.select(selectColumns).maybeSingle());
+      const updated = await updateQuery.select(selectColumns);
+      return normalizeSingleResult(updated);
     }
 
-    return safeMaybeSingle(client.from(table).insert(payload).select(selectColumns).maybeSingle());
+    const inserted = await client.from(table).insert(payload).select(selectColumns);
+    return normalizeSingleResult(inserted);
   };
 
   const deleteWithFallback = async ({ table, keys }) => {
@@ -530,13 +535,14 @@ export const createSupabaseAdapter = (options = {}) => {
       .select('items')
       .eq('user_id', session.user.id)
       .eq('date', date)
-      .maybeSingle()
+      .limit(1)
       .then(({ data, error }) => {
         if (error) {
           authWarn('special_plans fetch failed', error.message || error);
           return local.getSpecialPlan(userId, date);
         }
-        return data?.items || null;
+        const row = Array.isArray(data) ? data[0] : data;
+        return row?.items || null;
       });
   };
 
