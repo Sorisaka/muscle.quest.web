@@ -1,10 +1,43 @@
-const normalizeHash = (path) => {
+export const normalizeHash = (path) => {
   const cleaned = (path || '#/').trim();
   if (!cleaned || cleaned === '#') return '#/';
-  if (cleaned.startsWith('#/')) return cleaned;
-  if (cleaned.startsWith('/')) return `#${cleaned}`;
-  if (cleaned.startsWith('#')) return `#/${cleaned.slice(1)}`;
-  return `#/${cleaned}`;
+  let normalized = cleaned;
+  if (normalized.startsWith('/')) normalized = `#${normalized}`;
+  else if (!normalized.startsWith('#/')) {
+    normalized = normalized.startsWith('#')
+      ? `#/${normalized.slice(1)}`
+      : `#/${normalized}`;
+  }
+
+  const pathOnly = normalized.slice(1).replace(/\/+/g, '/').replace(/\/$/, '');
+  return `#${pathOnly || '/'}`;
+};
+
+const stripHashPrefix = (path) => normalizeHash(path).replace(/^#/, '');
+
+const splitPathSegments = (path) => stripHashPrefix(path).split('/').filter(Boolean);
+
+const isSegmentPrefix = (targetPath, candidatePath) => {
+  const targetSegments = splitPathSegments(targetPath);
+  const candidateSegments = splitPathSegments(candidatePath);
+  if (candidateSegments.length > targetSegments.length) return false;
+  return candidateSegments.every((segment, index) => targetSegments[index] === segment);
+};
+
+export const resolveNavRouteKey = (currentPath, navRoutes = []) => {
+  const normalizedCurrent = normalizeHash(currentPath);
+  const normalizedRoutes = navRoutes
+    .map((route) => normalizeHash(route))
+    .filter((route, index, all) => all.indexOf(route) === index)
+    .sort((a, b) => splitPathSegments(b).length - splitPathSegments(a).length);
+
+  const exactMatch = normalizedRoutes.find((route) => route === normalizedCurrent);
+  if (exactMatch) return exactMatch;
+
+  const prefixMatch = normalizedRoutes.find((route) => route !== '#/' && isSegmentPrefix(normalizedCurrent, route));
+  if (prefixMatch) return prefixMatch;
+
+  return normalizedRoutes.includes('#/') ? '#/' : null;
 };
 
 const splitSegments = (path) => path.replace(/^#\/?/, '').split('/').filter(Boolean);
@@ -33,19 +66,19 @@ const matchSegments = (path, pattern) => {
 export const createRouter = (routes, onRouteChange) => {
   const preparedRoutes = routes.map((route) => ({
     ...route,
-    normalizedPath: normalizeHash(route.path).replace(/^#/, ''),
+    normalizedPath: stripHashPrefix(route.path),
   }));
 
   let currentPath = normalizeHash(window.location.hash || '#/');
   let previousPath = '#/';
 
   const findMatch = (hash) => {
-    const normalized = normalizeHash(hash).replace(/^#/, '');
+    const normalized = stripHashPrefix(hash);
 
     for (const route of preparedRoutes) {
       const params = matchSegments(normalized, route.normalizedPath);
       if (params) {
-        return { route, params, fullPath: `#/${normalized}`.replace('#//#', '#/') };
+        return { route, params, fullPath: normalizeHash(`#/${normalized}`) };
       }
     }
 

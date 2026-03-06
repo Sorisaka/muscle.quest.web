@@ -187,29 +187,24 @@ export const createLocalPersistence = () => {
     const profile = loadProfile();
     const history = loadHistory();
     const totals = aggregateCalories(history);
-    const bots = [
-      { id: 'atlas', displayName: 'Atlas', calories: 3200, daily: 140, weekly: 860, monthly: 2100 },
-      { id: 'valkyrie', displayName: 'Valkyrie', calories: 2500, daily: 110, weekly: 640, monthly: 1600 },
-      { id: 'nova', displayName: 'Nova', calories: 1800, daily: 80, weekly: 420, monthly: 1100 },
-    ];
+    const calories = period === 'daily'
+      ? totals.daily || 0
+      : period === 'weekly'
+        ? totals.weekly || 0
+        : period === 'monthly'
+          ? totals.monthly || 0
+          : profile.totalCalories || 0;
 
-    const getPeriodCalories = (entry) => {
-      if (entry.id === profile.id) {
-        if (period === 'daily') return totals.daily || 0;
-        if (period === 'weekly') return totals.weekly || 0;
-        if (period === 'monthly') return totals.monthly || 0;
-      }
-      if (period === 'daily') return entry.daily ?? entry.calories ?? 0;
-      if (period === 'weekly') return entry.weekly ?? entry.calories ?? 0;
-      if (period === 'monthly') return entry.monthly ?? entry.calories ?? 0;
-      return entry.calories || 0;
-    };
-
-    const entries = [...bots, { ...profile, calories: profile.totalCalories || 0 }];
-    return entries
-      .map((entry) => ({ ...entry, calories: Math.max(getPeriodCalories(entry), 0) }))
-      .sort((a, b) => b.calories - a.calories)
-      .slice(0, 20);
+    return [{
+      id: profile.id,
+      displayName: profile.displayName || 'Guest',
+      account_visibility: normalizeAccountVisibility(profile.account_visibility || profile.default_visibility, 'private'),
+      icon_border: profile.icon_border || null,
+      icon_background: profile.icon_background || null,
+      icon_center_object: profile.icon_center_object || null,
+      calories: Math.max(Number(calories || 0), 0),
+      is_self: true,
+    }];
   };
 
 
@@ -229,16 +224,22 @@ export const createLocalPersistence = () => {
     return {
       id: userId,
       display_name: userId,
-      account_visibility: 'public',
+      account_visibility: 'private',
       icon_border: null,
       icon_background: null,
       icon_center_object: null,
     };
   };
 
-  const getFollowing = (userId) => loadFollows().filter((row) => row.follower_id === userId).map((row) => row.followee_id);
+  const getFollowing = (userId) => loadFollows()
+    .filter((row) => row.follower_id === userId)
+    .map((row) => ensureLocalProfile(row.followee_id))
+    .filter(Boolean);
 
-  const getFollowers = (userId) => loadFollows().filter((row) => row.followee_id === userId).map((row) => row.follower_id);
+  const getFollowers = (userId) => loadFollows()
+    .filter((row) => row.followee_id === userId)
+    .map((row) => ensureLocalProfile(row.follower_id))
+    .filter(Boolean);
 
   const getFollowState = (viewerId, targetId) => {
     const follows = loadFollows();
@@ -346,7 +347,7 @@ export const createLocalPersistence = () => {
       ids.add(row.requester_id);
       ids.add(row.target_id);
     });
-    const list = Array.from(ids).map((id) => ensureLocalProfile(id));
+    const list = Array.from(ids).map((id) => ensureLocalProfile(id)).filter(Boolean);
     const q = String(query || '').trim().toLowerCase();
     const matched = q
       ? list.filter((row) => String(row.id).toLowerCase().includes(q) || String(row.display_name || '').toLowerCase().includes(q))
@@ -446,6 +447,9 @@ export const createLocalPersistence = () => {
   const upsertBodyMetric = (userId, metric = {}) => {
     const normalized = normalizeBodyMetric(metric);
     if (!normalized.date) return null;
+    if (normalized.weight_kg == null && normalized.body_fat_pct == null) {
+      return { ok: false, code: 'BODY_METRIC_EMPTY_NOT_ALLOWED' };
+    }
     const rows = loadBodyMetricsData(userId);
     const next = Array.isArray(rows) ? rows.slice() : [];
     const idx = next.findIndex((row) => row.date === normalized.date);

@@ -1,4 +1,4 @@
-import { createRouter } from './core/router.js';
+import { createRouter, normalizeHash, resolveNavRouteKey } from './core/router.js';
 import { createStore } from './core/store.js';
 import { initSfx, playSfx } from './core/sfx.js';
 import { createAccountState } from './core/accountState.js';
@@ -44,21 +44,16 @@ const routes = [
   { path: '#/follow-requests', render: (p, c) => renderAccountConnections({ type: 'requests' }, c) },
 ];
 
-const normalizePathForNav = (path) => {
-  const normalized = String(path || '#/').replace(/^#/, '');
-  if (normalized === '/' || normalized === '') return '#/';
-  if (normalized.startsWith('/rank')) return '#/rank';
-  if (normalized.startsWith('/timeline')) return '#/timeline';
-  if (normalized.startsWith('/history')) return '#/history';
-  if (normalized.startsWith('/account') || normalized.startsWith('/follow-requests')) return '#/';
-  return '#/';
-};
+
+const navRouteKeys = navButtons
+  .map((button) => normalizeHash(button.dataset.navRoute || '#/'))
+  .filter((route, index, all) => all.indexOf(route) === index);
 
 const updateActiveNav = (fullPath) => {
-  const activeKey = normalizePathForNav(fullPath);
+  const activeKey = resolveNavRouteKey(fullPath, navRouteKeys);
   navButtons.forEach((button) => {
-    const target = normalizePathForNav(button.dataset.navRoute || '#/');
-    button.classList.toggle('is-active', target === activeKey);
+    const target = normalizeHash(button.dataset.navRoute || '#/');
+    button.classList.toggle('is-active', Boolean(activeKey) && target === activeKey);
   });
 };
 

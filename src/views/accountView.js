@@ -40,7 +40,7 @@ const createEmpty = (text = 'データはありません。') => {
   return p;
 };
 
-export const renderAccount = (_params, { navigate, accountState, store, playSfx }) => {
+export const renderAccount = (_params, { navigate, accountState, store }) => {
   const container = document.createElement('section');
   container.className = 'stack account-view';
 
@@ -215,16 +215,7 @@ export const renderAccount = (_params, { navigate, accountState, store, playSfx 
   else entries.forEach((entry) => list.append(Object.assign(document.createElement('div'), { className: 'row', textContent: `${entry.exerciseSlug || entry.questId || 'workout'} / ${entry.calories || 0} kcal` })));
   postCard.append(list);
 
-  const requestButton = document.createElement('button');
-  requestButton.type = 'button';
-  requestButton.className = 'ghost';
-  requestButton.textContent = 'フォローリクエスト一覧へ';
-  requestButton.addEventListener('click', () => {
-    playSfx('ui:navigate');
-    navigate('#/follow-requests');
-  });
-
-  container.append(profileCard, activityCard, postCard, feedback, requestButton, followModalOverlay);
+  container.append(profileCard, activityCard, postCard, feedback, followModalOverlay);
   return container;
 };
 
@@ -287,87 +278,103 @@ export const renderAccountConnections = (params, { navigate, store, accountState
   const list = document.createElement('div');
   list.className = 'stack';
 
-  const tabs = document.createElement('div');
-  tabs.className = 'tabs';
-  tabs.hidden = type !== 'requests';
-  const incomingTab = document.createElement('button');
-  incomingTab.type = 'button';
-  incomingTab.className = 'tab is-active';
-  incomingTab.textContent = '受信';
-  const outgoingTab = document.createElement('button');
-  outgoingTab.type = 'button';
-  outgoingTab.className = 'tab';
-  outgoingTab.textContent = '送信済み';
-  tabs.append(incomingTab, outgoingTab);
+  const isRequestList = type === 'requests';
+  const tabs = isRequestList ? document.createElement('div') : null;
+  const incomingTab = isRequestList ? document.createElement('button') : null;
+  const outgoingTab = isRequestList ? document.createElement('button') : null;
+  if (tabs && incomingTab && outgoingTab) {
+    tabs.className = 'tabs';
+    incomingTab.type = 'button';
+    incomingTab.className = 'tab is-active';
+    incomingTab.textContent = '受信';
+    outgoingTab.type = 'button';
+    outgoingTab.className = 'tab';
+    outgoingTab.textContent = '送信済み';
+    tabs.append(incomingTab, outgoingTab);
+  }
 
   let requestDirection = 'incoming';
+
+  const renderFollowList = async () => {
+    const accounts = await Promise.resolve(type === 'followers' ? store.getFollowers(currentUserId) : store.getFollowing(currentUserId));
+    const rows = await renderAccountsByIds({ accounts: accounts || [], currentUserId, store, feedback, rerender: render });
+    list.innerHTML = '';
+    rows.forEach((row) => list.append(row));
+  };
+
+  const renderRequestList = async () => {
+    const requests = await Promise.resolve(store.listFollowRequests(currentUserId, requestDirection));
+    list.innerHTML = '';
+    if (!requests?.length) {
+      list.append(createEmpty(requestDirection === 'incoming' ? '受信リクエストはありません。' : '送信済みリクエストはありません。'));
+      return;
+    }
+
+    requests.forEach((row) => {
+      const account = requestDirection === 'incoming' ? row.requester : row.target;
+      const actions = requestDirection === 'incoming'
+        ? createIncomingRequestActions({
+          onApprove: async () => {
+            const result = await Promise.resolve(store.respondFollowRequest(currentUserId, row.requester_id, 'approve'));
+            feedback.textContent = buildStatusText(result?.code || 'REQUEST_ACCEPTED');
+            render();
+          },
+          onReject: async () => {
+            const result = await Promise.resolve(store.respondFollowRequest(currentUserId, row.requester_id, 'reject'));
+            feedback.textContent = buildStatusText(result?.code || 'REQUEST_REJECTED');
+            render();
+          },
+        })
+        : createOutgoingRequestActions({
+          onCancel: async () => {
+            const result = await Promise.resolve(store.cancelFollowRequest(currentUserId, row.target_id));
+            feedback.textContent = buildStatusText(result?.code || 'REQUEST_CANCELLED');
+            render();
+          },
+        });
+
+      list.append(createAccountListRow({ account, actionEl: actions }));
+    });
+  };
 
   const render = async () => {
     list.innerHTML = '';
     list.append(createLoading());
 
     try {
-      if (type === 'followers' || type === 'following') {
-        const accounts = await Promise.resolve(type === 'followers' ? store.getFollowers(currentUserId) : store.getFollowing(currentUserId));
-        const rows = await renderAccountsByIds({ accounts: accounts || [], currentUserId, store, feedback, rerender: render });
-        list.innerHTML = '';
-        rows.forEach((row) => list.append(row));
-        return;
+      if (isRequestList) {
+        await renderRequestList();
+      } else {
+        await renderFollowList();
       }
-
-      const requests = await Promise.resolve(store.listFollowRequests(currentUserId, requestDirection));
-      list.innerHTML = '';
-      if (!requests?.length) {
-        list.append(createEmpty(requestDirection === 'incoming' ? '受信リクエストはありません。' : '送信済みリクエストはありません。'));
-        return;
-      }
-
-      requests.forEach((row) => {
-        const account = requestDirection === 'incoming' ? row.requester : row.target;
-        const actions = requestDirection === 'incoming'
-          ? createIncomingRequestActions({
-            onApprove: async () => {
-              const result = await Promise.resolve(store.respondFollowRequest(currentUserId, row.requester_id, 'approve'));
-              feedback.textContent = buildStatusText(result?.code || 'REQUEST_ACCEPTED');
-              render();
-            },
-            onReject: async () => {
-              const result = await Promise.resolve(store.respondFollowRequest(currentUserId, row.requester_id, 'reject'));
-              feedback.textContent = buildStatusText(result?.code || 'REQUEST_REJECTED');
-              render();
-            },
-          })
-          : createOutgoingRequestActions({
-            onCancel: async () => {
-              const result = await Promise.resolve(store.cancelFollowRequest(currentUserId, row.target_id));
-              feedback.textContent = buildStatusText(result?.code || 'REQUEST_CANCELLED');
-              render();
-            },
-          });
-
-        list.append(createAccountListRow({ account, actionEl: actions }));
-      });
     } catch (_error) {
       list.innerHTML = '';
       list.append(createEmpty('一覧取得に失敗しました。再読み込みしてください。'));
     }
   };
 
-  incomingTab.addEventListener('click', () => {
-    requestDirection = 'incoming';
-    incomingTab.classList.add('is-active');
-    outgoingTab.classList.remove('is-active');
-    render();
-  });
-  outgoingTab.addEventListener('click', () => {
-    requestDirection = 'outgoing';
-    incomingTab.classList.remove('is-active');
-    outgoingTab.classList.add('is-active');
-    render();
-  });
+  if (incomingTab && outgoingTab) {
+    incomingTab.addEventListener('click', () => {
+      requestDirection = 'incoming';
+      incomingTab.classList.add('is-active');
+      outgoingTab.classList.remove('is-active');
+      render();
+    });
+
+    outgoingTab.addEventListener('click', () => {
+      requestDirection = 'outgoing';
+      incomingTab.classList.remove('is-active');
+      outgoingTab.classList.add('is-active');
+      render();
+    });
+  }
 
   render();
 
-  container.append(back, title, tabs, feedback, list);
+  if (tabs) {
+    container.append(back, title, tabs, feedback, list);
+  } else {
+    container.append(back, title, feedback, list);
+  }
   return container;
 };
