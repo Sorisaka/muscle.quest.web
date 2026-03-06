@@ -35,9 +35,9 @@ export const renderHome = (_params, { navigate, playSfx, store }) => {
   const grid = document.createElement('div');
   grid.className = 'card-grid';
 
-  const cardioCard = createCategoryCard('beginner', '有酸素', '心拍を上げるベースメニュー。', navigate, playSfx);
-  const bodyweightCard = createCategoryCard('intermediate', '自重', '器具なしで全身を鍛える。', navigate, playSfx);
-  const weightsCard = createCategoryCard('advanced', 'ウエイト', '負荷をかけて筋力アップ。', navigate, playSfx);
+  const cardioCard = createCategoryCard('cardio', '有酸素', '心拍を上げるベースメニュー。', navigate, playSfx);
+  const bodyweightCard = createCategoryCard('bodyweight', '自重', '器具なしで全身を鍛える。', navigate, playSfx);
+  const weightsCard = createCategoryCard('weights', 'ウエイト', '負荷をかけて筋力アップ。', navigate, playSfx);
 
   const todoCard = document.createElement('article');
   todoCard.className = 'card stack';

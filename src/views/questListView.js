@@ -4,9 +4,9 @@ import { getExerciseTags, MUSCLE_GROUPS } from '../core/exerciseTaxonomy.js';
 const starBadge = (count) => `${'★'.repeat(count)} (${count})`;
 
 const tierLabels = {
-  beginner: '有酸素',
-  intermediate: '自重',
-  advanced: 'ウエイト',
+  cardio: '有酸素',
+  bodyweight: '自重',
+  weights: 'ウエイト',
 };
 
 const FILTER_STORAGE_KEY = 'musclequest:questListMuscleFilter';
