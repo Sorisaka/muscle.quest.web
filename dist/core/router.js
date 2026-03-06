@@ -1,10 +1,16 @@
 export const normalizeHash = (path) => {
   const cleaned = (path || '#/').trim();
   if (!cleaned || cleaned === '#') return '#/';
-  if (cleaned.startsWith('#/')) return cleaned;
-  if (cleaned.startsWith('/')) return `#${cleaned}`;
-  if (cleaned.startsWith('#')) return `#/${cleaned.slice(1)}`;
-  return `#/${cleaned}`;
+  let normalized = cleaned;
+  if (normalized.startsWith('/')) normalized = `#${normalized}`;
+  else if (!normalized.startsWith('#/')) {
+    normalized = normalized.startsWith('#')
+      ? `#/${normalized.slice(1)}`
+      : `#/${normalized}`;
+  }
+
+  const pathOnly = normalized.slice(1).replace(/\/+/g, '/').replace(/\/$/, '');
+  return `#${pathOnly || '/'}`;
 };
 
 const stripHashPrefix = (path) => normalizeHash(path).replace(/^#/, '');
@@ -31,7 +37,7 @@ export const resolveNavRouteKey = (currentPath, navRoutes = []) => {
   const prefixMatch = normalizedRoutes.find((route) => route !== '#/' && isSegmentPrefix(normalizedCurrent, route));
   if (prefixMatch) return prefixMatch;
 
-  return null;
+  return normalizedRoutes.includes('#/') ? '#/' : null;
 };
 
 const splitSegments = (path) => path.replace(/^#\/?/, '').split('/').filter(Boolean);
@@ -72,7 +78,7 @@ export const createRouter = (routes, onRouteChange) => {
     for (const route of preparedRoutes) {
       const params = matchSegments(normalized, route.normalizedPath);
       if (params) {
-        return { route, params, fullPath: `#/${normalized}`.replace('#//#', '#/') };
+        return { route, params, fullPath: normalizeHash(`#/${normalized}`) };
       }
     }
 
