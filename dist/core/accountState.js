@@ -33,9 +33,9 @@ const toProfilePatch = (profile = {}) => ({
 });
 
 const missingConfigMessage = [
-  'Supabase settings are missing.',
-  'Create dist/config.js from dist/config.example.js with SUPABASE_URL and SUPABASE_ANON_KEY.',
-  'Then retry OAuth sign-in to enable cloud sync.',
+  'Supabase の設定が不足しています。',
+  'dist/config.example.js をもとに dist/config.js を作成し、SUPABASE_URL と SUPABASE_ANON_KEY を設定してください。',
+  'その後、OAuth ログインを再実行するとクラウド同期を利用できます。',
 ].join(' ');
 
 export const createAccountState = (store) => {
@@ -71,7 +71,7 @@ export const createAccountState = (store) => {
     const supaName = profile.display_name || profile.displayName;
     if (supaName) return supaName;
     if (state.session?.user?.email) return state.session.user.email;
-    return 'Guest';
+    return 'ゲスト';
   };
 
   const getStatus = () => {
@@ -161,7 +161,7 @@ export const createAccountState = (store) => {
   const login = async () => {
     if (loginInFlight) {
       authWarn('oauth sign-in already in progress');
-      return { data: null, error: new Error('OAuth sign-in already in progress.') };
+      return { data: null, error: new Error('OAuth ログインはすでに進行中です。') };
     }
 
     loginInFlight = true;

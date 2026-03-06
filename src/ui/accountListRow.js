@@ -1,7 +1,7 @@
 import { createAccountAvatar, getAvatarLabel } from './accountAvatar.js';
 
 export const withPrivateLock = (displayName, visibility) => {
-  const safeName = displayName || 'Unknown';
+  const safeName = displayName || '不明';
   return visibility === 'private' ? `${safeName} 🔒` : safeName;
 };
 
@@ -12,7 +12,7 @@ export const createAccountListRow = ({ account = {}, actionEl = null } = {}) => 
   const top = document.createElement('div');
   top.className = 'list-account-row';
 
-  const displayName = account.display_name || account.displayName || account.id || 'Unknown';
+  const displayName = account.display_name || account.displayName || account.id || '不明';
   const visibility = account.account_visibility || account.accountVisibility || 'public';
 
   const avatar = createAccountAvatar({
@@ -33,11 +33,11 @@ export const createAccountListRow = ({ account = {}, actionEl = null } = {}) => 
 
   const idText = document.createElement('p');
   idText.className = 'muted';
-  idText.textContent = `ID: ${account.id || 'unknown'}`;
+  idText.textContent = `ID: ${account.id || '不明'}`;
 
   const vis = document.createElement('span');
   vis.className = 'pill';
-  vis.textContent = visibility === 'private' ? 'private 🔒' : 'public';
+  vis.textContent = visibility === 'private' ? '非公開 🔒' : '公開';
 
   textWrap.append(name, idText, vis);
   top.append(avatar, textWrap);

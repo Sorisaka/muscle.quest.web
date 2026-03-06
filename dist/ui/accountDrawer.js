@@ -76,7 +76,7 @@ export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountSta
     const name = document.createElement('div');
     name.className = 'account-summary__name';
     const visibility = accountState.getStatus().profile?.account_visibility || 'private';
-    const label = status.displayName || 'Guest';
+    const label = status.displayName || 'ゲスト';
     name.textContent = visibility === 'private' ? `${label} 🔒` : label;
     identity.append(avatar, name);
 

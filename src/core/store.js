@@ -10,7 +10,7 @@ const TODO_STATE_KEY = 'musclequest:todoState';
 const HISTORY_FILTER_KEY = 'musclequest:historyFilter';
 
 const defaultSettings = {
-  language: 'en',
+  language: 'ja',
   difficulty: 'beginner',
   sfxEnabled: true,
   sfxVolume: 0.6,
@@ -23,7 +23,7 @@ const defaultSettings = {
 
 const defaultProfile = {
   id: 'local-user',
-  displayName: 'Guest',
+  displayName: 'ゲスト',
   totalCalories: 0,
   completedRuns: 0,
   lastResult: null,
@@ -75,9 +75,10 @@ const readSettings = () => {
     if (!normalized.timerType) {
       normalized.timerType = normalized.mode || defaultSettings.timerType;
     }
+    normalized.language = 'ja';
     return normalized;
   } catch (error) {
-    console.warn('Failed to parse settings from storage. Falling back to defaults.');
+    console.warn('設定データの解析に失敗したため、初期値に戻します。');
     return { ...defaultSettings };
   }
 };
@@ -88,7 +89,7 @@ const resolveMaybeAsync = (value, onValue) => {
       .then((result) => {
         if (typeof onValue === 'function') onValue(result);
       })
-      .catch((error) => console.warn('Async persistence operation failed', error));
+      .catch((error) => console.warn('非同期保存処理に失敗しました', error));
     return undefined;
   }
   return value;
@@ -156,7 +157,7 @@ export const createStore = (driver = 'supabase') => {
   const normalizeTimelineItem = (entry = {}) => ({
     runId: entry.runId ?? entry.run_id ?? null,
     userId: entry.userId ?? entry.user_id ?? null,
-    authorDisplayName: entry.authorDisplayName ?? entry.author_display_name ?? entry.displayName ?? entry.display_name ?? 'Unknown',
+    authorDisplayName: entry.authorDisplayName ?? entry.author_display_name ?? entry.displayName ?? entry.display_name ?? '不明',
     createdAt: entry.createdAt ?? entry.created_at ?? null,
     publishedAt: entry.publishedAt ?? entry.published_at ?? null,
     visibility: entry.visibility || 'private',
@@ -261,7 +262,7 @@ export const createStore = (driver = 'supabase') => {
   const getSettings = () => settings;
 
   const updateSettings = (partial) => {
-    settings = { ...settings, ...partial };
+    settings = { ...settings, ...partial, language: 'ja' };
     persistSettings();
     notifySettings();
   };
