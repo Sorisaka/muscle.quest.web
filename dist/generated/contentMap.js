@@ -186,33 +186,1783 @@ export const quests = [
       "膝を真ん中ラインに沿わせる",
       "スピードよりフォーム優先"
     ]
+  },
+  {
+    "id": "new-01",
+    "tier": "beginner",
+    "title": "ウォーキングチャレンジ",
+    "description": "ウォーキングの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "walking"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/walking.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "ウォーキングを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-02",
+    "tier": "beginner",
+    "title": "ジョギングチャレンジ",
+    "description": "ジョギングの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "jogging"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/jogging.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "ジョギングを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-03",
+    "tier": "advanced",
+    "title": "ランニングチャレンジ",
+    "description": "ランニングの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 4,
+    "exercises": [
+      "running"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/running.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "ランニングを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-04",
+    "tier": "beginner",
+    "title": "サイクリングチャレンジ",
+    "description": "サイクリングの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "cycling"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/cycling.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "サイクリングを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-05",
+    "tier": "beginner",
+    "title": "エアロビクスチャレンジ",
+    "description": "エアロビクスの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "aerobics"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/aerobics.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "エアロビクスを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-06",
+    "tier": "beginner",
+    "title": "ストレッチチャレンジ",
+    "description": "ストレッチの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "stretching"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/stretching.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "ストレッチを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-07",
+    "tier": "beginner",
+    "title": "サッカーチャレンジ",
+    "description": "サッカーの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "soccer"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/soccer.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "サッカーを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-08",
+    "tier": "beginner",
+    "title": "バスケットボールチャレンジ",
+    "description": "バスケットボールの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "basketball"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/basketball.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "バスケットボールを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-09",
+    "tier": "beginner",
+    "title": "テニスチャレンジ",
+    "description": "テニスの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "tennis"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/tennis.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "テニスを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-10",
+    "tier": "beginner",
+    "title": "水泳チャレンジ",
+    "description": "水泳の基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "swimming"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/swimming.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "水泳を反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-11",
+    "tier": "beginner",
+    "title": "バドミントンチャレンジ",
+    "description": "バドミントンの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "badminton"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/badminton.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "バドミントンを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-12",
+    "tier": "beginner",
+    "title": "卓球チャレンジ",
+    "description": "卓球の基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "table-tennis"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/table-tennis.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "卓球を反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-13",
+    "tier": "beginner",
+    "title": "腕立て伏せ（膝付き）チャレンジ",
+    "description": "腕立て伏せ（膝付き）の基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "knee-push-ups"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/knee-push-ups.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "腕立て伏せ（膝付き）を反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-14",
+    "tier": "beginner",
+    "title": "腹筋チャレンジ",
+    "description": "腹筋の基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "sit-ups"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/sit-ups.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "腹筋を反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-15",
+    "tier": "beginner",
+    "title": "V字腹筋チャレンジ",
+    "description": "V字腹筋の基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "v-ups"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/v-ups.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "V字腹筋を反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-16",
+    "tier": "beginner",
+    "title": "アブドミナルクランチチャレンジ",
+    "description": "アブドミナルクランチの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "abdominal-crunches"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/abdominal-crunches.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "アブドミナルクランチを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-17",
+    "tier": "beginner",
+    "title": "サイドクランチチャレンジ",
+    "description": "サイドクランチの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "side-crunches"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/side-crunches.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "サイドクランチを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-18",
+    "tier": "beginner",
+    "title": "ツイストクランチチャレンジ",
+    "description": "ツイストクランチの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "twist-crunches"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/twist-crunches.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "ツイストクランチを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-19",
+    "tier": "beginner",
+    "title": "レッグレイズチャレンジ",
+    "description": "レッグレイズの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "leg-raises"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/leg-raises.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "レッグレイズを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-20",
+    "tier": "beginner",
+    "title": "アブローラーチャレンジ",
+    "description": "アブローラーの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "ab-roller"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/ab-roller.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "アブローラーを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-21",
+    "tier": "beginner",
+    "title": "デクラインシットアップチャレンジ",
+    "description": "デクラインシットアップの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "decline-sit-ups"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/decline-sit-ups.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "デクラインシットアップを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-22",
+    "tier": "beginner",
+    "title": "ジャンプスクワットチャレンジ",
+    "description": "ジャンプスクワットの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "jump-squats"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/jump-squats.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "ジャンプスクワットを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-23",
+    "tier": "beginner",
+    "title": "懸垂チャレンジ",
+    "description": "懸垂の基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "pull-ups"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/pull-ups.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "懸垂を反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-24",
+    "tier": "beginner",
+    "title": "サイドプランクチャレンジ",
+    "description": "サイドプランクの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "side-plank"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/side-plank.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "サイドプランクを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-25",
+    "tier": "advanced",
+    "title": "倒立押上チャレンジ",
+    "description": "倒立押上の基本フォームと継続を意識する単種目クエスト。",
+    "stars": 4,
+    "exercises": [
+      "handstand-push-ups"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/handstand-push-ups.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "倒立押上を反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-26",
+    "tier": "beginner",
+    "title": "倒立維持（補助あり）チャレンジ",
+    "description": "倒立維持（補助あり）の基本フォームと継続を意識する単種目クエスト。",
+    "stars": 1,
+    "exercises": [
+      "assisted-handstand-hold"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/assisted-handstand-hold.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "倒立維持（補助あり）を反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-27",
+    "tier": "advanced",
+    "title": "倒立維持（補助なし）チャレンジ",
+    "description": "倒立維持（補助なし）の基本フォームと継続を意識する単種目クエスト。",
+    "stars": 4,
+    "exercises": [
+      "freestanding-handstand-hold"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/freestanding-handstand-hold.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "倒立維持（補助なし）を反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-28",
+    "tier": "intermediate",
+    "title": "シュラッグチャレンジ",
+    "description": "シュラッグの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "shrug"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/shrug.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "シュラッグを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-29",
+    "tier": "intermediate",
+    "title": "ベントオーバーローチャレンジ",
+    "description": "ベントオーバーローの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "bent-over-row"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/bent-over-row.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "ベントオーバーローを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-30",
+    "tier": "intermediate",
+    "title": "スクワットチャレンジ",
+    "description": "スクワットの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "weighted-squats"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/weighted-squats.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "スクワットを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-31",
+    "tier": "advanced",
+    "title": "デッドリフトチャレンジ",
+    "description": "デッドリフトの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 4,
+    "exercises": [
+      "deadlifts"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/deadlifts.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "デッドリフトを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-32",
+    "tier": "intermediate",
+    "title": "カーフレイズチャレンジ",
+    "description": "カーフレイズの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "calf-raises"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/calf-raises.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "カーフレイズを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-33",
+    "tier": "intermediate",
+    "title": "ミリタリープレスチャレンジ",
+    "description": "ミリタリープレスの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "military-press"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/military-press.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "ミリタリープレスを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-34",
+    "tier": "intermediate",
+    "title": "ショルダープレスチャレンジ",
+    "description": "ショルダープレスの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "shoulder-press"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/shoulder-press.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "ショルダープレスを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-35",
+    "tier": "intermediate",
+    "title": "サイドレイズチャレンジ",
+    "description": "サイドレイズの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "side-raises"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/side-raises.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "サイドレイズを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-36",
+    "tier": "intermediate",
+    "title": "フロントレイズチャレンジ",
+    "description": "フロントレイズの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "front-raises"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/front-raises.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "フロントレイズを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-37",
+    "tier": "intermediate",
+    "title": "ラタラルレイズチャレンジ",
+    "description": "ラタラルレイズの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "lateral-raises"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/lateral-raises.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "ラタラルレイズを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-38",
+    "tier": "intermediate",
+    "title": "カールチャレンジ",
+    "description": "カールの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "curls"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/curls.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "カールを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-39",
+    "tier": "intermediate",
+    "title": "プリーチャーカールチャレンジ",
+    "description": "プリーチャーカールの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "preacher-curls"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/preacher-curls.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "プリーチャーカールを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-40",
+    "tier": "intermediate",
+    "title": "リストカールチャレンジ",
+    "description": "リストカールの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "wrist-curls"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/wrist-curls.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "リストカールを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-41",
+    "tier": "intermediate",
+    "title": "リバースリストカールチャレンジ",
+    "description": "リバースリストカールの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "reverse-wrist-curls"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/reverse-wrist-curls.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "リバースリストカールを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-42",
+    "tier": "intermediate",
+    "title": "ベンチプレスチャレンジ",
+    "description": "ベンチプレスの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "bench-press"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/bench-press.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "ベンチプレスを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-43",
+    "tier": "intermediate",
+    "title": "インクラインベンチプレスチャレンジ",
+    "description": "インクラインベンチプレスの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "incline-bench-press"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/incline-bench-press.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "インクラインベンチプレスを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-44",
+    "tier": "intermediate",
+    "title": "フライチャレンジ",
+    "description": "フライの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "fly"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/fly.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "フライを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-45",
+    "tier": "intermediate",
+    "title": "アブドミナルクランチチャレンジ",
+    "description": "アブドミナルクランチの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "weighted-abdominal-crunches"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/weighted-abdominal-crunches.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "アブドミナルクランチを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-46",
+    "tier": "intermediate",
+    "title": "ケーブルウッドチョップチャレンジ",
+    "description": "ケーブルウッドチョップの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "cable-woodchops"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/cable-woodchops.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "ケーブルウッドチョップを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-47",
+    "tier": "intermediate",
+    "title": "ケーブルクランチチャレンジ",
+    "description": "ケーブルクランチの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "cable-crunches"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/cable-crunches.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "ケーブルクランチを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-48",
+    "tier": "intermediate",
+    "title": "ケーブルサイドベントチャレンジ",
+    "description": "ケーブルサイドベントの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "cable-side-bends"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/cable-side-bends.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "ケーブルサイドベントを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-49",
+    "tier": "intermediate",
+    "title": "ロータリートルソーチャレンジ",
+    "description": "ロータリートルソーの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "rotary-torso"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/rotary-torso.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "ロータリートルソーを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
+  },
+  {
+    "id": "new-50",
+    "tier": "intermediate",
+    "title": "トライセップスエクステンションチャレンジ",
+    "description": "トライセップスエクステンションの基本フォームと継続を意識する単種目クエスト。",
+    "stars": 3,
+    "exercises": [
+      "triceps-extension"
+    ],
+    "estimatedMinutes": 10,
+    "link": "./content/exercises/triceps-extension.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "姿勢を整え、無理のない強度で開始します。"
+      },
+      {
+        "heading": "実施",
+        "body": "トライセップスエクステンションを反動を使わず丁寧に繰り返します。"
+      },
+      {
+        "heading": "クールダウン",
+        "body": "呼吸を整え、使った部位を軽くほぐします。"
+      }
+    ],
+    "tips": [
+      "痛みが出る場合は中断する",
+      "回数よりフォームを優先する",
+      "水分補給を忘れない"
+    ]
   }
 ];
 
 export const exercises = {
+  "ab-roller": {
+    "title": "アブローラーのやり方",
+    "body": "<h1>アブローラー</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "abdominal-crunches": {
+    "title": "アブドミナルクランチのやり方",
+    "body": "<h1>アブドミナルクランチ</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "aerobics": {
+    "title": "エアロビクスのやり方",
+    "body": "<h1>エアロビクス</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "assisted-handstand-hold": {
+    "title": "倒立維持（補助あり）のやり方",
+    "body": "<h1>倒立維持（補助あり）</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "badminton": {
+    "title": "バドミントンのやり方",
+    "body": "<h1>バドミントン</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "basketball": {
+    "title": "バスケットボールのやり方",
+    "body": "<h1>バスケットボール</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "bench-press": {
+    "title": "ベンチプレスのやり方",
+    "body": "<h1>ベンチプレス</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "bent-over-row": {
+    "title": "ベントオーバーローのやり方",
+    "body": "<h1>ベントオーバーロー</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
   "burpees": {
     "title": "バーピーのやり方",
-    "body": "<h1>バーピー</h1>\n    <ol>\n      <li>しゃがんで両手を床につけます。</li>\n      <li>足を後ろに跳ねてハイプランク姿勢になります。</li>\n      <li>足を戻して立ち上がり、軽くジャンプして繰り返します。</li>\n    </ol>"
+    "body": "<h1>バーピー</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "cable-crunches": {
+    "title": "ケーブルクランチのやり方",
+    "body": "<h1>ケーブルクランチ</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "cable-side-bends": {
+    "title": "ケーブルサイドベントのやり方",
+    "body": "<h1>ケーブルサイドベント</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "cable-woodchops": {
+    "title": "ケーブルウッドチョップのやり方",
+    "body": "<h1>ケーブルウッドチョップ</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "calf-raises": {
+    "title": "カーフレイズのやり方",
+    "body": "<h1>カーフレイズ</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "curls": {
+    "title": "カールのやり方",
+    "body": "<h1>カール</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "cycling": {
+    "title": "サイクリングのやり方",
+    "body": "<h1>サイクリング</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "deadlifts": {
+    "title": "デッドリフトのやり方",
+    "body": "<h1>デッドリフト</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "decline-sit-ups": {
+    "title": "デクラインシットアップのやり方",
+    "body": "<h1>デクラインシットアップ</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "fly": {
+    "title": "フライのやり方",
+    "body": "<h1>フライ</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "freestanding-handstand-hold": {
+    "title": "倒立維持（補助なし）のやり方",
+    "body": "<h1>倒立維持（補助なし）</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "front-raises": {
+    "title": "フロントレイズのやり方",
+    "body": "<h1>フロントレイズ</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "handstand-push-ups": {
+    "title": "倒立押上のやり方",
+    "body": "<h1>倒立押上</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "incline-bench-press": {
+    "title": "インクラインベンチプレスのやり方",
+    "body": "<h1>インクラインベンチプレス</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "jogging": {
+    "title": "ジョギングのやり方",
+    "body": "<h1>ジョギング</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "jump-squats": {
+    "title": "ジャンプスクワットのやり方",
+    "body": "<h1>ジャンプスクワット</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "knee-push-ups": {
+    "title": "腕立て伏せ（膝付き）のやり方",
+    "body": "<h1>腕立て伏せ（膝付き）</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "lateral-raises": {
+    "title": "ラタラルレイズのやり方",
+    "body": "<h1>ラタラルレイズ</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "leg-raises": {
+    "title": "レッグレイズのやり方",
+    "body": "<h1>レッグレイズ</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
   },
   "lunges": {
     "title": "ランジのやり方",
-    "body": "<h1>ランジ</h1>\n    <ol>\n      <li>足を腰幅に開いて立ち、一歩前に踏み出します。</li>\n      <li>後ろ足の膝を床に近づけながら上体をまっすぐ保ちます。</li>\n      <li>前足で床を押し、元の位置に戻ったら反対側も行います。</li>\n    </ol>"
+    "body": "<h1>ランジ</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "military-press": {
+    "title": "ミリタリープレスのやり方",
+    "body": "<h1>ミリタリープレス</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
   },
   "mountain-climbers": {
     "title": "マウンテンクライマーのやり方",
-    "body": "<h1>マウンテンクライマー</h1>\n    <ol>\n      <li>手を肩の下に置き、ハイプランク姿勢を取ります。</li>\n      <li>片膝を胸に引き寄せ、素早く左右交互に入れ替えます。</li>\n      <li>腰の高さを一定に保ち、リズム良く続けます。</li>\n    </ol>"
+    "body": "<h1>マウンテンクライマー</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
   },
   "plank": {
     "title": "プランクのやり方",
-    "body": "<h1>プランク</h1>\n    <ol>\n      <li>肘を肩の真下に置き、前腕とつま先で体を支えます。</li>\n      <li>頭からかかとまで一直線を意識し、腰が落ちないようキープします。</li>\n      <li>ゆっくり呼吸を続けながら時間を計測します。</li>\n    </ol>"
+    "body": "<h1>プランク</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "preacher-curls": {
+    "title": "プリーチャーカールのやり方",
+    "body": "<h1>プリーチャーカール</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "pull-ups": {
+    "title": "懸垂のやり方",
+    "body": "<h1>懸垂</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
   },
   "push-ups": {
-    "title": "Push-ups",
-    "body": "<h1>Push-ups</h1>\n    <ol>\n      <li>Place your hands shoulder-width apart and extend your legs behind you.</li>\n      <li>Keep your core engaged and lower your chest toward the floor.</li>\n      <li>Press back up to the starting position without locking your elbows.</li>\n    </ol>"
+    "title": "腕立て伏せのやり方",
+    "body": "<h1>腕立て伏せ</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "reverse-wrist-curls": {
+    "title": "リバースリストカールのやり方",
+    "body": "<h1>リバースリストカール</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "rotary-torso": {
+    "title": "ロータリートルソーのやり方",
+    "body": "<h1>ロータリートルソー</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "running": {
+    "title": "ランニングのやり方",
+    "body": "<h1>ランニング</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "shoulder-press": {
+    "title": "ショルダープレスのやり方",
+    "body": "<h1>ショルダープレス</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "shrug": {
+    "title": "シュラッグのやり方",
+    "body": "<h1>シュラッグ</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "side-crunches": {
+    "title": "サイドクランチのやり方",
+    "body": "<h1>サイドクランチ</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "side-plank": {
+    "title": "サイドプランクのやり方",
+    "body": "<h1>サイドプランク</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "side-raises": {
+    "title": "サイドレイズのやり方",
+    "body": "<h1>サイドレイズ</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "sit-ups": {
+    "title": "腹筋のやり方",
+    "body": "<h1>腹筋</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "soccer": {
+    "title": "サッカーのやり方",
+    "body": "<h1>サッカー</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
   },
   "squats": {
-    "title": "Squats",
-    "body": "<h1>Squats</h1>\n    <ol>\n      <li>Stand with your feet shoulder-width apart and toes slightly turned out.</li>\n      <li>Send your hips back and bend your knees to lower into a squat.</li>\n      <li>Drive through your heels to return to standing without rounding your back.</li>\n    </ol>"
+    "title": "スクワットのやり方",
+    "body": "<h1>スクワット</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "stretching": {
+    "title": "ストレッチのやり方",
+    "body": "<h1>ストレッチ</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "swimming": {
+    "title": "水泳のやり方",
+    "body": "<h1>水泳</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "table-tennis": {
+    "title": "卓球のやり方",
+    "body": "<h1>卓球</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "tennis": {
+    "title": "テニスのやり方",
+    "body": "<h1>テニス</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "triceps-extension": {
+    "title": "トライセップスエクステンションのやり方",
+    "body": "<h1>トライセップスエクステンション</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "twist-crunches": {
+    "title": "ツイストクランチのやり方",
+    "body": "<h1>ツイストクランチ</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "v-ups": {
+    "title": "V字腹筋のやり方",
+    "body": "<h1>V字腹筋</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "walking": {
+    "title": "ウォーキングのやり方",
+    "body": "<h1>ウォーキング</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "weighted-abdominal-crunches": {
+    "title": "アブドミナルクランチのやり方",
+    "body": "<h1>アブドミナルクランチ</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "weighted-squats": {
+    "title": "スクワットのやり方",
+    "body": "<h1>スクワット</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
+  },
+  "wrist-curls": {
+    "title": "リストカールのやり方",
+    "body": "<h1>リストカール</h1>\n    <ol>\n      <li>開始前に姿勢と呼吸を整え、使う部位を意識します。</li>\n      <li>可動域を一定に保ち、反動を使わずにゆっくり実施します。</li>\n      <li>終了後は呼吸を整えて、対象部位を軽くストレッチします。</li>\n    </ol>\n    <p>注意: フォームが崩れると関節に負担がかかるため、痛みがある場合は中止してください。</p>"
   }
 };
 
