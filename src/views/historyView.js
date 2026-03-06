@@ -198,7 +198,7 @@ const createCalendarPanel = async ({ store, navigate, playSfx, selectedDate }) =
     month: new Date(toTimestamp(selectedDate)).getMonth() + 1,
   };
   let activeDate = selectedDate;
-  let filterState = { ...defaultHistoryFilter };
+  let filterState = store.getHistoryFilter ? store.getHistoryFilter() : { ...defaultHistoryFilter };
 
   const headerCard = document.createElement('div');
   headerCard.className = 'card account-card';
@@ -266,7 +266,9 @@ const createCalendarPanel = async ({ store, navigate, playSfx, selectedDate }) =
     filterSlot.append(createHistoryFilterControls({
       state: filterState,
       onChange: (nextState) => {
-        filterState = { ...nextState };
+        filterState = store.setHistoryFilter
+          ? store.setHistoryFilter(nextState)
+          : { ...nextState };
         renderMonth();
         renderDetail();
       },

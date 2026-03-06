@@ -277,8 +277,8 @@ export const createSupabaseAdapter = (options = {}) => {
 
     const tryRpc = async () => {
       const { data, error } = await client.rpc('add_workout_result', {
-        p_points: payload.points,
-        p_calories: payload.calories || 0,
+        p_points: Number(payload.points || 0),
+        p_calories: Number(payload.calories || 0),
         p_visibility: payload.visibility || null,
         p_result: payload,
         p_category: payload.category || 'unknown',
