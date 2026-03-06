@@ -277,7 +277,16 @@ export const renderTimeline = (_params, { navigate, playSfx, store }) => {
   const filterSlot = document.createElement('div');
   const renderFilter = () => {
     filterSlot.innerHTML = '';
-    filterSlot.append(createHistoryFilterControls({ state: filterState, onChange: (next) => { filterState = { ...next }; render(); }, title: '絞り込み', cardClassName: 'card stack' }));
+    filterSlot.append(createHistoryFilterControls({
+      state: filterState,
+      onChange: (next) => {
+        filterState = { ...next };
+        renderFilter();
+        render();
+      },
+      title: '絞り込み',
+      cardClassName: 'card stack',
+    }));
   };
   renderFilter();
 

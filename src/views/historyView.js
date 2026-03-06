@@ -269,6 +269,7 @@ const createCalendarPanel = async ({ store, navigate, playSfx, selectedDate }) =
         filterState = store.setHistoryFilter
           ? store.setHistoryFilter(nextState)
           : { ...nextState };
+        renderFilter();
         renderMonth();
         renderDetail();
       },
