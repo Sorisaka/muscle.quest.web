@@ -5,10 +5,31 @@ import { getSupabaseClient } from '../../lib/supabaseClient.js';
 import { getSession, onAuthStateChange } from '../authService.js';
 import { normalizeAccountVisibility, normalizePostVisibility, resolvePostVisibility } from '../../core/visibility.js';
 import { toDateKey, startOfDay, endOfDay } from '../../lib/dateKey.js';
+import { decorateResultWithTags, getExerciseTags, normalizeCategory, normalizeMuscles } from '../../core/exerciseTaxonomy.js';
 
 const PROFILE_COLUMNS = 'id,display_name,account_visibility,default_visibility,points,total_calories,completed_runs,last_result,height_cm,weight_kg,sex,step_length_m,arm_length_m,leg_length_m,torso_length_m,step_length_m_mode,arm_length_m_mode,leg_length_m_mode,torso_length_m_mode,updated_at';
 const HISTORY_LIMIT = 100;
 const MIGRATION_FLAG_PREFIX = 'musclequest:migration:';
+
+
+const WORKOUT_RUNS_COLUMNS_BASE = 'id,user_id,created_at,points,calories,visibility,published_at,note,result';
+const WORKOUT_RUNS_COLUMNS_WITH_TAGS = 'id,user_id,created_at,points,calories,visibility,published_at,note,category,muscles,result';
+
+const isWorkoutRunTagColumnError = (error) => {
+  const message = String(error?.message || error || '').toLowerCase();
+  return message.includes('category') || message.includes('muscles');
+};
+
+const selectWorkoutRunsWithFallback = async (buildQuery) => {
+  const withTags = await buildQuery(WORKOUT_RUNS_COLUMNS_WITH_TAGS);
+  if (!withTags?.error) return withTags;
+  if (!isWorkoutRunTagColumnError(withTags.error)) return withTags;
+
+  const fallback = await buildQuery(WORKOUT_RUNS_COLUMNS_BASE);
+  if (fallback?.error) return fallback;
+  const patched = (fallback?.data || []).map((row) => ({ ...row, category: null, muscles: null }));
+  return { ...fallback, data: patched };
+};
 
 const isPromise = (value) => value && typeof value.then === 'function';
 
@@ -35,29 +56,37 @@ const fetchSingleByKeys = async (client, table, keys, selectColumns = '*') => {
 
 
 const mapHistoryRow = (row) => {
-  const result = row?.result || {};
+  const rawResult = row?.result || {};
+  const taggedResult = decorateResultWithTags(rawResult);
   const createdAt = row?.created_at ? new Date(row.created_at).getTime() : Date.now();
+  const fallbackTags = getExerciseTags(taggedResult.exerciseSlug || taggedResult.exercise_slug || taggedResult.questId || taggedResult.quest_id);
   return {
-    id: row?.id || result.id || null,
-    user_id: row?.user_id || result.user_id || null,
-    questId: result.questId || result.quest_id || null,
-    exerciseSlug: result.exerciseSlug || result.exercise_slug || null,
-    calories: row?.calories ?? result.calories ?? 0,
-    points: row?.points ?? result.points ?? 0,
-    mode: result.mode || null,
-    difficulty: result.difficulty || null,
-    sets: result.sets || null,
-    startTime: result.startTime || result.start_time || null,
-    endTime: result.endTime || result.end_time || null,
-    visibility: normalizePostVisibility(row?.visibility || result.visibility, 'private'),
-    published_at: row?.published_at || result.published_at || null,
-    note: row?.note || result.note || null,
+    id: row?.id || taggedResult.id || null,
+    user_id: row?.user_id || taggedResult.user_id || null,
+    questId: taggedResult.questId || taggedResult.quest_id || null,
+    exerciseSlug: taggedResult.exerciseSlug || taggedResult.exercise_slug || null,
+    calories: row?.calories ?? taggedResult.calories ?? 0,
+    points: row?.points ?? taggedResult.points ?? 0,
+    mode: taggedResult.mode || null,
+    difficulty: taggedResult.difficulty || null,
+    sets: taggedResult.sets || null,
+    startTime: taggedResult.startTime || taggedResult.start_time || null,
+    endTime: taggedResult.endTime || taggedResult.end_time || null,
+    visibility: normalizePostVisibility(row?.visibility || taggedResult.visibility, 'private'),
+    published_at: row?.published_at || taggedResult.published_at || null,
+    note: row?.note || taggedResult.note || null,
     timestamp: createdAt,
+    category: normalizeCategory(row?.category || taggedResult.category || fallbackTags.category),
+    muscles: normalizeMuscles(row?.muscles || taggedResult.muscles || fallbackTags.muscles),
+    result: taggedResult,
   };
 };
 
 
-const mapTimelineRow = (row) => ({
+const mapTimelineRow = (row) => {
+  const taggedResult = decorateResultWithTags(row?.result || {});
+  const fallbackTags = getExerciseTags(taggedResult.exerciseSlug || taggedResult.exercise_slug || taggedResult.questId || taggedResult.quest_id);
+  return ({
   runId: row?.run_id ?? row?.runId ?? null,
   userId: row?.user_id ?? row?.userId ?? null,
   authorDisplayName: row?.author_display_name ?? row?.authorDisplayName ?? row?.display_name ?? row?.displayName ?? null,
@@ -66,10 +95,13 @@ const mapTimelineRow = (row) => ({
   visibility: normalizePostVisibility(row?.visibility, 'private'),
   calories: Number(row?.calories ?? 0),
   note: row?.note ?? null,
-  result: row?.result ?? null,
+  result: taggedResult,
+  category: normalizeCategory(row?.category || taggedResult.category || fallbackTags.category),
+  muscles: normalizeMuscles(row?.muscles || taggedResult.muscles || fallbackTags.muscles),
   likeCount: Number(row?.like_count ?? row?.likeCount ?? 0),
   liked: Boolean(row?.liked),
 });
+};
 
 export const createSupabaseAdapter = (options = {}) => {
   const local = createLocalPersistence();
@@ -186,12 +218,12 @@ export const createSupabaseAdapter = (options = {}) => {
 
   const refreshHistoryFromSupabase = async () => {
     if (!client || !session?.user?.id) return history;
-    const { data, error } = await client
+    const { data, error } = await selectWorkoutRunsWithFallback((columns) => client
       .from('workout_runs')
-      .select('id,user_id,created_at,points,calories,visibility,published_at,note,result')
+      .select(columns)
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
-      .limit(HISTORY_LIMIT);
+      .limit(HISTORY_LIMIT));
 
     if (error) {
       authWarn('workout_runs fetch failed', error.message || error);
@@ -249,6 +281,8 @@ export const createSupabaseAdapter = (options = {}) => {
         p_calories: payload.calories || 0,
         p_visibility: payload.visibility || null,
         p_result: payload,
+        p_category: payload.category || 'unknown',
+        p_muscles: Array.isArray(payload.muscles) ? payload.muscles : [],
       });
 
       if (error) throw error;
@@ -258,7 +292,7 @@ export const createSupabaseAdapter = (options = {}) => {
     const fallbackInsertAndUpdate = async () => {
       const insertResult = await client
         .from('workout_runs')
-        .insert({ user_id: session.user.id, points: payload.points, calories: payload.calories || 0, visibility: payload.visibility, published_at: payload.published_at, note: payload.note, result: payload })
+.insert({ user_id: session.user.id, points: payload.points, calories: payload.calories || 0, visibility: payload.visibility, published_at: payload.published_at, note: payload.note, category: payload.category || 'unknown', muscles: Array.isArray(payload.muscles) ? payload.muscles : [], result: payload })
         .select('id')
         .maybeSingle();
 
@@ -469,8 +503,9 @@ export const createSupabaseAdapter = (options = {}) => {
     }
 
     const effectiveVisibility = resolvePostVisibility(profile.account_visibility || profile.default_visibility, result.visibilityOverride ?? result.visibility ?? null);
+    const taggedResult = decorateResultWithTags(result);
     const payload = {
-      ...result,
+      ...taggedResult,
       visibility: effectiveVisibility,
       published_at: effectiveVisibility === 'archived' ? null : (result.published_at || new Date().toISOString()),
       note: result.note || null,
@@ -659,12 +694,12 @@ export const createSupabaseAdapter = (options = {}) => {
     }
 
     return Promise.all([
-      client
+      selectWorkoutRunsWithFallback((columns) => client
         .from('workout_runs')
-        .select('id,user_id,created_at,points,calories,visibility,published_at,note,result')
+        .select(columns)
         .eq('user_id', targetUserId)
         .order('created_at', { ascending: false })
-        .limit(HISTORY_LIMIT),
+        .limit(HISTORY_LIMIT)),
       getFollowing(viewerId),
     ]).then(([runsResult, followingIds]) => {
       if (runsResult.error) {
@@ -749,9 +784,24 @@ export const createSupabaseAdapter = (options = {}) => {
       })
       .eq('id', runId)
       .eq('user_id', session.user.id)
-      .select('id,user_id,created_at,points,calories,visibility,published_at,note,result')
+      .select(WORKOUT_RUNS_COLUMNS_WITH_TAGS)
       .maybeSingle()
-      .then(({ data, error }) => {
+      .then(async ({ data, error }) => {
+        if (error && isWorkoutRunTagColumnError(error)) {
+          const fallback = await client
+            .from('workout_runs')
+            .update({
+              visibility: nextVisibility,
+              published_at: nextPublishedAt,
+              note: typeof updates.note === 'string' ? updates.note : null,
+            })
+            .eq('id', runId)
+            .eq('user_id', session.user.id)
+            .select(WORKOUT_RUNS_COLUMNS_BASE)
+            .maybeSingle();
+          data = fallback.data ? { ...fallback.data, category: null, muscles: null } : data;
+          error = fallback.error;
+        }
         if (error) {
           authWarn('workout post update failed', error.message || error);
           return local.updateWorkoutPost(runId, { ...updates, visibility: nextVisibility, published_at: nextPublishedAt });
@@ -868,18 +918,21 @@ export const createSupabaseAdapter = (options = {}) => {
     const from = startOfDay(date).toISOString();
     const to = endOfDay(date).toISOString();
 
-    let query = client
-      .from('workout_runs')
-      .select('id,user_id,created_at,points,calories,visibility,published_at,note,result')
-      .eq('user_id', userId || session.user.id);
+    const buildQuery = (columns) => {
+      let query = client
+        .from('workout_runs')
+        .select(columns)
+        .eq('user_id', userId || session.user.id);
 
-    const supportsRange = typeof query?.gte === 'function' && typeof query?.lte === 'function';
-    if (supportsRange) {
-      query = query.gte('created_at', from).lte('created_at', to);
-    }
+      const supportsRange = typeof query?.gte === 'function' && typeof query?.lte === 'function';
+      if (supportsRange) {
+        query = query.gte('created_at', from).lte('created_at', to);
+      }
 
-    return query
-      .order('created_at', { ascending: false })
+      return query.order('created_at', { ascending: false });
+    };
+
+    return selectWorkoutRunsWithFallback(buildQuery)
       .then(({ data, error }) => {
         if (error) {
           authWarn('workout_runs by date fetch failed', error.message || error);
@@ -901,19 +954,22 @@ export const createSupabaseAdapter = (options = {}) => {
       ? `${year + 1}-01-01`
       : `${year}-${String(month + 1).padStart(2, '0')}-01`;
 
-    let query = client
-      .from('workout_runs')
-      .select('id,user_id,created_at,points,calories,visibility,published_at,note,result')
-      .eq('user_id', userId || session.user.id);
+    const buildQuery = (columns) => {
+      let query = client
+        .from('workout_runs')
+        .select(columns)
+        .eq('user_id', userId || session.user.id);
 
-    const supportsRange = typeof query?.gte === 'function' && typeof query?.lt === 'function';
-    if (supportsRange) {
-      query = query.gte('created_at', startOfDay(first).toISOString())
-        .lt('created_at', startOfDay(nextMonth).toISOString());
-    }
+      const supportsRange = typeof query?.gte === 'function' && typeof query?.lt === 'function';
+      if (supportsRange) {
+        query = query.gte('created_at', startOfDay(first).toISOString())
+          .lt('created_at', startOfDay(nextMonth).toISOString());
+      }
 
-    return query
-      .order('created_at', { ascending: false })
+      return query.order('created_at', { ascending: false });
+    };
+
+    return selectWorkoutRunsWithFallback(buildQuery)
       .then(({ data, error }) => {
         if (error) {
           authWarn('workout_runs month dates fetch failed', error.message || error);

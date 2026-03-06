@@ -1,8 +1,11 @@
 import { toDateKey, toTimestamp } from '../lib/dateKey.js';
 import { createSparkline } from '../ui/chart/sparkline.js';
 import { createMonthGrid } from '../ui/calendar/monthGrid.js';
+import { defaultHistoryFilter, filterRuns, getRunTags } from '../core/historyFilters.js';
+import { createHistoryFilterControls, HISTORY_CATEGORY_LABELS, toMuscleLabel } from '../ui/historyFilterControls.js';
 
 const PERIODS = [7, 30, 90, 180];
+
 
 const formatMonthLabel = (year, month) => `${year}年${month}月`;
 
@@ -127,7 +130,7 @@ const createBodyMetricsPanel = async ({ store, playSfx }) => {
   return panel;
 };
 
-const createDayDetail = async ({ store, dateKey, navigate, playSfx }) => {
+const createDayDetail = async ({ store, dateKey, navigate, playSfx, filterState }) => {
   const card = document.createElement('div');
   card.className = 'card account-card';
 
@@ -159,7 +162,7 @@ const createDayDetail = async ({ store, dateKey, navigate, playSfx }) => {
 
   const list = document.createElement('div');
   list.className = 'stack';
-  const runs = await Promise.resolve(store.getWorkoutsByDate(dateKey));
+  const runs = filterRuns(await Promise.resolve(store.getWorkoutsByDate(dateKey)), filterState);
   if (!runs.length) {
     const empty = document.createElement('p');
     empty.className = 'muted';
@@ -173,7 +176,10 @@ const createDayDetail = async ({ store, dateKey, navigate, playSfx }) => {
       name.textContent = `${entry.exerciseSlug || entry.questId || 'workout'}`;
       const meta = document.createElement('p');
       meta.className = 'muted';
-      meta.textContent = `${entry.calories || 0} kcal / ${entry.points || 0} pt`;
+      const tags = getRunTags(entry);
+      const category = HISTORY_CATEGORY_LABELS[tags.category] || HISTORY_CATEGORY_LABELS.unknown;
+      const muscles = tags.muscles.map(toMuscleLabel).join('・') || '未設定';
+      meta.textContent = `${entry.calories || 0} kcal / ${entry.points || 0} pt / ${category} / ${muscles}`;
       row.append(name, meta);
       list.append(row);
     });
@@ -192,6 +198,7 @@ const createCalendarPanel = async ({ store, navigate, playSfx, selectedDate }) =
     month: new Date(toTimestamp(selectedDate)).getMonth() + 1,
   };
   let activeDate = selectedDate;
+  let filterState = { ...defaultHistoryFilter };
 
   const headerCard = document.createElement('div');
   headerCard.className = 'card account-card';
@@ -217,7 +224,14 @@ const createCalendarPanel = async ({ store, navigate, playSfx, selectedDate }) =
 
   const renderMonth = async () => {
     monthLabel.textContent = formatMonthLabel(cursor.year, cursor.month);
-    const workoutDates = new Set(await Promise.resolve(store.listWorkoutDatesInMonth(cursor.year, cursor.month)));
+    const monthPrefix = `${cursor.year}-${String(cursor.month).padStart(2, '0')}-`;
+    const monthRuns = (store.getHistory() || []).filter((entry) => {
+      const source = entry?.timestamp || entry?.result?.timestamp || entry?.created_at || entry?.published_at || null;
+      if (!source) return false;
+      const key = toDateKey(source);
+      return key.startsWith(monthPrefix);
+    });
+    const workoutDates = new Set(filterRuns(monthRuns, filterState).map((entry) => toDateKey(entry?.timestamp || entry?.result?.timestamp || entry?.created_at || entry?.published_at)));
     gridSlot.innerHTML = '';
     gridSlot.append(createMonthGrid({
       year: cursor.year,
@@ -233,7 +247,7 @@ const createCalendarPanel = async ({ store, navigate, playSfx, selectedDate }) =
 
   const renderDetail = async () => {
     detailSlot.innerHTML = '';
-    detailSlot.append(await createDayDetail({ store, dateKey: activeDate, navigate, playSfx }));
+    detailSlot.append(await createDayDetail({ store, dateKey: activeDate, navigate, playSfx, filterState }));
   };
 
   prevMonth.addEventListener('click', () => {
@@ -246,8 +260,22 @@ const createCalendarPanel = async ({ store, navigate, playSfx, selectedDate }) =
     renderMonth();
   });
 
+  const filterSlot = document.createElement('div');
+  const renderFilter = () => {
+    filterSlot.innerHTML = '';
+    filterSlot.append(createHistoryFilterControls({
+      state: filterState,
+      onChange: (nextState) => {
+        filterState = { ...nextState };
+        renderMonth();
+        renderDetail();
+      },
+    }));
+  };
+
   await Promise.all([renderMonth(), renderDetail()]);
-  panel.append(headerCard, gridSlot, detailSlot);
+  renderFilter();
+  panel.append(filterSlot, headerCard, gridSlot, detailSlot);
   return panel;
 };
 

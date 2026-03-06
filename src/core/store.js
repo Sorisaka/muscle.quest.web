@@ -2,6 +2,7 @@ import { trainingConfig } from '../data/trainingConfig.js';
 import { createPersistence } from '../data/persistence.js';
 import { calculateCalories, calculatePoints } from './points.js';
 import { aggregateCalories, calculateStreak } from './history.js';
+import { decorateResultWithTags } from './exerciseTaxonomy.js';
 
 const STORAGE_KEY = 'musclequest:settings';
 const TODO_STATE_KEY = 'musclequest:todoState';
@@ -302,10 +303,11 @@ export const createStore = (driver = 'supabase') => {
   };
 
   const recordResult = (result) => {
-    const calorieResult = calculateCalories(result, profile);
-    const legacyPoints = calculatePoints(result, profile);
+    const taggedResult = decorateResultWithTags(result);
+    const calorieResult = calculateCalories(taggedResult, profile);
+    const legacyPoints = calculatePoints(taggedResult, profile);
     const enriched = {
-      ...result,
+      ...taggedResult,
       calories: calorieResult.total,
       breakdown: calorieResult.breakdown,
       points: legacyPoints.total,

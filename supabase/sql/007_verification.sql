@@ -30,3 +30,21 @@ order by tablename, policyname;
 select tgname as trigger_name, tgrelid::regclass as table_name
 from pg_trigger
 where tgrelid = 'auth.users'::regclass and not tgisinternal;
+
+
+-- Phase6: workout_runs tags columns / index / function signature
+select column_name, data_type
+from information_schema.columns
+where table_schema = 'public' and table_name = 'workout_runs' and column_name in ('category', 'muscles')
+order by column_name;
+
+select indexname, indexdef
+from pg_indexes
+where schemaname = 'public' and tablename = 'workout_runs' and indexname in ('workout_runs_category_idx', 'workout_runs_muscles_gin')
+order by indexname;
+
+select proname, pg_get_function_identity_arguments(p.oid) as args
+from pg_proc p
+join pg_namespace n on n.oid = p.pronamespace
+where n.nspname='public' and proname='add_workout_result'
+order by args;
