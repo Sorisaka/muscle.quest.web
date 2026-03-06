@@ -29,7 +29,7 @@ const createExerciseGuides = (quest) => {
   if (exerciseEntries.length === 0) {
     const empty = document.createElement('p');
     empty.className = 'muted';
-    empty.textContent = 'このクエストに紐づくフォームガイドはまだありません。';
+    empty.textContent = 'このワークアウトに紐づくフォームガイドはまだありません。';
     guides.append(empty);
   } else {
     exerciseEntries.forEach((exercise) => {
@@ -87,7 +87,7 @@ export const renderQuest = (params, { navigate, store, playSfx }) => {
 
   if (!quest) {
     const missing = document.createElement('p');
-    missing.textContent = 'クエストが見つかりませんでした。ホームに戻ります。';
+    missing.textContent = 'ワークアウトが見つかりませんでした。ホームに戻ります。';
     container.append(missing);
     return container;
   }
@@ -104,7 +104,7 @@ export const renderQuest = (params, { navigate, store, playSfx }) => {
   backToList.textContent = '一覧に戻る';
   backToList.addEventListener('click', () => {
     playSfx('ui:navigate');
-    navigate(`#/quests/${quest.tier}`);
+    navigate(`#/workouts/${quest.tier}`);
   });
 
   heading.append(title, backToList);
@@ -129,7 +129,7 @@ export const renderQuest = (params, { navigate, store, playSfx }) => {
 
   const start = document.createElement('button');
   start.type = 'button';
-  start.textContent = '開始する（編集して消費カロリーUP）';
+  start.textContent = 'ワークアウト開始（編集して消費カロリーUP）';
   start.addEventListener('click', () => {
     store.rememberPlan(quest.id, settings.difficulty, plan);
     playSfx('ui:navigate');

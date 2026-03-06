@@ -318,12 +318,26 @@ export const createStore = (driver = 'supabase') => {
 
   const getProfile = () => profile;
 
+
+  const refreshProfile = () => {
+    const result = persistence.loadProfile();
+    const sync = resolveMaybeAsync(result, applyProfile);
+    if (sync) applyProfile(sync);
+    return sync || profile;
+  };
+
+  const refreshSocialGraph = () => {
+    notifyProfile();
+  };
+
   const setProfileName = (name) => {
     const result = persistence.updateDisplayName(name);
     const nextProfile = resolveMaybeAsync(result, applyProfile);
     if (nextProfile) {
       applyProfile(nextProfile);
+      refreshSocialGraph();
     }
+    if (!nextProfile) refreshProfile();
     return nextProfile || profile;
   };
 
@@ -334,8 +348,11 @@ export const createStore = (driver = 'supabase') => {
     const nextProfile = resolveMaybeAsync(result, applyProfile);
     if (nextProfile) {
       applyProfile(nextProfile);
+      refreshSocialGraph();
       return nextProfile;
     }
+    refreshProfile();
+    refreshSocialGraph();
     return result || mergedProfile;
   };
 
@@ -449,6 +466,11 @@ export const createStore = (driver = 'supabase') => {
 
   const upsertBodyMetric = (dateKey, metric = {}) => {
     if (!dateKey) return null;
+    const weight = metric?.weight_kg ?? metric?.weightKg ?? null;
+    const bodyFat = metric?.body_fat_pct ?? metric?.bodyFatPct ?? null;
+    if (weight == null && bodyFat == null) {
+      return { ok: false, code: 'BODY_METRIC_EMPTY_NOT_ALLOWED' };
+    }
     const userId = resolveCurrentUserId();
     const payload = { date: dateKey, ...(metric || {}) };
     clearWorkoutDatesMonthCache();
@@ -501,9 +523,75 @@ export const createStore = (driver = 'supabase') => {
     });
   };
 
-  const followUser = (followerId, followeeId) => persistence.followUser(followerId, followeeId);
+  const followUser = (followerId, followeeId) => {
+    const result = persistence.followUser(followerId, followeeId);
+    const sync = resolveMaybeAsync(result, (value) => {
+      refreshProfile();
+      refreshSocialGraph();
+      return value;
+    });
+    if (sync) {
+      refreshProfile();
+      refreshSocialGraph();
+    }
+    return sync || result;
+  };
 
-  const unfollowUser = (followerId, followeeId) => persistence.unfollowUser(followerId, followeeId);
+  const unfollowUser = (followerId, followeeId) => {
+    const result = persistence.unfollowUser(followerId, followeeId);
+    const sync = resolveMaybeAsync(result, (value) => {
+      refreshProfile();
+      refreshSocialGraph();
+      return value;
+    });
+    if (sync) {
+      refreshProfile();
+      refreshSocialGraph();
+    }
+    return sync || result;
+  };
+
+  const requestFollow = (requesterId, targetId) => {
+    const result = persistence.requestFollow(requesterId, targetId);
+    const sync = resolveMaybeAsync(result, (value) => {
+      refreshSocialGraph();
+      return value;
+    });
+    if (sync) refreshSocialGraph();
+    return sync || result;
+  };
+
+  const cancelFollowRequest = (requesterId, targetId) => {
+    const result = persistence.cancelFollowRequest(requesterId, targetId);
+    const sync = resolveMaybeAsync(result, (value) => {
+      refreshSocialGraph();
+      return value;
+    });
+    if (sync) refreshSocialGraph();
+    return sync || result;
+  };
+
+  const respondFollowRequest = (targetId, requesterId, action) => {
+    const result = persistence.respondFollowRequest(targetId, requesterId, action);
+    const sync = resolveMaybeAsync(result, (value) => {
+      refreshProfile();
+      refreshSocialGraph();
+      return value;
+    });
+    if (sync) {
+      refreshProfile();
+      refreshSocialGraph();
+    }
+    return sync || result;
+  };
+
+  const getFollowState = (viewerId, targetId) => persistence.getFollowState(viewerId, targetId);
+
+  const listFollowRequests = (userId, direction = 'incoming') => persistence.listFollowRequests(userId, direction);
+
+  const searchAccounts = (query = '', viewerId = null, limit = 20) => persistence.searchAccounts(query, viewerId, limit);
+
+  const getFollowCounts = (userId) => persistence.getFollowCounts(userId);
 
   const getFollowing = (userId) => persistence.getFollowing(userId);
 
@@ -656,6 +744,13 @@ export const createStore = (driver = 'supabase') => {
     setTodoDone,
     followUser,
     unfollowUser,
+    requestFollow,
+    cancelFollowRequest,
+    respondFollowRequest,
+    getFollowState,
+    listFollowRequests,
+    searchAccounts,
+    getFollowCounts,
     getFollowing,
     getFollowers,
     listVisibleWorkouts,

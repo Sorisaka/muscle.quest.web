@@ -434,6 +434,13 @@ async function parseJsonResponse(response) {
 function createPostgrestClient(supabaseUrl, supabaseKey, auth) {
   const normalizedUrl = normalizeUrl(supabaseUrl);
 
+  const encodeFilterValue = (value) => {
+    if (value === null) return 'null';
+    if (value === undefined) return '';
+    if (value instanceof Date) return value.toISOString();
+    return String(value);
+  };
+
   const resolveAccessToken = async () => {
     if (typeof auth?.getSession !== 'function') return null;
     const { data } = await auth.getSession();
@@ -445,20 +452,62 @@ function createPostgrestClient(supabaseUrl, supabaseKey, auth) {
       this.table = table;
       this.method = 'GET';
       this.params = {};
+      this.filters = [];
       this.body = null;
       this.headers = {};
       this.single = false;
+      this.allowEmpty = false;
+      this.shouldThrowOnError = false;
     }
 
     select(columns = '*') {
       if (columns) {
         this.params.select = columns;
       }
+      if (this.method !== 'GET') {
+        this.addPreferDirective('return=representation');
+      }
       return this;
     }
 
     eq(column, value) {
-      this.params[column] = `eq.${encodeURIComponent(value)}`;
+      this.addFilter(column, `eq.${encodeFilterValue(value)}`);
+      return this;
+    }
+
+    neq(column, value) {
+      this.addFilter(column, `neq.${encodeFilterValue(value)}`);
+      return this;
+    }
+
+    gt(column, value) {
+      this.addFilter(column, `gt.${encodeFilterValue(value)}`);
+      return this;
+    }
+
+    gte(column, value) {
+      this.addFilter(column, `gte.${encodeFilterValue(value)}`);
+      return this;
+    }
+
+    lt(column, value) {
+      this.addFilter(column, `lt.${encodeFilterValue(value)}`);
+      return this;
+    }
+
+    lte(column, value) {
+      this.addFilter(column, `lte.${encodeFilterValue(value)}`);
+      return this;
+    }
+
+    in(column, values = []) {
+      const list = Array.isArray(values) ? values : [values];
+      this.addFilter(column, `in.(${list.map((item) => encodeFilterValue(item)).join(',')})`);
+      return this;
+    }
+
+    addFilter(column, value) {
+      this.filters.push([column, value]);
       return this;
     }
 
@@ -478,20 +527,57 @@ function createPostgrestClient(supabaseUrl, supabaseKey, auth) {
     insert(values) {
       this.method = 'POST';
       this.body = values;
-      this.headers.Prefer = 'return=representation';
+      this.addPreferDirective('return=representation');
+      return this;
+    }
+
+    upsert(values, options = {}) {
+      this.method = 'POST';
+      this.body = values;
+      this.addPreferDirective('resolution=merge-duplicates');
+      this.addPreferDirective('return=representation');
+      if (options?.onConflict) {
+        this.params.on_conflict = options.onConflict;
+      }
       return this;
     }
 
     update(values) {
       this.method = 'PATCH';
       this.body = values;
-      this.headers.Prefer = 'return=representation';
+      this.addPreferDirective('return=representation');
+      return this;
+    }
+
+    single() {
+      this.single = true;
+      this.allowEmpty = false;
+      this.headers.Accept = 'application/vnd.pgrst.object+json';
       return this;
     }
 
     maybeSingle() {
       this.single = true;
+      this.allowEmpty = true;
       this.headers.Accept = 'application/vnd.pgrst.object+json';
+      return this;
+    }
+
+    throwOnError() {
+      this.shouldThrowOnError = true;
+      return this;
+    }
+
+    addPreferDirective(value) {
+      if (!value) return this;
+      const existing = String(this.headers.Prefer || '')
+        .split(',')
+        .map((part) => part.trim())
+        .filter(Boolean);
+      if (!existing.includes(value)) {
+        existing.push(value);
+      }
+      this.headers.Prefer = existing.join(',');
       return this;
     }
 
@@ -500,6 +586,11 @@ function createPostgrestClient(supabaseUrl, supabaseKey, auth) {
       Object.entries(this.params || {}).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           url.searchParams.set(key, value);
+        }
+      });
+      (this.filters || []).forEach(([key, value]) => {
+        if (key && value !== undefined && value !== null) {
+          url.searchParams.append(key, value);
         }
       });
 
@@ -516,15 +607,31 @@ function createPostgrestClient(supabaseUrl, supabaseKey, auth) {
 
       if (!response.ok) {
         const message = data?.error_description || data?.message || data?.error || response.statusText;
-        return { data: null, error: new Error(message || 'Request failed') };
+        const error = new Error(message || 'Request failed');
+        if (this.shouldThrowOnError) {
+          throw error;
+        }
+        return { data: null, error };
       }
 
       if (this.single) {
-        if (!data) return { data: null, error: null };
+        if (!data) {
+          if (this.allowEmpty) return { data: null, error: null };
+          const emptyError = new Error('No rows returned');
+          if (this.shouldThrowOnError) throw emptyError;
+          return { data: null, error: emptyError };
+        }
         if (Array.isArray(data)) {
-          if (data.length === 0) return { data: null, error: null };
+          if (data.length === 0) {
+            if (this.allowEmpty) return { data: null, error: null };
+            const emptyError = new Error('No rows returned');
+            if (this.shouldThrowOnError) throw emptyError;
+            return { data: null, error: emptyError };
+          }
           if (data.length === 1) return { data: data[0], error: null };
-          return { data: null, error: new Error('Multiple rows returned') };
+          const multipleError = new Error('Multiple rows returned');
+          if (this.shouldThrowOnError) throw multipleError;
+          return { data: null, error: multipleError };
         }
       }
 

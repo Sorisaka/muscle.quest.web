@@ -1,17 +1,11 @@
 import { quests } from '../core/content.js';
 
-const createTierCard = (tier, label, summary, navigate, playSfx) => {
+const createCategoryCard = (tier, label, summary, navigate, playSfx) => {
   const card = document.createElement('article');
   card.className = 'card tier-card';
 
-  const header = document.createElement('div');
-  header.className = 'tier-card__header';
   const title = document.createElement('h3');
   title.textContent = label;
-  const badge = document.createElement('span');
-  badge.className = 'pill';
-  badge.textContent = tier;
-  header.append(title, badge);
 
   const description = document.createElement('p');
   description.className = 'muted';
@@ -19,17 +13,17 @@ const createTierCard = (tier, label, summary, navigate, playSfx) => {
 
   const action = document.createElement('button');
   action.type = 'button';
-  action.textContent = 'クエスト一覧へ';
+  action.textContent = 'ワークアウト一覧へ';
   action.addEventListener('click', () => {
     playSfx('ui:navigate');
-    navigate(`#/quests/${tier}`);
+    navigate(`#/workouts/${tier}`);
   });
 
-  card.append(header, description, action);
+  card.append(title, description, action);
   return card;
 };
 
-const findQuestIdByExercise = (exerciseSlug) => {
+const findWorkoutIdByExercise = (exerciseSlug) => {
   const match = (quests || []).find((quest) => (quest.exercises || []).includes(exerciseSlug));
   return match?.id || null;
 };
@@ -41,18 +35,9 @@ export const renderHome = (_params, { navigate, playSfx, store }) => {
   const grid = document.createElement('div');
   grid.className = 'card-grid';
 
-  const rankButton = document.createElement('button');
-  rankButton.type = 'button';
-  rankButton.className = 'ghost';
-  rankButton.textContent = 'ランキングを見る';
-  rankButton.addEventListener('click', () => {
-    playSfx('ui:navigate');
-    navigate('#/rank/local');
-  });
-
-  const beginnerCard = createTierCard('beginner', '初級', 'ウォームアップに最適な短めクエスト。', navigate, playSfx);
-  const intermediateCard = createTierCard('intermediate', '中級', 'フォームを安定させながら負荷を上げる中距離戦。', navigate, playSfx);
-  const advancedCard = createTierCard('advanced', '上級', '集中力と体力の両方を試すハードモード。', navigate, playSfx);
+  const cardioCard = createCategoryCard('beginner', '有酸素', '心拍を上げるベースメニュー。', navigate, playSfx);
+  const bodyweightCard = createCategoryCard('intermediate', '自重', '器具なしで全身を鍛える。', navigate, playSfx);
+  const weightsCard = createCategoryCard('advanced', 'ウエイト', '負荷をかけて筋力アップ。', navigate, playSfx);
 
   const todoCard = document.createElement('article');
   todoCard.className = 'card stack';
@@ -65,7 +50,7 @@ export const renderHome = (_params, { navigate, playSfx, store }) => {
 
   const startButton = document.createElement('button');
   startButton.type = 'button';
-  startButton.textContent = 'このメニューでトレーニング開始';
+  startButton.textContent = 'このメニューでワークアウト開始';
 
   const renderTodos = async () => {
     const userId = store.getProfile()?.id || 'local-user';
@@ -105,10 +90,10 @@ export const renderHome = (_params, { navigate, playSfx, store }) => {
     startButton.disabled = false;
     startButton.onclick = () => {
       const first = nextToday.items[0];
-      const questId = findQuestIdByExercise(first.exerciseSlug);
+      const workoutId = findWorkoutIdByExercise(first.exerciseSlug);
       playSfx('ui:navigate');
-      if (questId) navigate(`#/run/${questId}`);
-      else navigate('#/quests/beginner');
+      if (workoutId) navigate(`#/run/${workoutId}`);
+      else navigate('#/workouts/beginner');
     };
   };
 
@@ -116,7 +101,7 @@ export const renderHome = (_params, { navigate, playSfx, store }) => {
 
   todoCard.append(todoTitle, todoMeta, todoList, startButton);
 
-  grid.append(beginnerCard, intermediateCard, advancedCard);
-  container.append(rankButton, todoCard, grid);
+  grid.append(cardioCard, bodyweightCard, weightsCard);
+  container.append(todoCard, grid);
   return container;
 };

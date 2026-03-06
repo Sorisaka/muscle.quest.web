@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="ja">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,21 +9,18 @@
   <body>
     <main class="shell">
       <header class="shell__header">
-        <button class="account-trigger" type="button" data-account-trigger aria-label="アカウントドロワーを開く">
-          <span aria-hidden="true">☺</span>
-        </button>
-        <section class="route-meta">
-          <div>
-            <p class="eyebrow">Current route</p>
-            <h2 data-route-title>Home</h2>
-            <p class="muted" data-route-description>Browse quests and jump into a run.</p>
-          </div>
-          <span class="pill" data-route-path>#/</span>
-        </section>
+        <button class="account-trigger" type="button" data-account-trigger aria-label="アカウントドロワーを開く"></button>
       </header>
-
       <section data-view class="panel"></section>
     </main>
+
+    <nav class="bottom-nav" aria-label="ページ切り替え" data-bottom-nav>
+      <button type="button" class="bottom-nav__button" data-nav-route="#/">ホーム</button>
+      <button type="button" class="bottom-nav__button" data-nav-route="#/timeline">タイムライン</button>
+      <button type="button" class="bottom-nav__button" data-nav-route="#/rank/local">ランキング</button>
+      <button type="button" class="bottom-nav__button" data-nav-route="#/history">履歴</button>
+    </nav>
+
     <div class="drawer-overlay" data-drawer-overlay></div>
     <aside class="account-drawer" data-account-drawer></aside>
     <script src="./config.js"></script>

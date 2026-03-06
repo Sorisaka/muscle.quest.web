@@ -1,3 +1,6 @@
+import { defaultHistoryFilter, filterRuns, getRunTags } from '../core/historyFilters.js';
+import { createHistoryFilterControls, HISTORY_CATEGORY_LABELS, toMuscleLabel } from '../ui/historyFilterControls.js';
+
 const formatDateTime = (value) => {
   if (!value) return '-';
   const date = new Date(value);
@@ -36,30 +39,19 @@ const normalizeTimelineResponse = (timelineState) => {
   };
 };
 
-export const renderTimeline = (_params, { navigate, playSfx, store }) => {
+export const renderTimeline = (_params, { playSfx, store }) => {
   const container = document.createElement('section');
   container.className = 'stack';
 
   const header = document.createElement('div');
   header.className = 'list-header';
-  const heading = document.createElement('h2');
-  heading.textContent = 'Timeline';
-
-  const back = document.createElement('button');
-  back.type = 'button';
-  back.className = 'ghost';
-  back.textContent = '← ホームに戻る';
-  back.addEventListener('click', () => {
-    playSfx('ui:navigate');
-    navigate('#/');
-  });
 
   const refreshButton = document.createElement('button');
   refreshButton.type = 'button';
   refreshButton.className = 'ghost';
   refreshButton.textContent = '更新';
 
-  header.append(heading, refreshButton, back);
+  header.append(refreshButton);
 
   const tabs = document.createElement('div');
   tabs.className = 'tabs';
@@ -84,6 +76,7 @@ export const renderTimeline = (_params, { navigate, playSfx, store }) => {
   let itemsByScope = { following: [], global: [] };
   let nextBeforeByScope = { following: null, global: null };
   let likeBusy = new Set();
+  let filterState = { ...defaultHistoryFilter };
 
   const syncFromStore = () => {
     const parsed = normalizeTimelineResponse(store.getTimelineState());
@@ -115,7 +108,9 @@ export const renderTimeline = (_params, { navigate, playSfx, store }) => {
       return;
     }
 
-    if (!items.length) {
+    const filteredItems = filterRuns(items, filterState);
+
+    if (!filteredItems.length) {
       const empty = document.createElement('p');
       empty.className = 'muted';
       empty.textContent = 'タイムラインに表示できる投稿がありません。';
@@ -123,7 +118,7 @@ export const renderTimeline = (_params, { navigate, playSfx, store }) => {
       return;
     }
 
-    items.forEach((item) => {
+    filteredItems.forEach((item) => {
       const card = document.createElement('article');
       card.className = 'card timeline-card';
 
@@ -157,6 +152,11 @@ export const renderTimeline = (_params, { navigate, playSfx, store }) => {
         meta.append(ex);
       }
 
+      const tags = getRunTags(item.result || item);
+      const tagLine = document.createElement('p');
+      tagLine.className = 'muted';
+      tagLine.textContent = `${HISTORY_CATEGORY_LABELS[tags.category] || HISTORY_CATEGORY_LABELS.unknown} / ${(tags.muscles || []).map(toMuscleLabel).join('・') || '未設定'}`;
+
       const note = document.createElement('p');
       note.className = item.note ? '' : 'muted';
       note.textContent = item.note || 'メモはありません。';
@@ -187,7 +187,7 @@ export const renderTimeline = (_params, { navigate, playSfx, store }) => {
       });
 
       actions.append(likeButton);
-      card.append(top, meta, note, actions);
+      card.append(top, meta, tagLine, note, actions);
       list.append(card);
     });
   };
@@ -263,7 +263,23 @@ export const renderTimeline = (_params, { navigate, playSfx, store }) => {
     loadTimeline({ append: true });
   });
 
-  container.append(header, tabs, errorText, list, loadMore);
+  const filterSlot = document.createElement('div');
+  const renderFilter = () => {
+    filterSlot.innerHTML = '';
+    filterSlot.append(createHistoryFilterControls({
+      state: filterState,
+      onChange: (next) => {
+        filterState = { ...next };
+        renderFilter();
+        render();
+      },
+      title: '絞り込み',
+      cardClassName: 'card stack',
+    }));
+  };
+  renderFilter();
+
+  container.append(header, tabs, filterSlot, errorText, list, loadMore);
 
   syncFromStore();
   render();

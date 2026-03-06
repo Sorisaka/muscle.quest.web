@@ -21,12 +21,12 @@ const createControls = (navigate, questId, playSfx, onReset, onToggle, onComplet
   const stopButton = document.createElement('button');
   stopButton.type = 'button';
   stopButton.className = 'ghost';
-  stopButton.textContent = 'クエスト詳細へ';
+  stopButton.textContent = 'ワークアウト詳細へ';
   stopButton.addEventListener('click', () => {
-    const confirmed = window.confirm('中断してクエスト詳細に戻りますか？');
+    const confirmed = window.confirm('中断してワークアウト詳細に戻りますか？');
     if (confirmed) {
       playSfx('timer:stop');
-      navigate(`#/quest/${questId}`);
+      navigate(`#/workout/${questId}`);
     }
   });
 
@@ -175,7 +175,7 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
 
   if (!quest) {
     const missing = document.createElement('p');
-    missing.textContent = 'クエストが見つかりませんでした。ホームに戻ります。';
+    missing.textContent = 'ワークアウトが見つかりませんでした。ホームに戻ります。';
     const back = document.createElement('button');
     back.type = 'button';
     back.addEventListener('click', () => {

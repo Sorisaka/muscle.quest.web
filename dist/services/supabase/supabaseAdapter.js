@@ -5,10 +5,31 @@ import { getSupabaseClient } from '../../lib/supabaseClient.js';
 import { getSession, onAuthStateChange } from '../authService.js';
 import { normalizeAccountVisibility, normalizePostVisibility, resolvePostVisibility } from '../../core/visibility.js';
 import { toDateKey, startOfDay, endOfDay } from '../../lib/dateKey.js';
+import { decorateResultWithTags, getExerciseTags, normalizeCategory, normalizeMuscles } from '../../core/exerciseTaxonomy.js';
 
-const PROFILE_COLUMNS = 'id,display_name,account_visibility,default_visibility,points,total_calories,completed_runs,last_result,height_cm,weight_kg,sex,step_length_m,arm_length_m,leg_length_m,torso_length_m,step_length_m_mode,arm_length_m_mode,leg_length_m_mode,torso_length_m_mode,updated_at';
+const PROFILE_COLUMNS = 'id,display_name,account_visibility,default_visibility,icon_border,icon_background,icon_center_object,points,total_calories,completed_runs,last_result,height_cm,weight_kg,sex,step_length_m,arm_length_m,leg_length_m,torso_length_m,step_length_m_mode,arm_length_m_mode,leg_length_m_mode,torso_length_m_mode,updated_at';
 const HISTORY_LIMIT = 100;
 const MIGRATION_FLAG_PREFIX = 'musclequest:migration:';
+
+
+const WORKOUT_RUNS_COLUMNS_BASE = 'id,user_id,created_at,points,calories,visibility,published_at,note,result';
+const WORKOUT_RUNS_COLUMNS_WITH_TAGS = 'id,user_id,created_at,points,calories,visibility,published_at,note,category,muscles,result';
+
+const isWorkoutRunTagColumnError = (error) => {
+  const message = String(error?.message || error || '').toLowerCase();
+  return message.includes('category') || message.includes('muscles');
+};
+
+const selectWorkoutRunsWithFallback = async (buildQuery) => {
+  const withTags = await buildQuery(WORKOUT_RUNS_COLUMNS_WITH_TAGS);
+  if (!withTags?.error) return withTags;
+  if (!isWorkoutRunTagColumnError(withTags.error)) return withTags;
+
+  const fallback = await buildQuery(WORKOUT_RUNS_COLUMNS_BASE);
+  if (fallback?.error) return fallback;
+  const patched = (fallback?.data || []).map((row) => ({ ...row, category: null, muscles: null }));
+  return { ...fallback, data: patched };
+};
 
 const isPromise = (value) => value && typeof value.then === 'function';
 
@@ -35,29 +56,37 @@ const fetchSingleByKeys = async (client, table, keys, selectColumns = '*') => {
 
 
 const mapHistoryRow = (row) => {
-  const result = row?.result || {};
+  const rawResult = row?.result || {};
+  const taggedResult = decorateResultWithTags(rawResult);
   const createdAt = row?.created_at ? new Date(row.created_at).getTime() : Date.now();
+  const fallbackTags = getExerciseTags(taggedResult.exerciseSlug || taggedResult.exercise_slug || taggedResult.questId || taggedResult.quest_id);
   return {
-    id: row?.id || result.id || null,
-    user_id: row?.user_id || result.user_id || null,
-    questId: result.questId || result.quest_id || null,
-    exerciseSlug: result.exerciseSlug || result.exercise_slug || null,
-    calories: row?.calories ?? result.calories ?? 0,
-    points: row?.points ?? result.points ?? 0,
-    mode: result.mode || null,
-    difficulty: result.difficulty || null,
-    sets: result.sets || null,
-    startTime: result.startTime || result.start_time || null,
-    endTime: result.endTime || result.end_time || null,
-    visibility: normalizePostVisibility(row?.visibility || result.visibility, 'private'),
-    published_at: row?.published_at || result.published_at || null,
-    note: row?.note || result.note || null,
+    id: row?.id || taggedResult.id || null,
+    user_id: row?.user_id || taggedResult.user_id || null,
+    questId: taggedResult.questId || taggedResult.quest_id || null,
+    exerciseSlug: taggedResult.exerciseSlug || taggedResult.exercise_slug || null,
+    calories: row?.calories ?? taggedResult.calories ?? 0,
+    points: row?.points ?? taggedResult.points ?? 0,
+    mode: taggedResult.mode || null,
+    difficulty: taggedResult.difficulty || null,
+    sets: taggedResult.sets || null,
+    startTime: taggedResult.startTime || taggedResult.start_time || null,
+    endTime: taggedResult.endTime || taggedResult.end_time || null,
+    visibility: normalizePostVisibility(row?.visibility || taggedResult.visibility, 'private'),
+    published_at: row?.published_at || taggedResult.published_at || null,
+    note: row?.note || taggedResult.note || null,
     timestamp: createdAt,
+    category: normalizeCategory(row?.category || taggedResult.category || fallbackTags.category),
+    muscles: normalizeMuscles(row?.muscles || taggedResult.muscles || fallbackTags.muscles),
+    result: taggedResult,
   };
 };
 
 
-const mapTimelineRow = (row) => ({
+const mapTimelineRow = (row) => {
+  const taggedResult = decorateResultWithTags(row?.result || {});
+  const fallbackTags = getExerciseTags(taggedResult.exerciseSlug || taggedResult.exercise_slug || taggedResult.questId || taggedResult.quest_id);
+  return ({
   runId: row?.run_id ?? row?.runId ?? null,
   userId: row?.user_id ?? row?.userId ?? null,
   authorDisplayName: row?.author_display_name ?? row?.authorDisplayName ?? row?.display_name ?? row?.displayName ?? null,
@@ -66,10 +95,43 @@ const mapTimelineRow = (row) => ({
   visibility: normalizePostVisibility(row?.visibility, 'private'),
   calories: Number(row?.calories ?? 0),
   note: row?.note ?? null,
-  result: row?.result ?? null,
+  result: taggedResult,
+  category: normalizeCategory(row?.category || taggedResult.category || fallbackTags.category),
+  muscles: normalizeMuscles(row?.muscles || taggedResult.muscles || fallbackTags.muscles),
   likeCount: Number(row?.like_count ?? row?.likeCount ?? 0),
   liked: Boolean(row?.liked),
 });
+};
+
+const mapAccountRow = (row = {}) => ({
+  id: row.id,
+  display_name: row.display_name || row.id || 'Unknown',
+  account_visibility: normalizeAccountVisibility(row.account_visibility, 'private'),
+  icon_border: row.icon_border || null,
+  icon_background: row.icon_background || null,
+  icon_center_object: row.icon_center_object || null,
+});
+
+const mapLeaderboardRow = (row = {}, period = 'overall') => {
+  const periodCalories = period === 'daily'
+    ? row.daily_calories
+    : period === 'weekly'
+      ? row.weekly_calories
+      : period === 'monthly'
+        ? row.monthly_calories
+        : row.total_calories;
+
+  return {
+    id: row.user_id,
+    displayName: row.display_name || row.user_id || 'Unknown',
+    calories: Math.max(Number(periodCalories || 0), 0),
+    account_visibility: normalizeAccountVisibility(row.account_visibility, 'private'),
+    icon_border: row.icon_border || null,
+    icon_background: row.icon_background || null,
+    icon_center_object: row.icon_center_object || null,
+    is_self: Boolean(row.is_self),
+  };
+};
 
 export const createSupabaseAdapter = (options = {}) => {
   const local = createLocalPersistence();
@@ -154,6 +216,9 @@ export const createSupabaseAdapter = (options = {}) => {
     displayName: row?.display_name || row?.displayName || session?.user?.email || defaultName(),
     account_visibility: normalizeAccountVisibility(row?.account_visibility || row?.default_visibility || row?.defaultVisibility, 'private'),
     default_visibility: normalizeAccountVisibility(row?.account_visibility || row?.default_visibility || row?.defaultVisibility, 'private'),
+    icon_border: row?.icon_border ?? null,
+    icon_background: row?.icon_background ?? null,
+    icon_center_object: row?.icon_center_object ?? null,
     points: row?.points ?? 0,
     totalCalories: row?.total_calories ?? row?.totalCalories ?? 0,
     completedRuns: row?.completed_runs ?? row?.completedRuns ?? 0,
@@ -186,12 +251,12 @@ export const createSupabaseAdapter = (options = {}) => {
 
   const refreshHistoryFromSupabase = async () => {
     if (!client || !session?.user?.id) return history;
-    const { data, error } = await client
+    const { data, error } = await selectWorkoutRunsWithFallback((columns) => client
       .from('workout_runs')
-      .select('id,user_id,created_at,points,calories,visibility,published_at,note,result')
+      .select(columns)
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
-      .limit(HISTORY_LIMIT);
+      .limit(HISTORY_LIMIT));
 
     if (error) {
       authWarn('workout_runs fetch failed', error.message || error);
@@ -245,10 +310,12 @@ export const createSupabaseAdapter = (options = {}) => {
 
     const tryRpc = async () => {
       const { data, error } = await client.rpc('add_workout_result', {
-        p_points: payload.points,
-        p_calories: payload.calories || 0,
+        p_points: Number(payload.points || 0),
+        p_calories: Number(payload.calories || 0),
         p_visibility: payload.visibility || null,
         p_result: payload,
+        p_category: payload.category || 'unknown',
+        p_muscles: Array.isArray(payload.muscles) ? payload.muscles : [],
       });
 
       if (error) throw error;
@@ -258,7 +325,7 @@ export const createSupabaseAdapter = (options = {}) => {
     const fallbackInsertAndUpdate = async () => {
       const insertResult = await client
         .from('workout_runs')
-        .insert({ user_id: session.user.id, points: payload.points, calories: payload.calories || 0, visibility: payload.visibility, published_at: payload.published_at, note: payload.note, result: payload })
+.insert({ user_id: session.user.id, points: payload.points, calories: payload.calories || 0, visibility: payload.visibility, published_at: payload.published_at, note: payload.note, category: payload.category || 'unknown', muscles: Array.isArray(payload.muscles) ? payload.muscles : [], result: payload })
         .select('id')
         .maybeSingle();
 
@@ -394,6 +461,9 @@ export const createSupabaseAdapter = (options = {}) => {
     const payload = {
       display_name: mergedProfile.displayName,
       account_visibility: normalizeAccountVisibility(mergedProfile.account_visibility || mergedProfile.default_visibility, 'private'),
+      icon_border: mergedProfile.icon_border,
+      icon_background: mergedProfile.icon_background,
+      icon_center_object: mergedProfile.icon_center_object,
       height_cm: mergedProfile.height_cm,
       weight_kg: mergedProfile.weight_kg,
       sex: mergedProfile.sex,
@@ -469,8 +539,9 @@ export const createSupabaseAdapter = (options = {}) => {
     }
 
     const effectiveVisibility = resolvePostVisibility(profile.account_visibility || profile.default_visibility, result.visibilityOverride ?? result.visibility ?? null);
+    const taggedResult = decorateResultWithTags(result);
     const payload = {
-      ...result,
+      ...taggedResult,
       visibility: effectiveVisibility,
       published_at: effectiveVisibility === 'archived' ? null : (result.published_at || new Date().toISOString()),
       note: result.note || null,
@@ -494,7 +565,24 @@ export const createSupabaseAdapter = (options = {}) => {
     return syncPromise;
   };
 
-  const loadLeaderboard = (period = 'overall') => local.loadLeaderboard(period);
+  const loadLeaderboard = (period = 'overall') => {
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.loadLeaderboard(period);
+    }
+
+    return client
+      .rpc('get_leaderboard', {
+        p_period: period || 'overall',
+        p_limit: 50,
+      })
+      .then(({ data, error }) => {
+        if (error) {
+          authWarn('get_leaderboard failed', error.message || error);
+          throw error;
+        }
+        return (data || []).map((row) => mapLeaderboardRow(row, period));
+      });
+  };
 
   const saveLastPlan = (questId, difficulty, plan) => local.saveLastPlan(questId, difficulty, plan);
   const getLastPlan = (questId, difficulty) => local.getLastPlan(questId, difficulty);
@@ -582,8 +670,16 @@ export const createSupabaseAdapter = (options = {}) => {
   };
 
 
+  const normalizeFollowError = (error) => {
+    const message = String(error?.message || error || '').toLowerCase();
+    if (message.includes('self') || message.includes('follower') && message.includes('followee')) return 'SELF_FOLLOW_NOT_ALLOWED';
+    if (message.includes('duplicate') || message.includes('already')) return 'ALREADY_EXISTS';
+    if (message.includes('permission') || message.includes('policy') || message.includes('rls')) return 'FORBIDDEN';
+    return 'UNKNOWN_ERROR';
+  };
+
   const followUser = (followerId, followeeId) => {
-    if (!followerId || !followeeId || followerId === followeeId) return false;
+    if (!followerId || !followeeId || followerId === followeeId) return { ok: false, code: 'SELF_FOLLOW_NOT_ALLOWED' };
     if (!supabaseEnabled || !session?.user?.id) {
       return local.followUser(followerId, followeeId);
     }
@@ -594,9 +690,10 @@ export const createSupabaseAdapter = (options = {}) => {
       .then(({ error }) => {
         if (error) {
           authWarn('follows insert failed', error.message || error);
-          return local.followUser(followerId, followeeId);
+          const code = normalizeFollowError(error);
+          return { ok: code === 'ALREADY_EXISTS', code };
         }
-        return true;
+        return { ok: true, code: 'FOLLOWED' };
       });
   };
 
@@ -609,11 +706,126 @@ export const createSupabaseAdapter = (options = {}) => {
       table: 'follows',
       keys: { follower_id: followerId, followee_id: followeeId },
     }).then(({ error }) => {
+      if (error) {
+        authWarn('follows delete failed', error.message || error);
+        return { ok: false, code: normalizeFollowError(error) };
+      }
+      return { ok: true, code: 'UNFOLLOWED' };
+    });
+  };
+
+  const requestFollow = (requesterId, targetId) => {
+    if (!requesterId || !targetId || requesterId === targetId) return { ok: false, code: 'SELF_FOLLOW_NOT_ALLOWED' };
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.requestFollow(requesterId, targetId);
+    }
+    return client.rpc('follow_action', { p_target_id: targetId }).then(({ data, error }) => {
+      if (error) {
+        authWarn('follow_action failed', error.message || error);
+        return { ok: false, code: normalizeFollowError(error), message: error.message || String(error) };
+      }
+      return { ok: true, code: String(data || 'OK').toUpperCase() };
+    });
+  };
+
+  const cancelFollowRequest = (requesterId, targetId) => {
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.cancelFollowRequest(requesterId, targetId);
+    }
+    return client.rpc('cancel_follow_request', { p_target_id: targetId }).then(({ data, error }) => {
+      if (error) {
+        authWarn('cancel_follow_request failed', error.message || error);
+        return { ok: false, code: normalizeFollowError(error), message: error.message || String(error) };
+      }
+      return { ok: Boolean(data), code: data ? 'REQUEST_CANCELLED' : 'REQUEST_NOT_FOUND' };
+    });
+  };
+
+  const respondFollowRequest = (targetId, requesterId, action = 'reject') => {
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.respondFollowRequest(targetId, requesterId, action);
+    }
+    return client.rpc('respond_follow_request', { p_requester_id: requesterId, p_action: action }).then(({ data, error }) => {
+      if (error) {
+        authWarn('respond_follow_request failed', error.message || error);
+        return { ok: false, code: normalizeFollowError(error), message: error.message || String(error) };
+      }
+      return { ok: Boolean(data), code: action === 'approve' ? 'REQUEST_ACCEPTED' : 'REQUEST_REJECTED' };
+    });
+  };
+
+  const getFollowState = (viewerId, targetId) => {
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.getFollowState(viewerId, targetId);
+    }
+    return client.rpc('get_follow_state', { p_target_id: targetId }).then(({ data, error }) => {
+      if (error) {
+        authWarn('get_follow_state failed', error.message || error);
+        return local.getFollowState(viewerId, targetId);
+      }
+      const row = Array.isArray(data) ? data[0] : data;
+      return {
+        targetId,
+        accountVisibility: row?.account_visibility || 'public',
+        isFollowing: Boolean(row?.is_following),
+        hasPendingRequest: Boolean(row?.has_pending_request),
+        hasIncomingRequest: Boolean(row?.has_incoming_request),
+        requestStatus: row?.request_status || null,
+      };
+    });
+  };
+
+  const listFollowRequests = (userId, direction = 'incoming') => {
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.listFollowRequests(userId, direction);
+    }
+    return client.rpc('get_follow_requests', { p_direction: direction }).then(({ data, error }) => {
+      if (error) {
+        authWarn('get_follow_requests failed', error.message || error);
+        return local.listFollowRequests(userId, direction);
+      }
+      return (data || []).map((row) => ({
+        requester_id: row.requester_id,
+        target_id: row.target_id,
+        status: row.status,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        requester: {
+          id: row.requester_id,
+          display_name: row.requester_display_name,
+          account_visibility: row.requester_visibility,
+          icon_border: row.requester_icon_border,
+          icon_background: row.requester_icon_background,
+          icon_center_object: row.requester_icon_center_object,
+        },
+        target: {
+          id: row.target_id,
+          display_name: row.target_display_name,
+          account_visibility: row.target_visibility,
+          icon_border: row.target_icon_border,
+          icon_background: row.target_icon_background,
+          icon_center_object: row.target_icon_center_object,
+        },
+      }));
+    });
+  };
+
+  const searchAccounts = (query = '', viewerId = null, limit = 20) => {
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.searchAccounts(query, viewerId, limit);
+    }
+
+    return client
+      .rpc('search_accounts', {
+        p_query: String(query || '').trim(),
+        p_limit: Math.max(1, Number(limit) || 20),
+      })
+      .then(({ data, error }) => {
         if (error) {
-          authWarn('follows delete failed', error.message || error);
-          return local.unfollowUser(followerId, followeeId);
+          authWarn('search_accounts failed', error.message || error);
+          throw error;
         }
-        return true;
+        return (data || []).map(mapAccountRow);
       });
   };
 
@@ -623,15 +835,15 @@ export const createSupabaseAdapter = (options = {}) => {
     }
 
     return client
-      .from('follows')
-      .select('followee_id')
-      .eq('follower_id', userId)
+      .rpc('get_following_accounts', {
+        p_user_id: userId || session.user.id,
+      })
       .then(({ data, error }) => {
         if (error) {
-          authWarn('follows following fetch failed', error.message || error);
-          return local.getFollowing(userId);
+          authWarn('get_following_accounts failed', error.message || error);
+          throw error;
         }
-        return (data || []).map((row) => row.followee_id);
+        return (data || []).map(mapAccountRow);
       });
   };
 
@@ -641,17 +853,29 @@ export const createSupabaseAdapter = (options = {}) => {
     }
 
     return client
-      .from('follows')
-      .select('follower_id')
-      .eq('followee_id', userId)
+      .rpc('get_follower_accounts', {
+        p_user_id: userId || session.user.id,
+      })
       .then(({ data, error }) => {
         if (error) {
-          authWarn('follows followers fetch failed', error.message || error);
-          return local.getFollowers(userId);
+          authWarn('get_follower_accounts failed', error.message || error);
+          throw error;
         }
-        return (data || []).map((row) => row.follower_id);
+        return (data || []).map(mapAccountRow);
       });
   };
+
+  const getFollowCounts = (userId) => Promise.all([
+    getFollowing(userId),
+    getFollowers(userId),
+    listFollowRequests(userId, 'incoming'),
+    listFollowRequests(userId, 'outgoing'),
+  ]).then(([following, followers, incoming, outgoing]) => ({
+    following: (following || []).length,
+    followers: (followers || []).length,
+    pendingIncoming: (incoming || []).length,
+    pendingOutgoing: (outgoing || []).length,
+  }));
 
   const listVisibleWorkouts = (viewerId, targetUserId) => {
     if (!supabaseEnabled || !session?.user?.id) {
@@ -659,19 +883,19 @@ export const createSupabaseAdapter = (options = {}) => {
     }
 
     return Promise.all([
-      client
+      selectWorkoutRunsWithFallback((columns) => client
         .from('workout_runs')
-        .select('id,user_id,created_at,points,calories,visibility,published_at,note,result')
+        .select(columns)
         .eq('user_id', targetUserId)
         .order('created_at', { ascending: false })
-        .limit(HISTORY_LIMIT),
+        .limit(HISTORY_LIMIT)),
       getFollowing(viewerId),
     ]).then(([runsResult, followingIds]) => {
       if (runsResult.error) {
         authWarn('visible workouts fetch failed', runsResult.error.message || runsResult.error);
         return local.listVisibleWorkouts(viewerId, targetUserId);
       }
-      const followingSet = new Set(followingIds || []);
+      const followingSet = new Set((followingIds || []).map((entry) => entry?.id).filter(Boolean));
       return (runsResult.data || [])
         .map(mapHistoryRow)
         .filter((entry) => {
@@ -749,9 +973,24 @@ export const createSupabaseAdapter = (options = {}) => {
       })
       .eq('id', runId)
       .eq('user_id', session.user.id)
-      .select('id,user_id,created_at,points,calories,visibility,published_at,note,result')
+      .select(WORKOUT_RUNS_COLUMNS_WITH_TAGS)
       .maybeSingle()
-      .then(({ data, error }) => {
+      .then(async ({ data, error }) => {
+        if (error && isWorkoutRunTagColumnError(error)) {
+          const fallback = await client
+            .from('workout_runs')
+            .update({
+              visibility: nextVisibility,
+              published_at: nextPublishedAt,
+              note: typeof updates.note === 'string' ? updates.note : null,
+            })
+            .eq('id', runId)
+            .eq('user_id', session.user.id)
+            .select(WORKOUT_RUNS_COLUMNS_BASE)
+            .maybeSingle();
+          data = fallback.data ? { ...fallback.data, category: null, muscles: null } : data;
+          error = fallback.error;
+        }
         if (error) {
           authWarn('workout post update failed', error.message || error);
           return local.updateWorkoutPost(runId, { ...updates, visibility: nextVisibility, published_at: nextPublishedAt });
@@ -788,6 +1027,9 @@ export const createSupabaseAdapter = (options = {}) => {
 
     const payload = toBodyMetricPayload(metric);
     if (!payload.date) return null;
+    if (payload.weight_kg == null && payload.body_fat_pct == null) {
+      return { ok: false, code: 'BODY_METRIC_EMPTY_NOT_ALLOWED' };
+    }
 
     return client
       .from('body_metrics')
@@ -868,18 +1110,21 @@ export const createSupabaseAdapter = (options = {}) => {
     const from = startOfDay(date).toISOString();
     const to = endOfDay(date).toISOString();
 
-    let query = client
-      .from('workout_runs')
-      .select('id,user_id,created_at,points,calories,visibility,published_at,note,result')
-      .eq('user_id', userId || session.user.id);
+    const buildQuery = (columns) => {
+      let query = client
+        .from('workout_runs')
+        .select(columns)
+        .eq('user_id', userId || session.user.id);
 
-    const supportsRange = typeof query?.gte === 'function' && typeof query?.lte === 'function';
-    if (supportsRange) {
-      query = query.gte('created_at', from).lte('created_at', to);
-    }
+      const supportsRange = typeof query?.gte === 'function' && typeof query?.lte === 'function';
+      if (supportsRange) {
+        query = query.gte('created_at', from).lte('created_at', to);
+      }
 
-    return query
-      .order('created_at', { ascending: false })
+      return query.order('created_at', { ascending: false });
+    };
+
+    return selectWorkoutRunsWithFallback(buildQuery)
       .then(({ data, error }) => {
         if (error) {
           authWarn('workout_runs by date fetch failed', error.message || error);
@@ -901,19 +1146,22 @@ export const createSupabaseAdapter = (options = {}) => {
       ? `${year + 1}-01-01`
       : `${year}-${String(month + 1).padStart(2, '0')}-01`;
 
-    let query = client
-      .from('workout_runs')
-      .select('id,user_id,created_at,points,calories,visibility,published_at,note,result')
-      .eq('user_id', userId || session.user.id);
+    const buildQuery = (columns) => {
+      let query = client
+        .from('workout_runs')
+        .select(columns)
+        .eq('user_id', userId || session.user.id);
 
-    const supportsRange = typeof query?.gte === 'function' && typeof query?.lt === 'function';
-    if (supportsRange) {
-      query = query.gte('created_at', startOfDay(first).toISOString())
-        .lt('created_at', startOfDay(nextMonth).toISOString());
-    }
+      const supportsRange = typeof query?.gte === 'function' && typeof query?.lt === 'function';
+      if (supportsRange) {
+        query = query.gte('created_at', startOfDay(first).toISOString())
+          .lt('created_at', startOfDay(nextMonth).toISOString());
+      }
 
-    return query
-      .order('created_at', { ascending: false })
+      return query.order('created_at', { ascending: false });
+    };
+
+    return selectWorkoutRunsWithFallback(buildQuery)
       .then(({ data, error }) => {
         if (error) {
           authWarn('workout_runs month dates fetch failed', error.message || error);
@@ -965,6 +1213,13 @@ export const createSupabaseAdapter = (options = {}) => {
     setSpecialPlan,
     followUser,
     unfollowUser,
+    requestFollow,
+    cancelFollowRequest,
+    respondFollowRequest,
+    getFollowState,
+    listFollowRequests,
+    searchAccounts,
+    getFollowCounts,
     getFollowing,
     getFollowers,
     listVisibleWorkouts,

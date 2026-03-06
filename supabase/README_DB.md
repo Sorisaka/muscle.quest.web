@@ -78,3 +78,126 @@ select set_config('request.jwt.claim.sub', '<viewer>', true);
 select * from public.get_timeline('global', 50, null);
 select * from public.get_timeline('following', 50, null);
 ```
+
+## Phase2: フォロー / フォローリクエスト適用手順
+
+### 追加ファイル
+- migration: `supabase/migrations/20260306_0006_phase2_follow_requests.sql`
+- 手動SQL: `supabase/sql/013_phase2_follow_requests.sql`
+- 検証SQL: `supabase/sql/014_phase2_follow_requests_verification.sql`
+
+### 実行順
+1. `supabase db push`（migration適用）
+2. 既存環境へ手動反映したい場合は SQL Editor で `013_phase2_follow_requests.sql` を実行
+3. `014_phase2_follow_requests_verification.sql` で制約/ポリシー/関数を確認
+
+### 含まれるDB変更
+- `profiles` に `account_visibility` / `icon_border` / `icon_background` / `icon_center_object` を追加
+- `follows` の自己フォロー禁止制約を補強
+- `follow_requests` テーブル追加（`pending` / `accepted` / `rejected` / `cancelled`）
+- RLS再設計
+  - profiles: 本人 or public or 承認済みフォロワー
+  - follows: 本人と、閲覧許可された対象アカウントの一覧取得
+  - follow_requests: 送受信者のみ閲覧、送信者のみ作成、送受信者ごとの更新制御
+- RPC追加
+  - `follow_action`（public は即follow / private はrequest）
+  - `get_follow_state`
+  - `get_follow_requests`
+  - `cancel_follow_request`
+  - `respond_follow_request`
+
+### テスト観点
+- public アカウントへの follow_action が即フォロー成立する
+- private アカウントへの follow_action が pending request を作成する
+- target 側の respond_follow_request(approve) で follows へ反映される
+- respond_follow_request(reject) でフォロー不成立のまま request 状態が更新される
+- requester 側の cancel_follow_request が pending request を取り下げる
+- unfollow（`follows` delete）が成立する
+- private アカウントは UI で表示名末尾に `🔒` を付与する
+
+## Phase4: アイコン設定列・制約
+
+### 追加ファイル
+- migration: `supabase/migrations/20260306_0007_phase4_icon_settings.sql`
+- 手動SQL: `supabase/sql/015_phase4_icon_settings.sql`
+
+### 実行順（既存環境）
+1. `013_phase2_follow_requests.sql`
+2. `015_phase4_icon_settings.sql`
+3. `014_phase2_follow_requests_verification.sql`（follow系確認）
+4. 必要なら下記追加確認
+   - `select icon_border, icon_background, icon_center_object from public.profiles limit 5;`
+   - `select conname from pg_constraint where conname like 'profiles_icon_%';`
+
+### 仕様
+- `profiles.icon_border`: `ring-slate|ring-emerald|ring-amber|ring-rose`
+- `profiles.icon_background`: `bg-night|bg-ocean|bg-sunset|bg-forest`
+- `profiles.icon_center_object`: `dot|diamond|barbell|bolt`
+- デフォルト値を設定し、既存データは `coalesce` で埋め戻し
+
+
+## Phase1: ランキング / 検索 / フォロー一覧 取得の修正
+
+### 追加ファイル
+- migration: `supabase/migrations/20260306_0008_phase1_ranking_follow_queries.sql`
+- 手動SQL: `supabase/sql/016_phase1_ranking_follow_queries.sql`
+
+### 実行順
+1. `supabase db push`
+2. 既存環境への差分反映は SQL Editor で `016_phase1_ranking_follow_queries.sql` を実行
+
+### 含まれるDB変更
+- RPC追加
+  - `get_leaderboard(p_period, p_limit)`
+  - `search_accounts(p_query, p_limit)`
+  - `get_following_accounts(p_user_id)`
+  - `get_follower_accounts(p_user_id)`
+- インデックス補強
+  - `workout_runs(visibility, published_at desc, user_id)`
+  - `workout_runs(user_id, created_at desc)`
+  - `follows(follower_id, followee_id)`
+  - `follows(followee_id, follower_id)`
+
+### テスト観点
+- ranking が `public / self / following-private` のみを返す
+- search_accounts が表示名・公開範囲・アイコン構成を返す
+- following/followers がプロフィール情報付きで取得できる
+
+
+## Phase3: body_metrics の空レコード禁止
+
+### 追加ファイル
+- migration: `supabase/migrations/20260306_0009_phase3_body_metrics_non_empty.sql`
+- 手動SQL: `supabase/sql/017_phase3_body_metrics_non_empty.sql`
+
+### 仕様
+- `weight_kg` か `body_fat_pct` のどちらかは必須（両方 null は不可）。
+- 制約名: `body_metrics_not_both_null`
+- `(user_id, date)` 主キーの upsert モデルは維持。
+
+
+## Phase4: メニュー設定UI接続（DB追加なし）
+
+- `weekly_plans` / `special_plans` は既存 foundation migration で作成済みのため、今回の UI 接続で新規 SQL は不要です。
+- 未適用環境ではまず `supabase/migrations/20260305_0001_phase0_3_foundation.sql` を含む migration を適用してください。
+
+## 最終統合: 推奨 migration 適用順（Phase 1-6）
+
+CLI (`supabase db push`) を使う場合はタイムスタンプ順で自動適用されます。手動で順序確認する場合は以下を基準にしてください。
+
+1. `supabase/migrations/20260305_0001_phase0_3_foundation.sql`
+2. `supabase/migrations/20260306_0006_phase2_follow_requests.sql`
+3. `supabase/migrations/20260306_0007_phase4_icon_settings.sql`
+4. `supabase/migrations/20260306_0008_phase1_ranking_follow_queries.sql`
+5. `supabase/migrations/20260306_0009_phase3_body_metrics_non_empty.sql`
+
+### 手動 SQL（既存環境へ差分反映）の順序
+1. `supabase/sql/013_phase2_follow_requests.sql`
+2. `supabase/sql/015_phase4_icon_settings.sql`
+3. `supabase/sql/016_phase1_ranking_follow_queries.sql`
+4. `supabase/sql/017_phase3_body_metrics_non_empty.sql`
+5. 必要に応じて `supabase/sql/014_phase2_follow_requests_verification.sql`
+
+### 注意
+- SQL は README 記載だけでなく、必ず `supabase/sql/*.sql` 実ファイルを正とすること。
+- 既存データ保護のため、制約追加時は既存値を確認してから適用すること。

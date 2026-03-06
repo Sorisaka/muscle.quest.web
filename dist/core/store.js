@@ -2,9 +2,12 @@ import { trainingConfig } from '../data/trainingConfig.js';
 import { createPersistence } from '../data/persistence.js';
 import { calculateCalories, calculatePoints } from './points.js';
 import { aggregateCalories, calculateStreak } from './history.js';
+import { decorateResultWithTags } from './exerciseTaxonomy.js';
+import { defaultHistoryFilter } from './historyFilters.js';
 
 const STORAGE_KEY = 'musclequest:settings';
 const TODO_STATE_KEY = 'musclequest:todoState';
+const HISTORY_FILTER_KEY = 'musclequest:historyFilter';
 
 const defaultSettings = {
   language: 'en',
@@ -40,6 +43,23 @@ const readTodoState = () => {
 
 const writeTodoState = (value) => {
   localStorage.setItem(TODO_STATE_KEY, JSON.stringify(value || {}));
+};
+
+const readHistoryFilter = () => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(HISTORY_FILTER_KEY) || 'null');
+    const muscles = Array.isArray(parsed?.muscles)
+      ? parsed.muscles.filter((entry) => typeof entry === 'string')
+      : [];
+    const category = typeof parsed?.category === 'string' ? parsed.category : defaultHistoryFilter.category;
+    return { category, muscles };
+  } catch (error) {
+    return { ...defaultHistoryFilter };
+  }
+};
+
+const writeHistoryFilter = (value) => {
+  localStorage.setItem(HISTORY_FILTER_KEY, JSON.stringify(value || defaultHistoryFilter));
 };
 
 const readSettings = () => {
@@ -91,6 +111,7 @@ export const createStore = (driver = 'supabase') => {
   let weeklyPlan = {};
   let specialPlans = {};
   let todoState = readTodoState();
+  let historyFilter = readHistoryFilter();
   let workoutDatesMonthCache = new Map();
   let timeline = {
     scope: 'following',
@@ -278,14 +299,45 @@ export const createStore = (driver = 'supabase') => {
 
   const getLastPlan = (questId, difficulty) => persistence.getLastPlan(questId, difficulty);
 
+  const getHistoryFilter = () => ({
+    category: historyFilter?.category || defaultHistoryFilter.category,
+    muscles: Array.isArray(historyFilter?.muscles) ? historyFilter.muscles.slice() : [],
+  });
+
+  const setHistoryFilter = (nextFilter = defaultHistoryFilter) => {
+    const safeFilter = {
+      category: typeof nextFilter?.category === 'string' ? nextFilter.category : defaultHistoryFilter.category,
+      muscles: Array.isArray(nextFilter?.muscles)
+        ? nextFilter.muscles.filter((entry) => typeof entry === 'string')
+        : [],
+    };
+    historyFilter = safeFilter;
+    writeHistoryFilter(safeFilter);
+    return getHistoryFilter();
+  };
+
   const getProfile = () => profile;
+
+
+  const refreshProfile = () => {
+    const result = persistence.loadProfile();
+    const sync = resolveMaybeAsync(result, applyProfile);
+    if (sync) applyProfile(sync);
+    return sync || profile;
+  };
+
+  const refreshSocialGraph = () => {
+    notifyProfile();
+  };
 
   const setProfileName = (name) => {
     const result = persistence.updateDisplayName(name);
     const nextProfile = resolveMaybeAsync(result, applyProfile);
     if (nextProfile) {
       applyProfile(nextProfile);
+      refreshSocialGraph();
     }
+    if (!nextProfile) refreshProfile();
     return nextProfile || profile;
   };
 
@@ -296,16 +348,20 @@ export const createStore = (driver = 'supabase') => {
     const nextProfile = resolveMaybeAsync(result, applyProfile);
     if (nextProfile) {
       applyProfile(nextProfile);
+      refreshSocialGraph();
       return nextProfile;
     }
+    refreshProfile();
+    refreshSocialGraph();
     return result || mergedProfile;
   };
 
   const recordResult = (result) => {
-    const calorieResult = calculateCalories(result, profile);
-    const legacyPoints = calculatePoints(result, profile);
+    const taggedResult = decorateResultWithTags(result);
+    const calorieResult = calculateCalories(taggedResult, profile);
+    const legacyPoints = calculatePoints(taggedResult, profile);
     const enriched = {
-      ...result,
+      ...taggedResult,
       calories: calorieResult.total,
       breakdown: calorieResult.breakdown,
       points: legacyPoints.total,
@@ -410,6 +466,11 @@ export const createStore = (driver = 'supabase') => {
 
   const upsertBodyMetric = (dateKey, metric = {}) => {
     if (!dateKey) return null;
+    const weight = metric?.weight_kg ?? metric?.weightKg ?? null;
+    const bodyFat = metric?.body_fat_pct ?? metric?.bodyFatPct ?? null;
+    if (weight == null && bodyFat == null) {
+      return { ok: false, code: 'BODY_METRIC_EMPTY_NOT_ALLOWED' };
+    }
     const userId = resolveCurrentUserId();
     const payload = { date: dateKey, ...(metric || {}) };
     clearWorkoutDatesMonthCache();
@@ -462,9 +523,75 @@ export const createStore = (driver = 'supabase') => {
     });
   };
 
-  const followUser = (followerId, followeeId) => persistence.followUser(followerId, followeeId);
+  const followUser = (followerId, followeeId) => {
+    const result = persistence.followUser(followerId, followeeId);
+    const sync = resolveMaybeAsync(result, (value) => {
+      refreshProfile();
+      refreshSocialGraph();
+      return value;
+    });
+    if (sync) {
+      refreshProfile();
+      refreshSocialGraph();
+    }
+    return sync || result;
+  };
 
-  const unfollowUser = (followerId, followeeId) => persistence.unfollowUser(followerId, followeeId);
+  const unfollowUser = (followerId, followeeId) => {
+    const result = persistence.unfollowUser(followerId, followeeId);
+    const sync = resolveMaybeAsync(result, (value) => {
+      refreshProfile();
+      refreshSocialGraph();
+      return value;
+    });
+    if (sync) {
+      refreshProfile();
+      refreshSocialGraph();
+    }
+    return sync || result;
+  };
+
+  const requestFollow = (requesterId, targetId) => {
+    const result = persistence.requestFollow(requesterId, targetId);
+    const sync = resolveMaybeAsync(result, (value) => {
+      refreshSocialGraph();
+      return value;
+    });
+    if (sync) refreshSocialGraph();
+    return sync || result;
+  };
+
+  const cancelFollowRequest = (requesterId, targetId) => {
+    const result = persistence.cancelFollowRequest(requesterId, targetId);
+    const sync = resolveMaybeAsync(result, (value) => {
+      refreshSocialGraph();
+      return value;
+    });
+    if (sync) refreshSocialGraph();
+    return sync || result;
+  };
+
+  const respondFollowRequest = (targetId, requesterId, action) => {
+    const result = persistence.respondFollowRequest(targetId, requesterId, action);
+    const sync = resolveMaybeAsync(result, (value) => {
+      refreshProfile();
+      refreshSocialGraph();
+      return value;
+    });
+    if (sync) {
+      refreshProfile();
+      refreshSocialGraph();
+    }
+    return sync || result;
+  };
+
+  const getFollowState = (viewerId, targetId) => persistence.getFollowState(viewerId, targetId);
+
+  const listFollowRequests = (userId, direction = 'incoming') => persistence.listFollowRequests(userId, direction);
+
+  const searchAccounts = (query = '', viewerId = null, limit = 20) => persistence.searchAccounts(query, viewerId, limit);
+
+  const getFollowCounts = (userId) => persistence.getFollowCounts(userId);
 
   const getFollowing = (userId) => persistence.getFollowing(userId);
 
@@ -594,6 +721,8 @@ export const createStore = (driver = 'supabase') => {
     subscribe: subscribeSettings,
     setRunPlan,
     getRunPlan,
+    getHistoryFilter,
+    setHistoryFilter,
     rememberPlan,
     rememberTimerConfig,
     getLastPlan,
@@ -615,6 +744,13 @@ export const createStore = (driver = 'supabase') => {
     setTodoDone,
     followUser,
     unfollowUser,
+    requestFollow,
+    cancelFollowRequest,
+    respondFollowRequest,
+    getFollowState,
+    listFollowRequests,
+    searchAccounts,
+    getFollowCounts,
     getFollowing,
     getFollowers,
     listVisibleWorkouts,
