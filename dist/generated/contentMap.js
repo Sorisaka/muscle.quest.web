@@ -4,7 +4,8 @@ export const quests = [
   {
     "id": "w-001",
     "tier": "beginner",
-    "title": "ウォーキングの記録",
+    "category": "cardio",
+    "title": "ウォーキング",
     "description": "ウォーキングの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -35,7 +36,8 @@ export const quests = [
   {
     "id": "w-002",
     "tier": "beginner",
-    "title": "ジョギングの記録",
+    "category": "cardio",
+    "title": "ジョギング",
     "description": "ジョギングの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -66,7 +68,8 @@ export const quests = [
   {
     "id": "w-003",
     "tier": "advanced",
-    "title": "ランニングの記録",
+    "category": "cardio",
+    "title": "ランニング",
     "description": "ランニングの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 4,
     "exercises": [
@@ -97,7 +100,8 @@ export const quests = [
   {
     "id": "w-004",
     "tier": "beginner",
-    "title": "サイクリングの記録",
+    "category": "cardio",
+    "title": "サイクリング",
     "description": "サイクリングの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -128,7 +132,8 @@ export const quests = [
   {
     "id": "w-005",
     "tier": "beginner",
-    "title": "エアロビクスの記録",
+    "category": "cardio",
+    "title": "エアロビクス",
     "description": "エアロビクスの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -159,7 +164,8 @@ export const quests = [
   {
     "id": "w-006",
     "tier": "beginner",
-    "title": "ストレッチの記録",
+    "category": "cardio",
+    "title": "ストレッチ",
     "description": "ストレッチの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -190,7 +196,8 @@ export const quests = [
   {
     "id": "w-007",
     "tier": "beginner",
-    "title": "サッカーの記録",
+    "category": "cardio",
+    "title": "サッカー",
     "description": "サッカーの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -221,7 +228,8 @@ export const quests = [
   {
     "id": "w-008",
     "tier": "beginner",
-    "title": "バスケットボールの記録",
+    "category": "cardio",
+    "title": "バスケットボール",
     "description": "バスケットボールの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -252,7 +260,8 @@ export const quests = [
   {
     "id": "w-009",
     "tier": "beginner",
-    "title": "テニスの記録",
+    "category": "cardio",
+    "title": "テニス",
     "description": "テニスの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -283,7 +292,8 @@ export const quests = [
   {
     "id": "w-010",
     "tier": "beginner",
-    "title": "水泳の記録",
+    "category": "cardio",
+    "title": "水泳",
     "description": "水泳の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -314,7 +324,8 @@ export const quests = [
   {
     "id": "w-011",
     "tier": "beginner",
-    "title": "バドミントンの記録",
+    "category": "cardio",
+    "title": "バドミントン",
     "description": "バドミントンの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -345,7 +356,8 @@ export const quests = [
   {
     "id": "w-012",
     "tier": "beginner",
-    "title": "卓球の記録",
+    "category": "cardio",
+    "title": "卓球",
     "description": "卓球の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -376,7 +388,8 @@ export const quests = [
   {
     "id": "w-013",
     "tier": "beginner",
-    "title": "腕立て伏せの記録",
+    "category": "bodyweight",
+    "title": "腕立て伏せ",
     "description": "腕立て伏せの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -407,7 +420,8 @@ export const quests = [
   {
     "id": "w-014",
     "tier": "beginner",
-    "title": "腕立て伏せ（膝付き）の記録",
+    "category": "bodyweight",
+    "title": "腕立て伏せ（膝付き）",
     "description": "腕立て伏せ（膝付き）の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -438,7 +452,8 @@ export const quests = [
   {
     "id": "w-015",
     "tier": "beginner",
-    "title": "腹筋の記録",
+    "category": "bodyweight",
+    "title": "腹筋",
     "description": "腹筋の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -469,7 +484,8 @@ export const quests = [
   {
     "id": "w-016",
     "tier": "beginner",
-    "title": "V字腹筋の記録",
+    "category": "bodyweight",
+    "title": "V字腹筋",
     "description": "V字腹筋の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -500,7 +516,8 @@ export const quests = [
   {
     "id": "w-017",
     "tier": "beginner",
-    "title": "アブドミナルクランチの記録",
+    "category": "bodyweight",
+    "title": "アブドミナルクランチ",
     "description": "アブドミナルクランチの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -531,7 +548,8 @@ export const quests = [
   {
     "id": "w-018",
     "tier": "beginner",
-    "title": "サイドクランチの記録",
+    "category": "bodyweight",
+    "title": "サイドクランチ",
     "description": "サイドクランチの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -562,7 +580,8 @@ export const quests = [
   {
     "id": "w-019",
     "tier": "beginner",
-    "title": "ツイストクランチの記録",
+    "category": "bodyweight",
+    "title": "ツイストクランチ",
     "description": "ツイストクランチの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -593,7 +612,8 @@ export const quests = [
   {
     "id": "w-020",
     "tier": "beginner",
-    "title": "レッグレイズの記録",
+    "category": "bodyweight",
+    "title": "レッグレイズ",
     "description": "レッグレイズの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -624,7 +644,8 @@ export const quests = [
   {
     "id": "w-021",
     "tier": "beginner",
-    "title": "アブローラーの記録",
+    "category": "bodyweight",
+    "title": "アブローラー",
     "description": "アブローラーの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -655,7 +676,8 @@ export const quests = [
   {
     "id": "w-022",
     "tier": "beginner",
-    "title": "デクラインシットアップの記録",
+    "category": "bodyweight",
+    "title": "デクラインシットアップ",
     "description": "デクラインシットアップの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -686,7 +708,8 @@ export const quests = [
   {
     "id": "w-023",
     "tier": "beginner",
-    "title": "スクワットの記録",
+    "category": "bodyweight",
+    "title": "スクワット",
     "description": "スクワットの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -717,7 +740,8 @@ export const quests = [
   {
     "id": "w-024",
     "tier": "beginner",
-    "title": "ジャンプスクワットの記録",
+    "category": "bodyweight",
+    "title": "ジャンプスクワット",
     "description": "ジャンプスクワットの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -748,7 +772,8 @@ export const quests = [
   {
     "id": "w-025",
     "tier": "beginner",
-    "title": "懸垂の記録",
+    "category": "bodyweight",
+    "title": "懸垂",
     "description": "懸垂の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -779,7 +804,8 @@ export const quests = [
   {
     "id": "w-026",
     "tier": "beginner",
-    "title": "プランクの記録",
+    "category": "bodyweight",
+    "title": "プランク",
     "description": "プランクの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -810,7 +836,8 @@ export const quests = [
   {
     "id": "w-027",
     "tier": "beginner",
-    "title": "サイドプランクの記録",
+    "category": "bodyweight",
+    "title": "サイドプランク",
     "description": "サイドプランクの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -841,7 +868,8 @@ export const quests = [
   {
     "id": "w-028",
     "tier": "beginner",
-    "title": "倒立維持（補助あり）の記録",
+    "category": "bodyweight",
+    "title": "倒立維持（補助あり）",
     "description": "倒立維持（補助あり）の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
     "exercises": [
@@ -872,7 +900,8 @@ export const quests = [
   {
     "id": "w-029",
     "tier": "advanced",
-    "title": "倒立維持（補助なし）の記録",
+    "category": "bodyweight",
+    "title": "倒立維持（補助なし）",
     "description": "倒立維持（補助なし）の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 4,
     "exercises": [
@@ -903,7 +932,8 @@ export const quests = [
   {
     "id": "w-030",
     "tier": "advanced",
-    "title": "倒立押上の記録",
+    "category": "bodyweight",
+    "title": "倒立押上",
     "description": "倒立押上の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 4,
     "exercises": [
@@ -934,7 +964,8 @@ export const quests = [
   {
     "id": "w-031",
     "tier": "intermediate",
-    "title": "シュラッグの記録",
+    "category": "weights",
+    "title": "シュラッグ",
     "description": "シュラッグの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -965,7 +996,8 @@ export const quests = [
   {
     "id": "w-032",
     "tier": "intermediate",
-    "title": "ベントオーバーローの記録",
+    "category": "weights",
+    "title": "ベントオーバーロー",
     "description": "ベントオーバーローの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -996,7 +1028,8 @@ export const quests = [
   {
     "id": "w-033",
     "tier": "intermediate",
-    "title": "スクワットの記録",
+    "category": "weights",
+    "title": "スクワット",
     "description": "スクワットの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1027,7 +1060,8 @@ export const quests = [
   {
     "id": "w-034",
     "tier": "intermediate",
-    "title": "ランジの記録",
+    "category": "weights",
+    "title": "ランジ",
     "description": "ランジの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1058,7 +1092,8 @@ export const quests = [
   {
     "id": "w-035",
     "tier": "advanced",
-    "title": "デッドリフトの記録",
+    "category": "weights",
+    "title": "デッドリフト",
     "description": "デッドリフトの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 4,
     "exercises": [
@@ -1089,7 +1124,8 @@ export const quests = [
   {
     "id": "w-036",
     "tier": "intermediate",
-    "title": "カーフレイズの記録",
+    "category": "weights",
+    "title": "カーフレイズ",
     "description": "カーフレイズの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1120,7 +1156,8 @@ export const quests = [
   {
     "id": "w-037",
     "tier": "intermediate",
-    "title": "ミリタリープレスの記録",
+    "category": "weights",
+    "title": "ミリタリープレス",
     "description": "ミリタリープレスの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1151,7 +1188,8 @@ export const quests = [
   {
     "id": "w-038",
     "tier": "intermediate",
-    "title": "ショルダープレスの記録",
+    "category": "weights",
+    "title": "ショルダープレス",
     "description": "ショルダープレスの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1182,7 +1220,8 @@ export const quests = [
   {
     "id": "w-039",
     "tier": "intermediate",
-    "title": "サイドレイズの記録",
+    "category": "weights",
+    "title": "サイドレイズ",
     "description": "サイドレイズの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1213,7 +1252,8 @@ export const quests = [
   {
     "id": "w-040",
     "tier": "intermediate",
-    "title": "フロントレイズの記録",
+    "category": "weights",
+    "title": "フロントレイズ",
     "description": "フロントレイズの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1244,7 +1284,8 @@ export const quests = [
   {
     "id": "w-041",
     "tier": "intermediate",
-    "title": "ラタラルレイズの記録",
+    "category": "weights",
+    "title": "ラタラルレイズ",
     "description": "ラタラルレイズの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1275,7 +1316,8 @@ export const quests = [
   {
     "id": "w-042",
     "tier": "intermediate",
-    "title": "カールの記録",
+    "category": "weights",
+    "title": "カール",
     "description": "カールの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1306,7 +1348,8 @@ export const quests = [
   {
     "id": "w-043",
     "tier": "intermediate",
-    "title": "プリーチャーカールの記録",
+    "category": "weights",
+    "title": "プリーチャーカール",
     "description": "プリーチャーカールの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1337,7 +1380,8 @@ export const quests = [
   {
     "id": "w-044",
     "tier": "intermediate",
-    "title": "リストカールの記録",
+    "category": "weights",
+    "title": "リストカール",
     "description": "リストカールの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1368,7 +1412,8 @@ export const quests = [
   {
     "id": "w-045",
     "tier": "intermediate",
-    "title": "リバースリストカールの記録",
+    "category": "weights",
+    "title": "リバースリストカール",
     "description": "リバースリストカールの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1399,7 +1444,8 @@ export const quests = [
   {
     "id": "w-046",
     "tier": "intermediate",
-    "title": "ベンチプレスの記録",
+    "category": "weights",
+    "title": "ベンチプレス",
     "description": "ベンチプレスの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1430,7 +1476,8 @@ export const quests = [
   {
     "id": "w-047",
     "tier": "intermediate",
-    "title": "インクラインベンチプレスの記録",
+    "category": "weights",
+    "title": "インクラインベンチプレス",
     "description": "インクラインベンチプレスの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1461,7 +1508,8 @@ export const quests = [
   {
     "id": "w-048",
     "tier": "intermediate",
-    "title": "フライの記録",
+    "category": "weights",
+    "title": "フライ",
     "description": "フライの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1492,7 +1540,8 @@ export const quests = [
   {
     "id": "w-049",
     "tier": "intermediate",
-    "title": "アブドミナルクランチの記録",
+    "category": "weights",
+    "title": "アブドミナルクランチ",
     "description": "アブドミナルクランチの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1523,7 +1572,8 @@ export const quests = [
   {
     "id": "w-050",
     "tier": "intermediate",
-    "title": "ケーブルウッドチョップの記録",
+    "category": "weights",
+    "title": "ケーブルウッドチョップ",
     "description": "ケーブルウッドチョップの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1554,7 +1604,8 @@ export const quests = [
   {
     "id": "w-051",
     "tier": "intermediate",
-    "title": "ケーブルクランチの記録",
+    "category": "weights",
+    "title": "ケーブルクランチ",
     "description": "ケーブルクランチの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1585,7 +1636,8 @@ export const quests = [
   {
     "id": "w-052",
     "tier": "intermediate",
-    "title": "ケーブルサイドベントの記録",
+    "category": "weights",
+    "title": "ケーブルサイドベント",
     "description": "ケーブルサイドベントの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1616,7 +1668,8 @@ export const quests = [
   {
     "id": "w-053",
     "tier": "intermediate",
-    "title": "ロータリートルソーの記録",
+    "category": "weights",
+    "title": "ロータリートルソー",
     "description": "ロータリートルソーの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1647,7 +1700,8 @@ export const quests = [
   {
     "id": "w-054",
     "tier": "intermediate",
-    "title": "トライセップスエクステンションの記録",
+    "category": "weights",
+    "title": "トライセップスエクステンション",
     "description": "トライセップスエクステンションの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
     "exercises": [
@@ -1900,6 +1954,10 @@ export const questIndex = new Map(quests.map((quest) => [quest.id, quest]));
 
 export function findQuestById(id) {
   return questIndex.get(id);
+}
+
+export function listQuestsByCategory(category) {
+  return quests.filter((quest) => quest.category === category);
 }
 
 export function listQuestsByTier(tier) {

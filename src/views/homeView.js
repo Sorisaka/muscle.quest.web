@@ -1,6 +1,6 @@
 import { quests } from '../core/content.js';
 
-const createCategoryCard = (tier, label, summary, navigate, playSfx) => {
+const createCategoryCard = (category, label, summary, navigate, playSfx) => {
   const card = document.createElement('article');
   card.className = 'card tier-card';
 
@@ -16,7 +16,7 @@ const createCategoryCard = (tier, label, summary, navigate, playSfx) => {
   action.textContent = 'ワークアウト一覧へ';
   action.addEventListener('click', () => {
     playSfx('ui:navigate');
-    navigate(`#/workouts/${tier}`);
+    navigate(`#/workouts/${category}`);
   });
 
   card.append(title, description, action);
@@ -35,9 +35,9 @@ export const renderHome = (_params, { navigate, playSfx, store }) => {
   const grid = document.createElement('div');
   grid.className = 'card-grid';
 
-  const cardioCard = createCategoryCard('beginner', '有酸素', '心拍を上げるベースメニュー。', navigate, playSfx);
-  const bodyweightCard = createCategoryCard('intermediate', '自重', '器具なしで全身を鍛える。', navigate, playSfx);
-  const weightsCard = createCategoryCard('advanced', 'ウエイト', '負荷をかけて筋力アップ。', navigate, playSfx);
+  const cardioCard = createCategoryCard('cardio', '有酸素', '心拍を上げるベースメニュー。', navigate, playSfx);
+  const bodyweightCard = createCategoryCard('bodyweight', '自重', '器具なしで全身を鍛える。', navigate, playSfx);
+  const weightsCard = createCategoryCard('weights', 'ウエイト', '負荷をかけて筋力アップ。', navigate, playSfx);
 
   const todoCard = document.createElement('article');
   todoCard.className = 'card stack';
@@ -93,7 +93,7 @@ export const renderHome = (_params, { navigate, playSfx, store }) => {
       const workoutId = findWorkoutIdByExercise(first.exerciseSlug);
       playSfx('ui:navigate');
       if (workoutId) navigate(`#/run/${workoutId}`);
-      else navigate('#/workouts/beginner');
+      else navigate(`#/workouts/${first?.category || 'cardio'}`);
     };
   };
 

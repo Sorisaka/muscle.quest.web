@@ -2,6 +2,7 @@
   {
     "id": "w-001",
     "tier": "beginner",
+    "category": "cardio",
     "title": "ウォーキング",
     "description": "ウォーキングの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -33,6 +34,7 @@
   {
     "id": "w-002",
     "tier": "beginner",
+    "category": "cardio",
     "title": "ジョギング",
     "description": "ジョギングの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -64,6 +66,7 @@
   {
     "id": "w-003",
     "tier": "advanced",
+    "category": "cardio",
     "title": "ランニング",
     "description": "ランニングの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 4,
@@ -95,6 +98,7 @@
   {
     "id": "w-004",
     "tier": "beginner",
+    "category": "cardio",
     "title": "サイクリング",
     "description": "サイクリングの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -126,6 +130,7 @@
   {
     "id": "w-005",
     "tier": "beginner",
+    "category": "cardio",
     "title": "エアロビクス",
     "description": "エアロビクスの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -157,6 +162,7 @@
   {
     "id": "w-006",
     "tier": "beginner",
+    "category": "cardio",
     "title": "ストレッチ",
     "description": "ストレッチの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -188,6 +194,7 @@
   {
     "id": "w-007",
     "tier": "beginner",
+    "category": "cardio",
     "title": "サッカー",
     "description": "サッカーの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -219,6 +226,7 @@
   {
     "id": "w-008",
     "tier": "beginner",
+    "category": "cardio",
     "title": "バスケットボール",
     "description": "バスケットボールの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -250,6 +258,7 @@
   {
     "id": "w-009",
     "tier": "beginner",
+    "category": "cardio",
     "title": "テニス",
     "description": "テニスの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -281,6 +290,7 @@
   {
     "id": "w-010",
     "tier": "beginner",
+    "category": "cardio",
     "title": "水泳",
     "description": "水泳の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -312,6 +322,7 @@
   {
     "id": "w-011",
     "tier": "beginner",
+    "category": "cardio",
     "title": "バドミントン",
     "description": "バドミントンの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -343,6 +354,7 @@
   {
     "id": "w-012",
     "tier": "beginner",
+    "category": "cardio",
     "title": "卓球",
     "description": "卓球の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -374,6 +386,7 @@
   {
     "id": "w-013",
     "tier": "beginner",
+    "category": "bodyweight",
     "title": "腕立て伏せ",
     "description": "腕立て伏せの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -405,6 +418,7 @@
   {
     "id": "w-014",
     "tier": "beginner",
+    "category": "bodyweight",
     "title": "腕立て伏せ（膝付き）",
     "description": "腕立て伏せ（膝付き）の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -436,6 +450,7 @@
   {
     "id": "w-015",
     "tier": "beginner",
+    "category": "bodyweight",
     "title": "腹筋",
     "description": "腹筋の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -467,6 +482,7 @@
   {
     "id": "w-016",
     "tier": "beginner",
+    "category": "bodyweight",
     "title": "V字腹筋",
     "description": "V字腹筋の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -498,6 +514,7 @@
   {
     "id": "w-017",
     "tier": "beginner",
+    "category": "bodyweight",
     "title": "アブドミナルクランチ",
     "description": "アブドミナルクランチの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -529,6 +546,7 @@
   {
     "id": "w-018",
     "tier": "beginner",
+    "category": "bodyweight",
     "title": "サイドクランチ",
     "description": "サイドクランチの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -560,6 +578,7 @@
   {
     "id": "w-019",
     "tier": "beginner",
+    "category": "bodyweight",
     "title": "ツイストクランチ",
     "description": "ツイストクランチの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -591,6 +610,7 @@
   {
     "id": "w-020",
     "tier": "beginner",
+    "category": "bodyweight",
     "title": "レッグレイズ",
     "description": "レッグレイズの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -622,6 +642,7 @@
   {
     "id": "w-021",
     "tier": "beginner",
+    "category": "bodyweight",
     "title": "アブローラー",
     "description": "アブローラーの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -653,6 +674,7 @@
   {
     "id": "w-022",
     "tier": "beginner",
+    "category": "bodyweight",
     "title": "デクラインシットアップ",
     "description": "デクラインシットアップの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -684,6 +706,7 @@
   {
     "id": "w-023",
     "tier": "beginner",
+    "category": "bodyweight",
     "title": "スクワット",
     "description": "スクワットの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -715,6 +738,7 @@
   {
     "id": "w-024",
     "tier": "beginner",
+    "category": "bodyweight",
     "title": "ジャンプスクワット",
     "description": "ジャンプスクワットの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -746,6 +770,7 @@
   {
     "id": "w-025",
     "tier": "beginner",
+    "category": "bodyweight",
     "title": "懸垂",
     "description": "懸垂の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -777,6 +802,7 @@
   {
     "id": "w-026",
     "tier": "beginner",
+    "category": "bodyweight",
     "title": "プランク",
     "description": "プランクの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -808,6 +834,7 @@
   {
     "id": "w-027",
     "tier": "beginner",
+    "category": "bodyweight",
     "title": "サイドプランク",
     "description": "サイドプランクの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -839,6 +866,7 @@
   {
     "id": "w-028",
     "tier": "beginner",
+    "category": "bodyweight",
     "title": "倒立維持（補助あり）",
     "description": "倒立維持（補助あり）の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
@@ -870,6 +898,7 @@
   {
     "id": "w-029",
     "tier": "advanced",
+    "category": "bodyweight",
     "title": "倒立維持（補助なし）",
     "description": "倒立維持（補助なし）の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 4,
@@ -901,6 +930,7 @@
   {
     "id": "w-030",
     "tier": "advanced",
+    "category": "bodyweight",
     "title": "倒立押上",
     "description": "倒立押上の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 4,
@@ -932,6 +962,7 @@
   {
     "id": "w-031",
     "tier": "intermediate",
+    "category": "weights",
     "title": "シュラッグ",
     "description": "シュラッグの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -963,6 +994,7 @@
   {
     "id": "w-032",
     "tier": "intermediate",
+    "category": "weights",
     "title": "ベントオーバーロー",
     "description": "ベントオーバーローの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -994,6 +1026,7 @@
   {
     "id": "w-033",
     "tier": "intermediate",
+    "category": "weights",
     "title": "スクワット",
     "description": "スクワットの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1025,6 +1058,7 @@
   {
     "id": "w-034",
     "tier": "intermediate",
+    "category": "weights",
     "title": "ランジ",
     "description": "ランジの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1056,6 +1090,7 @@
   {
     "id": "w-035",
     "tier": "advanced",
+    "category": "weights",
     "title": "デッドリフト",
     "description": "デッドリフトの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 4,
@@ -1087,6 +1122,7 @@
   {
     "id": "w-036",
     "tier": "intermediate",
+    "category": "weights",
     "title": "カーフレイズ",
     "description": "カーフレイズの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1118,6 +1154,7 @@
   {
     "id": "w-037",
     "tier": "intermediate",
+    "category": "weights",
     "title": "ミリタリープレス",
     "description": "ミリタリープレスの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1149,6 +1186,7 @@
   {
     "id": "w-038",
     "tier": "intermediate",
+    "category": "weights",
     "title": "ショルダープレス",
     "description": "ショルダープレスの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1180,6 +1218,7 @@
   {
     "id": "w-039",
     "tier": "intermediate",
+    "category": "weights",
     "title": "サイドレイズ",
     "description": "サイドレイズの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1211,6 +1250,7 @@
   {
     "id": "w-040",
     "tier": "intermediate",
+    "category": "weights",
     "title": "フロントレイズ",
     "description": "フロントレイズの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1242,6 +1282,7 @@
   {
     "id": "w-041",
     "tier": "intermediate",
+    "category": "weights",
     "title": "ラタラルレイズ",
     "description": "ラタラルレイズの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1273,6 +1314,7 @@
   {
     "id": "w-042",
     "tier": "intermediate",
+    "category": "weights",
     "title": "カール",
     "description": "カールの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1304,6 +1346,7 @@
   {
     "id": "w-043",
     "tier": "intermediate",
+    "category": "weights",
     "title": "プリーチャーカール",
     "description": "プリーチャーカールの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1335,6 +1378,7 @@
   {
     "id": "w-044",
     "tier": "intermediate",
+    "category": "weights",
     "title": "リストカール",
     "description": "リストカールの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1366,6 +1410,7 @@
   {
     "id": "w-045",
     "tier": "intermediate",
+    "category": "weights",
     "title": "リバースリストカール",
     "description": "リバースリストカールの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1397,6 +1442,7 @@
   {
     "id": "w-046",
     "tier": "intermediate",
+    "category": "weights",
     "title": "ベンチプレス",
     "description": "ベンチプレスの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1428,6 +1474,7 @@
   {
     "id": "w-047",
     "tier": "intermediate",
+    "category": "weights",
     "title": "インクラインベンチプレス",
     "description": "インクラインベンチプレスの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1459,6 +1506,7 @@
   {
     "id": "w-048",
     "tier": "intermediate",
+    "category": "weights",
     "title": "フライ",
     "description": "フライの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1490,6 +1538,7 @@
   {
     "id": "w-049",
     "tier": "intermediate",
+    "category": "weights",
     "title": "アブドミナルクランチ",
     "description": "アブドミナルクランチの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1521,6 +1570,7 @@
   {
     "id": "w-050",
     "tier": "intermediate",
+    "category": "weights",
     "title": "ケーブルウッドチョップ",
     "description": "ケーブルウッドチョップの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1552,6 +1602,7 @@
   {
     "id": "w-051",
     "tier": "intermediate",
+    "category": "weights",
     "title": "ケーブルクランチ",
     "description": "ケーブルクランチの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1583,6 +1634,7 @@
   {
     "id": "w-052",
     "tier": "intermediate",
+    "category": "weights",
     "title": "ケーブルサイドベント",
     "description": "ケーブルサイドベントの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1614,6 +1666,7 @@
   {
     "id": "w-053",
     "tier": "intermediate",
+    "category": "weights",
     "title": "ロータリートルソー",
     "description": "ロータリートルソーの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
@@ -1645,6 +1698,7 @@
   {
     "id": "w-054",
     "tier": "intermediate",
+    "category": "weights",
     "title": "トライセップスエクステンション",
     "description": "トライセップスエクステンションの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 3,
