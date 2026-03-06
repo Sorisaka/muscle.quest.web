@@ -1,6 +1,8 @@
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 const DAY_MS = 86400000;
+const DEFAULT_WIDTH = 320;
+const MIN_LABEL_GAP = 56;
 
 const toDayTimestamp = (value) => {
   if (!value) return null;
@@ -10,18 +12,16 @@ const toDayTimestamp = (value) => {
   return parsed.getTime();
 };
 
-const getXAxisStep = (visibleDays) => {
-  if (visibleDays <= 7) return 1;
-  if (visibleDays <= 30) return 7;
-  if (visibleDays <= 90) return 14;
-  return 30;
+const getNiceTickStep = (minimumStep) => {
+  const candidates = [1, 2, 3, 5, 7, 10, 14, 15, 20, 30, 45, 60, 90];
+  return candidates.find((candidate) => candidate >= minimumStep) || Math.max(1, minimumStep);
 };
 
-const getDayWidth = (visibleDays) => {
-  if (visibleDays <= 7) return 42;
-  if (visibleDays <= 30) return 26;
-  if (visibleDays <= 90) return 16;
-  return 10;
+const getXAxisStep = ({ visibleDays, plotWidth }) => {
+  const safePlotWidth = Math.max(1, plotWidth);
+  const maxLabelCount = Math.max(2, Math.floor(safePlotWidth / MIN_LABEL_GAP));
+  const minimumStep = Math.max(1, Math.ceil(visibleDays / maxLabelCount));
+  return getNiceTickStep(minimumStep);
 };
 
 const getSafeRange = (values = []) => {
@@ -57,147 +57,142 @@ export const createSparkline = ({
   wrapper.className = 'sparkline';
   wrapper.style.setProperty('--sparkline-height', `${height}px`);
 
-  const safePoints = (Array.isArray(points) ? points : []).map((entry) => ({
-    xTs: toDayTimestamp(entry?.x),
-    y: Number(entry?.y),
-  })).filter((entry) => Number.isFinite(entry.y) && Number.isFinite(entry.xTs));
-
-  if (safePoints.length <= 1) {
-    const empty = document.createElement('p');
-    empty.className = 'muted';
-    empty.textContent = `${label || 'グラフ'}: データ不足`;
-    wrapper.append(empty);
-    return wrapper;
-  }
-
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('role', 'img');
-  svg.setAttribute('aria-label', label || 'sparkline chart');
-
-  const axis = {
-    top: 12,
-    right: 14,
-    bottom: 30,
-    left: 56,
-  };
   const viewport = document.createElement('div');
   viewport.className = 'sparkline__viewport';
 
   const content = document.createElement('div');
   content.className = 'sparkline__content';
 
-  const rangeDays = Math.max(1, visibleDays);
-  const startTs = toDayTimestamp(Date.now() - rangeDays * DAY_MS);
-  const endTs = toDayTimestamp(Date.now());
+  const safePoints = (Array.isArray(points) ? points : []).map((entry) => ({
+    xTs: toDayTimestamp(entry?.x),
+    y: Number(entry?.y),
+  })).filter((entry) => Number.isFinite(entry.y) && Number.isFinite(entry.xTs));
 
+  const rangeDays = Math.max(1, visibleDays);
+  const endTs = toDayTimestamp(Date.now());
+  const startTs = endTs - rangeDays * DAY_MS;
   const visiblePoints = safePoints.filter((point) => point.xTs >= startTs && point.xTs <= endTs);
-  if (visiblePoints.length <= 1) {
+
+  const renderEmpty = () => {
+    content.innerHTML = '';
     const empty = document.createElement('p');
     empty.className = 'muted';
     empty.textContent = `${label || 'グラフ'}: データ不足`;
-    wrapper.append(empty);
-    return wrapper;
-  }
-
-  const targetPlotWidth = rangeDays * getDayWidth(visibleDays);
-  const baseWidth = 320;
-  const chartWidth = Math.max(baseWidth, axis.left + axis.right + targetPlotWidth);
-  const plotWidth = chartWidth - axis.left - axis.right;
-  const plotHeight = height - axis.top - axis.bottom;
-  svg.setAttribute('viewBox', `0 0 ${chartWidth} ${height}`);
-  svg.setAttribute('width', String(chartWidth));
-  svg.setAttribute('height', String(height));
-  content.style.width = `${chartWidth}px`;
-
-  const { min, max } = getSafeRange(visiblePoints.map((p) => p.y));
-  const xTickStep = getXAxisStep(visibleDays);
-
-  const toX = (timestamp) => {
-    const dayAgo = (endTs - timestamp) / DAY_MS;
-    return axis.left + (1 - clamp(dayAgo / rangeDays, 0, 1)) * plotWidth;
+    content.append(empty);
   };
-  const toY = (value) => axis.top + (1 - clamp((value - min) / (max - min), 0, 1)) * plotHeight;
 
-  const xTicks = [];
-  for (let dayAgo = 0; dayAgo <= rangeDays; dayAgo += xTickStep) xTicks.push(dayAgo);
-  if (xTicks[xTicks.length - 1] !== rangeDays) xTicks.push(rangeDays);
+  const renderChart = (viewportWidth) => {
+    content.innerHTML = '';
+    if (visiblePoints.length <= 1) {
+      renderEmpty();
+      return;
+    }
 
-  xTicks.forEach((dayAgo) => {
-    const x = axis.left + (1 - dayAgo / rangeDays) * plotWidth;
-    const grid = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    grid.setAttribute('x1', String(x));
-    grid.setAttribute('x2', String(x));
-    grid.setAttribute('y1', String(axis.top));
-    grid.setAttribute('y2', String(axis.top + plotHeight));
-    grid.setAttribute('stroke', 'rgba(148, 163, 184, 0.25)');
-    grid.setAttribute('stroke-width', '0.7');
-    svg.append(grid);
+    const chartWidth = Math.max(DEFAULT_WIDTH, Math.floor(viewportWidth || DEFAULT_WIDTH));
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', label || 'sparkline chart');
+    svg.setAttribute('viewBox', `0 0 ${chartWidth} ${height}`);
+    svg.setAttribute('width', String(chartWidth));
+    svg.setAttribute('height', String(height));
 
-    appendText({
-      svg,
-      x,
-      y: axis.top + plotHeight + 12,
-      text: `${dayAgo}日前`,
+    const axis = {
+      top: 12,
+      right: 14,
+      bottom: 30,
+      left: 56,
+    };
+
+    const plotWidth = Math.max(1, chartWidth - axis.left - axis.right);
+    const plotHeight = Math.max(1, height - axis.top - axis.bottom);
+
+    const { min, max } = getSafeRange(visiblePoints.map((p) => p.y));
+    const xTickStep = getXAxisStep({ visibleDays: rangeDays, plotWidth });
+
+    const toX = (timestamp) => {
+      const dayAgo = (endTs - timestamp) / DAY_MS;
+      return axis.left + (1 - clamp(dayAgo / rangeDays, 0, 1)) * plotWidth;
+    };
+    const toY = (value) => axis.top + (1 - clamp((value - min) / (max - min), 0, 1)) * plotHeight;
+
+    const xTicks = [];
+    for (let dayAgo = 0; dayAgo <= rangeDays; dayAgo += xTickStep) xTicks.push(dayAgo);
+    if (xTicks[xTicks.length - 1] !== rangeDays) xTicks.push(rangeDays);
+
+    xTicks.forEach((dayAgo) => {
+      const x = axis.left + (1 - dayAgo / rangeDays) * plotWidth;
+      const grid = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      grid.setAttribute('x1', String(x));
+      grid.setAttribute('x2', String(x));
+      grid.setAttribute('y1', String(axis.top));
+      grid.setAttribute('y2', String(axis.top + plotHeight));
+      grid.setAttribute('stroke', 'rgba(148, 163, 184, 0.25)');
+      grid.setAttribute('stroke-width', '0.7');
+      svg.append(grid);
+
+      appendText({
+        svg,
+        x,
+        y: axis.top + plotHeight + 12,
+        text: `${dayAgo}日前`,
+      });
     });
-  });
 
-  const yTickCount = 5;
-  for (let idx = 0; idx <= yTickCount; idx += 1) {
-    const ratio = idx / yTickCount;
-    const y = axis.top + ratio * plotHeight;
-    const value = max - (max - min) * ratio;
-    const grid = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    grid.setAttribute('x1', String(axis.left));
-    grid.setAttribute('x2', String(axis.left + plotWidth));
-    grid.setAttribute('y1', String(y));
-    grid.setAttribute('y2', String(y));
-    grid.setAttribute('stroke', 'rgba(148, 163, 184, 0.25)');
-    grid.setAttribute('stroke-width', idx === 0 || idx === yTickCount ? '0.9' : '0.7');
-    svg.append(grid);
+    const yTickCount = 5;
+    for (let idx = 0; idx <= yTickCount; idx += 1) {
+      const ratio = idx / yTickCount;
+      const y = axis.top + ratio * plotHeight;
+      const value = max - (max - min) * ratio;
+      const grid = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      grid.setAttribute('x1', String(axis.left));
+      grid.setAttribute('x2', String(axis.left + plotWidth));
+      grid.setAttribute('y1', String(y));
+      grid.setAttribute('y2', String(y));
+      grid.setAttribute('stroke', 'rgba(148, 163, 184, 0.25)');
+      grid.setAttribute('stroke-width', idx === 0 || idx === yTickCount ? '0.9' : '0.7');
+      svg.append(grid);
 
-    appendText({
-      svg,
-      x: axis.left - 4,
-      y: y + 3,
-      text: `${value.toFixed(1)}${yUnit}`,
-      anchor: 'end',
+      appendText({
+        svg,
+        x: axis.left - 4,
+        y: y + 3,
+        text: `${value.toFixed(1)}${yUnit}`,
+        anchor: 'end',
+      });
+    }
+
+    const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    const linePoints = visiblePoints.map((point) => `${toX(point.xTs)},${toY(point.y)}`).join(' ');
+    polyline.setAttribute('points', linePoints);
+    polyline.setAttribute('fill', 'none');
+    polyline.setAttribute('stroke', color);
+    polyline.setAttribute('stroke-width', String(strokeWidth));
+    polyline.setAttribute('stroke-linecap', 'round');
+    polyline.setAttribute('stroke-linejoin', 'round');
+    svg.append(polyline);
+
+    visiblePoints.forEach((point) => {
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('cx', String(toX(point.xTs)));
+      dot.setAttribute('cy', String(toY(point.y)));
+      dot.setAttribute('r', '2.5');
+      dot.setAttribute('fill', color);
+      svg.append(dot);
     });
-  }
 
-  const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-  const linePoints = visiblePoints.map((point) => `${toX(point.xTs)},${toY(point.y)}`).join(' ');
-  polyline.setAttribute('points', linePoints);
-  polyline.setAttribute('fill', 'none');
-  polyline.setAttribute('stroke', color);
-  polyline.setAttribute('stroke-width', String(strokeWidth));
-  polyline.setAttribute('stroke-linecap', 'round');
-  polyline.setAttribute('stroke-linejoin', 'round');
-  svg.append(polyline);
-
-  visiblePoints.forEach((point) => {
-    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    dot.setAttribute('cx', String(toX(point.xTs)));
-    dot.setAttribute('cy', String(toY(point.y)));
-    dot.setAttribute('r', '2.5');
-    dot.setAttribute('fill', color);
-    svg.append(dot);
-  });
-
-  const scrollToLatest = () => {
+    content.append(svg);
     viewport.scrollLeft = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
   };
 
-  content.append(svg);
   viewport.append(content);
   wrapper.append(viewport);
 
   requestAnimationFrame(() => {
-    scrollToLatest();
-    requestAnimationFrame(scrollToLatest);
+    renderChart(viewport.clientWidth);
   });
 
   const resizeObserver = new ResizeObserver(() => {
-    scrollToLatest();
+    renderChart(viewport.clientWidth);
   });
   resizeObserver.observe(viewport);
 

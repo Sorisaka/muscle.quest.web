@@ -155,6 +155,11 @@ section.panel {
 .stack {
   display: grid;
   gap: 0.6rem;
+  min-width: 0;
+}
+
+.stack > * {
+  min-width: 0;
 }
 
 .card-grid {
@@ -606,6 +611,7 @@ section.panel {
 .account-card {
   display: grid;
   gap: 0.65rem;
+  min-width: 0;
 }
 
 .account-card__header {
@@ -785,11 +791,15 @@ section.panel {
 
 .sparkline {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   --sparkline-height: 190px;
 }
 
 .sparkline__viewport {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   height: var(--sparkline-height);
   overflow-x: auto;
   overflow-y: auto;
@@ -800,12 +810,15 @@ section.panel {
 }
 
 .sparkline__content {
-  min-width: 100%;
+  width: 100%;
+  min-width: 0;
   min-height: 100%;
 }
 
 .sparkline svg {
   display: block;
+  width: 100%;
+  max-width: 100%;
 }
 
 
