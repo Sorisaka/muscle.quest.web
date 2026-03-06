@@ -55,6 +55,14 @@ const createMetricEditor = ({
   const error = document.createElement('p');
   error.className = 'muted';
 
+  const setBusy = (busy) => {
+    dateInput.disabled = busy;
+    weightInput.disabled = busy;
+    fatInput.disabled = busy;
+    submitBtn.disabled = busy;
+    cancelBtn.disabled = busy;
+  };
+
   const actions = document.createElement('div');
   actions.className = 'hero__actions';
 
@@ -68,6 +76,10 @@ const createMetricEditor = ({
   cancelBtn.textContent = '閉じる';
 
   submitBtn.addEventListener('click', async () => {
+    if (!dateInput.value) {
+      error.textContent = '日付を入力してください。';
+      return;
+    }
     const weight = weightInput.value === '' ? null : Number(weightInput.value);
     const bodyFat = fatInput.value === '' ? null : Number(fatInput.value);
 
@@ -77,7 +89,14 @@ const createMetricEditor = ({
     }
 
     error.textContent = '';
-    await onSubmit?.({ date: dateInput.value, weight_kg: weight, body_fat_pct: bodyFat });
+    setBusy(true);
+    try {
+      await onSubmit?.({ date: dateInput.value, weight_kg: weight, body_fat_pct: bodyFat });
+    } catch (submitError) {
+      error.textContent = submitError?.message || '保存に失敗しました。';
+    } finally {
+      setBusy(false);
+    }
   });
 
   cancelBtn.addEventListener('click', () => onCancel?.());
@@ -91,7 +110,14 @@ const createMetricEditor = ({
     deleteBtn.textContent = '削除';
     deleteBtn.addEventListener('click', async () => {
       if (!confirm('この計測を削除しますか？')) return;
-      await onDelete?.(dateInput.value);
+      setBusy(true);
+      try {
+        await onDelete?.(dateInput.value);
+      } catch (deleteError) {
+        error.textContent = deleteError?.message || '削除に失敗しました。';
+      } finally {
+        setBusy(false);
+      }
     });
     actions.append(deleteBtn);
   }
@@ -111,6 +137,10 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
 
   let metricsRows = [];
   let rowsByDate = new Map();
+
+  const setAddToggleLabel = () => {
+    addToggle.textContent = addExpanded ? '追加フォームを閉じる' : '計測を追加';
+  };
 
   const refreshMetrics = async () => {
     metricsRows = await Promise.resolve(store.getBodyMetricsRange(null, null)) || [];
@@ -153,6 +183,7 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
 
   const openEdit = (dateKey) => {
     activeDateKey = dateKey;
+    addExpanded = false;
     editTarget = rowsByDate.get(dateKey) || { date: dateKey, weight_kg: null, body_fat_pct: null };
     showTooltipForDate(dateKey);
     renderCharts();
@@ -190,6 +221,8 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
   });
 
   const renderCharts = () => {
+    weightTitle.textContent = `体重 (${activePeriod}日)`;
+    fatTitle.textContent = `体脂肪率 (${activePeriod}日)`;
     weightChart.updateSparkline({
       visibleDays: activePeriod,
       activeDateKey,
@@ -215,6 +248,7 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
     }));
     activeDateKey = date;
     editTarget = null;
+    addExpanded = false;
     await refreshMetrics();
     showTooltipForDate(activeDateKey);
     renderCharts();
@@ -227,6 +261,7 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
     await Promise.resolve(store.deleteBodyMetric(date));
     if (activeDateKey === date) activeDateKey = null;
     editTarget = null;
+    addExpanded = false;
     await refreshMetrics();
     showTooltipForDate(activeDateKey);
     renderCharts();
@@ -260,6 +295,7 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
       onSubmit: async (payload) => saveMetric(payload),
       onCancel: () => {
         addExpanded = false;
+        setAddToggleLabel();
         renderEditors();
       },
     }));
@@ -268,6 +304,7 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
   addToggle.addEventListener('click', () => {
     addExpanded = !addExpanded;
     editTarget = null;
+    setAddToggleLabel();
     renderEditors();
   });
 
@@ -286,15 +323,18 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
   });
   const weightCard = document.createElement('div');
   weightCard.className = 'card account-card';
-  weightCard.append(Object.assign(document.createElement('h3'), { textContent: `体重 (${activePeriod}日)` }), weightChart);
+  const weightTitle = document.createElement('h3');
+  weightCard.append(weightTitle, weightChart);
 
   const fatCard = document.createElement('div');
   fatCard.className = 'card account-card';
-  fatCard.append(Object.assign(document.createElement('h3'), { textContent: `体脂肪率 (${activePeriod}日)` }), fatChart);
+  const fatTitle = document.createElement('h3');
+  fatCard.append(fatTitle, fatChart);
 
   chartSlot.innerHTML = '';
   chartSlot.append(weightCard, fatCard);
 
+  setAddToggleLabel();
   defaultTooltip();
   renderCharts();
   renderEditors();

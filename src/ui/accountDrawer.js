@@ -58,13 +58,11 @@ export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountSta
     const summary = document.createElement('div');
     summary.className = 'account-summary';
 
-    const profileLink = document.createElement('button');
-    profileLink.type = 'button';
-    profileLink.className = 'account-summary__link';
-    profileLink.setAttribute('aria-label', 'アカウント情報へ移動');
+    const summaryHeader = document.createElement('div');
+    summaryHeader.className = 'account-summary__header';
 
     const identity = document.createElement('div');
-    identity.className = 'list-account-row';
+    identity.className = 'list-account-row account-summary__identity';
     const avatar = createAccountAvatar({
       label: getAvatarLabel(status.displayName, 'G'),
       className: 'account-avatar--inline',
@@ -82,18 +80,94 @@ export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountSta
     name.textContent = visibility === 'private' ? `${label} 🔒` : label;
     identity.append(avatar, name);
 
-    const id = document.createElement('div');
-    id.className = 'account-summary__id';
-    id.textContent = `ID: ${status.id || 'guest'}`;
-
-    profileLink.append(identity, id);
+    const profileLink = document.createElement('button');
+    profileLink.type = 'button';
+    profileLink.className = 'account-summary__link';
+    profileLink.setAttribute('aria-label', 'アカウント情報へ移動');
+    profileLink.textContent = 'アカウント情報へ';
     profileLink.addEventListener('click', () => {
       playSfx('ui:navigate');
       navigate('#/account');
       closeDrawer();
     });
 
-    summary.append(profileLink);
+    summaryHeader.append(identity, profileLink);
+
+    const idRow = document.createElement('div');
+    idRow.className = 'account-summary__id-row';
+
+    const id = document.createElement('div');
+    id.className = 'account-summary__id';
+    id.textContent = `ID: ${status.id || 'guest'}`;
+
+    const copyStatus = document.createElement('p');
+    copyStatus.className = 'account-summary__copy-status';
+    copyStatus.setAttribute('role', 'status');
+    copyStatus.setAttribute('aria-live', 'polite');
+
+    const copyBtn = document.createElement('button');
+    copyBtn.type = 'button';
+    copyBtn.className = 'ghost account-summary__copy';
+    copyBtn.textContent = 'コピー';
+
+    const copyTextFallback = (value) => {
+      const textarea = document.createElement('textarea');
+      textarea.value = value;
+      textarea.setAttribute('readonly', 'readonly');
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      textarea.style.pointerEvents = 'none';
+      document.body.append(textarea);
+      textarea.focus();
+      textarea.select();
+      let copied = false;
+      try {
+        copied = document.execCommand('copy');
+      } finally {
+        textarea.remove();
+      }
+      if (!copied) {
+        throw new Error('copy-fallback-failed');
+      }
+    };
+
+    const showCopied = (labelText) => {
+      copyBtn.textContent = labelText;
+      copyStatus.textContent = labelText;
+      window.setTimeout(() => {
+        copyBtn.textContent = 'コピー';
+        copyStatus.textContent = '';
+      }, 1400);
+    };
+
+    copyBtn.addEventListener('click', async () => {
+      const idText = status.id || 'guest';
+      try {
+        if (navigator?.clipboard?.writeText) {
+          await navigator.clipboard.writeText(idText);
+        } else {
+          copyTextFallback(idText);
+        }
+        playSfx('ui:select');
+        showCopied('コピーしました');
+      } catch (error) {
+        try {
+          copyTextFallback(idText);
+          playSfx('ui:select');
+          showCopied('コピーしました');
+        } catch (_fallbackError) {
+          copyBtn.textContent = 'コピー不可';
+          copyStatus.textContent = 'この環境ではコピーできません';
+          window.setTimeout(() => {
+            copyBtn.textContent = 'コピー';
+            copyStatus.textContent = '';
+          }, 1800);
+        }
+      }
+    });
+
+    idRow.append(id, copyBtn);
+    summary.append(summaryHeader, idRow, copyStatus);
 
     const metrics = document.createElement('div');
     metrics.className = 'account-metrics';
