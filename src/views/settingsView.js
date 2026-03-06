@@ -115,7 +115,7 @@ const createAccountSettings = ({ store, playSfx, accountState }) => {
   feedback.className = 'muted';
 
   const renderPreview = () => {
-    const displayName = nameInput.value.trim() || 'Guest';
+    const displayName = nameInput.value.trim() || 'ゲスト';
     const visibility = visField.select.value || 'private';
     previewAvatarSlot.innerHTML = '';
     previewAvatarSlot.append(createAccountAvatar({
@@ -143,7 +143,7 @@ const createAccountSettings = ({ store, playSfx, accountState }) => {
     playSfx('ui:select');
 
     const payload = {
-      displayName: nameInput.value.trim() || 'Guest',
+      displayName: nameInput.value.trim() || 'ゲスト',
       account_visibility: visField.select.value,
       default_visibility: visField.select.value,
       icon_border: borderField.select.value,
@@ -192,17 +192,12 @@ const createGeneralSettings = ({ store, playSfx }) => {
 
   const hint = document.createElement('p');
   hint.className = 'muted';
-  hint.textContent = '言語・難易度・操作感など、専用カテゴリ外の共通設定をまとめています。';
-
-  const languageField = createSelect('言語', settings.language || 'ja', [
-    { value: 'ja', label: '日本語' },
-    { value: 'en', label: 'English' },
-  ], (opt) => opt);
+  hint.textContent = '難易度や操作感など、専用カテゴリ外の共通設定をまとめています。';
 
   const difficultyField = createSelect('難易度', settings.difficulty || 'beginner', [
-    { value: 'beginner', label: 'beginner' },
-    { value: 'intermediate', label: 'intermediate' },
-    { value: 'advanced', label: 'advanced' },
+    { value: 'beginner', label: '初級' },
+    { value: 'intermediate', label: '中級' },
+    { value: 'advanced', label: '上級' },
   ], (opt) => opt);
 
   const sfxEnabledField = document.createElement('label');
@@ -243,7 +238,7 @@ const createGeneralSettings = ({ store, playSfx }) => {
   saveBtn.addEventListener('click', () => {
     playSfx('ui:select');
     const payload = {
-      language: languageField.select.value,
+      language: 'ja',
       difficulty: difficultyField.select.value,
       sfxEnabled: Boolean(sfxEnabledInput.checked),
       sfxVolume: Math.max(0, Math.min(1, Number(sfxVolumeInput.value) || 0)),
@@ -253,7 +248,7 @@ const createGeneralSettings = ({ store, playSfx }) => {
   });
 
   applyPreview();
-  card.append(title, hint, languageField.wrap, difficultyField.wrap, sfxEnabledField, sfxVolumeField, saveBtn, status);
+  card.append(title, hint, difficultyField.wrap, sfxEnabledField, sfxVolumeField, saveBtn, status);
   return card;
 };
 
@@ -402,8 +397,8 @@ const createBodyProfileSettings = ({ store, playSfx, accountState }) => {
     const pHint = document.createElement('p');
     pHint.className = 'muted';
     pHint.textContent = editorMode === 'simple'
-      ? 'Simple: 身長・体重・性別から各寸法を自動推定して保存します。'
-      : 'Advance: 各寸法を自動推定しつつ、manual を選んだ項目のみ手動上書きできます。';
+      ? 'シンプル: 身長・体重・性別から各寸法を自動推定して保存します。'
+      : '詳細: 各寸法を自動推定しつつ、手動を選んだ項目のみ上書きできます。';
 
     const summary = document.createElement('div');
     summary.className = 'stack';
@@ -434,8 +429,8 @@ const createBodyProfileSettings = ({ store, playSfx, accountState }) => {
   const renderModeTabs = () => {
     modeTabs.innerHTML = '';
     [
-      { key: 'simple', label: 'Simple' },
-      { key: 'advance', label: 'Advance' },
+      { key: 'simple', label: 'シンプル' },
+      { key: 'advance', label: '詳細' },
     ].forEach((entry) => {
       const tab = document.createElement('button');
       tab.type = 'button';
@@ -456,13 +451,13 @@ const createBodyProfileSettings = ({ store, playSfx, accountState }) => {
     form.append(sexField.wrap, heightField, weightField);
     if (editorMode === 'advance') {
       const advancedTitle = document.createElement('strong');
-      advancedTitle.textContent = '追加パラメータ (Advance)';
+      advancedTitle.textContent = '追加パラメータ（詳細モード）';
       form.append(advancedTitle, ...advancedFields.map((field) => field.wrap));
     }
 
     hint.textContent = editorMode === 'simple'
-      ? 'Simple は最小入力で自動推定を利用するモードです。'
-      : 'Advance は推定値を初期値として、必要項目のみ手動上書きするモードです。';
+      ? 'シンプルは最小入力で自動推定を利用するモードです。'
+      : '詳細は推定値を初期値として、必要項目のみ手動上書きするモードです。';
   };
 
   const validate = () => {

@@ -132,7 +132,7 @@ function setStatus(message) {
 }
 
 function showError(message) {
-  setStatus('Sign-in failed.');
+  setStatus('ログインに失敗しました。');
   if (errorEl) {
     errorEl.hidden = false;
     errorEl.textContent = message;
@@ -158,7 +158,7 @@ function redirectToAccount() {
 async function run() {
   const { client, ready, error } = getSupabaseClient();
   if (!client || !ready) {
-    showError('Supabase credentials are missing. Please configure the app and try again.');
+    showError('Supabase の認証情報が不足しています。設定後に再度お試しください。');
     authError('callback client missing', error?.message || error);
     return;
   }
@@ -190,7 +190,7 @@ async function run() {
   logSession('callback pre-flight session', preflightSession);
 
   if (authParams.error || authParams.errorDescription) {
-    showError(authParams.errorDescription || authParams.error || 'Authentication failed. Please try again.');
+    showError(authParams.errorDescription || authParams.error || '認証に失敗しました。再度お試しください。');
     authError('callback received oauth error', {
       error: authParams.error,
       errorDescription: authParams.errorDescription,
@@ -204,7 +204,7 @@ async function run() {
     if (fragmentSummary.hasAccessToken || fragmentSummary.hasRefreshToken) {
       authLog('callback implicit fragment detected', {
         fragmentSummary,
-        message: 'Tokens present in hash but no authorization code; PKCE exchange skipped.',
+        message: 'ハッシュにトークンはありますが認可コードがないため、PKCE 交換をスキップしました。',
       });
     }
 
@@ -216,13 +216,13 @@ async function run() {
     });
 
     if (!hasSession) {
-      showError('No OAuth code found. Please retry sign-in.');
+      showError('OAuth コードが見つかりません。再ログインしてください。');
       cleanCallbackUrl();
       return;
     }
 
     cleanCallbackUrl();
-    setStatus('Sign-in complete. Redirecting…');
+    setStatus('ログインが完了しました。画面を移動します…');
     redirectToAccount();
     return;
   }
@@ -253,17 +253,17 @@ async function run() {
   const hasSession = Boolean(sessionResult?.data?.session);
 
   if (exchangeError || !hasSession) {
-    showError('Authentication failed. Please try signing in again.');
+    showError('認証に失敗しました。再度ログインしてください。');
     cleanCallbackUrl();
     return;
   }
 
   cleanCallbackUrl();
-  setStatus('Sign-in complete. Redirecting…');
+  setStatus('ログインが完了しました。画面を移動します…');
   redirectToAccount();
 }
 
 run().catch((caught) => {
   authError('callback fatal', caught?.message || caught);
-  showError('Unexpected error during sign-in. Please try again.');
+  showError('ログイン処理中に予期しないエラーが発生しました。再度お試しください。');
 });

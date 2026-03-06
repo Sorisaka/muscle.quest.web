@@ -137,6 +137,8 @@ const buildSetInputs = (unit, limits, planSets, onChange) => {
   return wrapper;
 };
 
+const DIFFICULTY_LABELS = { beginner: '初級', intermediate: '中級', advanced: '上級' };
+
 const notifyCompletion = (message) => {
   if (typeof Notification === 'undefined') return;
   if (Notification.permission === 'granted') {
@@ -190,7 +192,7 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
 
   const metaBox = document.createElement('p');
   metaBox.className = 'muted';
-  metaBox.textContent = `${settings.difficulty} / 音: ${settings.sfxEnabled ? 'ON' : 'OFF'} / 音量: ${(settings.sfxVolume * 100).toFixed(0)}%`;
+  metaBox.textContent = `${DIFFICULTY_LABELS[settings.difficulty] || '初級'} / 音: ${settings.sfxEnabled ? 'オン' : 'オフ'} / 音量: ${(settings.sfxVolume * 100).toFixed(0)}%`;
 
   const timerBox = document.createElement('div');
   timerBox.className = 'run-timer';
@@ -217,8 +219,8 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
         : timerConfig.mode === 'timer'
           ? trainingConfig.descriptions.timer
           : trainingConfig.descriptions.stopwatch;
-    subMeta.textContent = `${description} / Work ${formatTime(timerConfig.workSeconds)}${
-      timerConfig.mode === 'interval' ? ` / Rest ${formatTime(timerConfig.restSeconds)} / ${timerConfig.sets} セット` : ''
+    subMeta.textContent = `${description} / 運動 ${formatTime(timerConfig.workSeconds)}${
+      timerConfig.mode === 'interval' ? ` / 休憩 ${formatTime(timerConfig.restSeconds)} / ${timerConfig.sets} セット` : ''
     }`;
   };
   updateMeta();

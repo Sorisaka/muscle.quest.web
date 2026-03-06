@@ -1,0 +1,34 @@
+{
+  "id": "new-exercise-slug",
+  "isActive": true,
+  "sortOrder": 999,
+  "label": "種目名",
+  "category": "bodyweight",
+  "muscles": ["core"],
+  "unit": "time",
+  "description": "種目説明",
+  "restSeconds": 30,
+  "difficulties": {
+    "beginner": {
+      "defaultSets": [{ "timeSeconds": 30 }],
+      "maxSets": 5,
+      "limits": { "timeSeconds": { "min": 15, "max": 120 } },
+      "points": { "base": 100, "perWork": 0.5, "setBonus": 8, "completion": 30, "challengeScale": 0.5 },
+      "howto": "フォーム説明"
+    },
+    "intermediate": {
+      "defaultSets": [{ "timeSeconds": 45 }],
+      "maxSets": 6,
+      "limits": { "timeSeconds": { "min": 20, "max": 180 } },
+      "points": { "base": 140, "perWork": 0.55, "setBonus": 10, "completion": 40, "challengeScale": 0.55 },
+      "howto": "フォーム説明"
+    },
+    "advanced": {
+      "defaultSets": [{ "timeSeconds": 60 }],
+      "maxSets": 7,
+      "limits": { "timeSeconds": { "min": 25, "max": 240 } },
+      "points": { "base": 180, "perWork": 0.6, "setBonus": 12, "completion": 55, "challengeScale": 0.6 },
+      "howto": "フォーム説明"
+    }
+  }
+}
