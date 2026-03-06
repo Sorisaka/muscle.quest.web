@@ -1,7 +1,6 @@
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 const DAY_MS = 86400000;
-const DEFAULT_WIDTH = 320;
 const MIN_LABEL_GAP = 56;
 
 const toDayTimestamp = (value) => {
@@ -17,10 +16,8 @@ const getNiceTickStep = (minimumStep) => {
   return candidates.find((candidate) => candidate >= minimumStep) || Math.max(1, minimumStep);
 };
 
-const getXAxisStep = ({ visibleDays, plotWidth }) => {
-  const safePlotWidth = Math.max(1, plotWidth);
-  const maxLabelCount = Math.max(2, Math.floor(safePlotWidth / MIN_LABEL_GAP));
-  const minimumStep = Math.max(1, Math.ceil(visibleDays / maxLabelCount));
+const getXAxisStep = ({ dayWidth }) => {
+  const minimumStep = Math.max(1, Math.ceil(MIN_LABEL_GAP / Math.max(1, dayWidth)));
   return getNiceTickStep(minimumStep);
 };
 
@@ -70,32 +67,34 @@ export const createSparkline = ({
 
   const rangeDays = Math.max(1, visibleDays);
   const endTs = toDayTimestamp(Date.now());
-  const startTs = endTs - rangeDays * DAY_MS;
-  const visiblePoints = safePoints.filter((point) => point.xTs >= startTs && point.xTs <= endTs);
+  const pointsUntilToday = safePoints.filter((point) => point.xTs <= endTs);
+  const oldestTs = pointsUntilToday.reduce((acc, point) => Math.min(acc, point.xTs), endTs);
+  const drawableDays = Math.max(rangeDays, Math.ceil((endTs - oldestTs) / DAY_MS));
 
   const renderEmpty = () => {
     content.innerHTML = '';
+    content.style.width = '100%';
     const empty = document.createElement('p');
     empty.className = 'muted';
     empty.textContent = `${label || 'グラフ'}: データ不足`;
     content.append(empty);
   };
 
+  const alignViewportToRight = () => {
+    viewport.scrollLeft = Math.max(0, viewport.scrollWidth);
+  };
+
   const renderChart = (viewportWidth) => {
     content.innerHTML = '';
-    if (visiblePoints.length <= 1) {
+    if (pointsUntilToday.length <= 1) {
       renderEmpty();
       return;
     }
 
-    const chartWidth = Math.max(DEFAULT_WIDTH, Math.floor(viewportWidth || DEFAULT_WIDTH));
+    const safeViewportWidth = Math.max(280, Math.floor(viewportWidth || 0));
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('role', 'img');
     svg.setAttribute('aria-label', label || 'sparkline chart');
-    svg.setAttribute('viewBox', `0 0 ${chartWidth} ${height}`);
-    svg.setAttribute('width', String(chartWidth));
-    svg.setAttribute('height', String(height));
-
     const axis = {
       top: 12,
       right: 14,
@@ -103,24 +102,33 @@ export const createSparkline = ({
       left: 56,
     };
 
-    const plotWidth = Math.max(1, chartWidth - axis.left - axis.right);
+    const visiblePlotWidth = Math.max(1, safeViewportWidth - axis.left - axis.right);
+    const dayWidth = Math.max(2, visiblePlotWidth / rangeDays);
+    const plotWidth = Math.max(1, dayWidth * drawableDays);
+    const chartWidth = Math.ceil(axis.left + axis.right + plotWidth);
+    const plotRight = axis.left + plotWidth;
+
+    svg.setAttribute('viewBox', `0 0 ${chartWidth} ${height}`);
+    svg.setAttribute('width', String(chartWidth));
+    svg.setAttribute('height', String(height));
+
     const plotHeight = Math.max(1, height - axis.top - axis.bottom);
 
-    const { min, max } = getSafeRange(visiblePoints.map((p) => p.y));
-    const xTickStep = getXAxisStep({ visibleDays: rangeDays, plotWidth });
+    const { min, max } = getSafeRange(pointsUntilToday.map((p) => p.y));
+    const xTickStep = getXAxisStep({ dayWidth });
 
     const toX = (timestamp) => {
       const dayAgo = (endTs - timestamp) / DAY_MS;
-      return axis.left + (1 - clamp(dayAgo / rangeDays, 0, 1)) * plotWidth;
+      return plotRight - clamp(dayAgo, 0, drawableDays) * dayWidth;
     };
     const toY = (value) => axis.top + (1 - clamp((value - min) / (max - min), 0, 1)) * plotHeight;
 
     const xTicks = [];
-    for (let dayAgo = 0; dayAgo <= rangeDays; dayAgo += xTickStep) xTicks.push(dayAgo);
-    if (xTicks[xTicks.length - 1] !== rangeDays) xTicks.push(rangeDays);
+    for (let dayAgo = 0; dayAgo <= drawableDays; dayAgo += xTickStep) xTicks.push(dayAgo);
+    if (xTicks[xTicks.length - 1] !== drawableDays) xTicks.push(drawableDays);
 
     xTicks.forEach((dayAgo) => {
-      const x = axis.left + (1 - dayAgo / rangeDays) * plotWidth;
+      const x = plotRight - dayAgo * dayWidth;
       const grid = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       grid.setAttribute('x1', String(x));
       grid.setAttribute('x2', String(x));
@@ -145,7 +153,7 @@ export const createSparkline = ({
       const value = max - (max - min) * ratio;
       const grid = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       grid.setAttribute('x1', String(axis.left));
-      grid.setAttribute('x2', String(axis.left + plotWidth));
+      grid.setAttribute('x2', String(plotRight));
       grid.setAttribute('y1', String(y));
       grid.setAttribute('y2', String(y));
       grid.setAttribute('stroke', 'rgba(148, 163, 184, 0.25)');
@@ -162,7 +170,7 @@ export const createSparkline = ({
     }
 
     const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-    const linePoints = visiblePoints.map((point) => `${toX(point.xTs)},${toY(point.y)}`).join(' ');
+    const linePoints = pointsUntilToday.map((point) => `${toX(point.xTs)},${toY(point.y)}`).join(' ');
     polyline.setAttribute('points', linePoints);
     polyline.setAttribute('fill', 'none');
     polyline.setAttribute('stroke', color);
@@ -171,7 +179,7 @@ export const createSparkline = ({
     polyline.setAttribute('stroke-linejoin', 'round');
     svg.append(polyline);
 
-    visiblePoints.forEach((point) => {
+    pointsUntilToday.forEach((point) => {
       const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       dot.setAttribute('cx', String(toX(point.xTs)));
       dot.setAttribute('cy', String(toY(point.y)));
@@ -180,8 +188,12 @@ export const createSparkline = ({
       svg.append(dot);
     });
 
+    content.style.width = `${chartWidth}px`;
     content.append(svg);
-    viewport.scrollLeft = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+    requestAnimationFrame(() => {
+      alignViewportToRight();
+      requestAnimationFrame(() => alignViewportToRight());
+    });
   };
 
   viewport.append(content);

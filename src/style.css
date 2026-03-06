@@ -802,23 +802,21 @@ section.panel {
   max-width: 100%;
   height: var(--sparkline-height);
   overflow-x: auto;
-  overflow-y: auto;
-  scrollbar-gutter: stable both-edges;
+  overflow-y: hidden;
+  scrollbar-gutter: stable;
   border: 1px solid #1f2937;
   border-radius: 10px;
   background: #0f1623;
 }
 
 .sparkline__content {
-  width: 100%;
-  min-width: 0;
+  width: max-content;
+  min-width: 100%;
   min-height: 100%;
 }
 
 .sparkline svg {
   display: block;
-  width: 100%;
-  max-width: 100%;
 }
 
 
