@@ -1,6 +1,6 @@
 import { quests } from '../core/content.js';
 
-const createCategoryCard = (tier, label, summary, navigate, playSfx) => {
+const createCategoryCard = (category, label, summary, navigate, playSfx) => {
   const card = document.createElement('article');
   card.className = 'card tier-card';
 
@@ -16,7 +16,7 @@ const createCategoryCard = (tier, label, summary, navigate, playSfx) => {
   action.textContent = 'ワークアウト一覧へ';
   action.addEventListener('click', () => {
     playSfx('ui:navigate');
-    navigate(`#/workouts/${tier}`);
+    navigate(`#/workouts/${category}`);
   });
 
   card.append(title, description, action);
@@ -93,7 +93,7 @@ export const renderHome = (_params, { navigate, playSfx, store }) => {
       const workoutId = findWorkoutIdByExercise(first.exerciseSlug);
       playSfx('ui:navigate');
       if (workoutId) navigate(`#/run/${workoutId}`);
-      else navigate('#/workouts/beginner');
+      else navigate(`#/workouts/${first?.category || 'cardio'}`);
     };
   };
 
