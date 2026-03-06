@@ -563,7 +563,7 @@ const normalizeMenuItem = (item = {}, index = 0) => {
     title: item.title || item.displayName || exerciseSlug || `項目${index + 1}`,
     exerciseSlug,
     questId: item.questId || quest?.id || '',
-    category: item.category || quest?.tier || 'custom',
+    category: item.category || quest?.category || 'custom',
     note: item.note || '',
   };
 };
@@ -580,7 +580,7 @@ const sanitizeMenuItems = (items = []) => (items || [])
       displayName: title,
       exerciseSlug,
       questId: item.questId || quest?.id || '',
-      category: item.category || quest?.tier || 'custom',
+      category: item.category || quest?.category || 'custom',
       note: (item.note || '').trim(),
     };
   });
@@ -785,7 +785,7 @@ const createMenuSettings = async ({ store, playSfx }) => {
       const questField = createSelect(
         '対応ワークアウト',
         item.questId || '',
-        [{ value: '', label: '(自動/未選択)' }, ...(quests || []).map((quest) => ({ value: quest.id, label: `${quest.title || quest.id} (${quest.tier})` }))],
+        [{ value: '', label: '(自動/未選択)' }, ...(quests || []).map((quest) => ({ value: quest.id, label: `${quest.title || quest.id} (${quest.category})` }))],
         (opt) => (typeof opt === 'string' ? { value: opt, label: opt } : opt),
       );
 
@@ -834,7 +834,7 @@ const createMenuSettings = async ({ store, playSfx }) => {
           title: nameInput.value,
           exerciseSlug,
           questId: questField.select.value || linkedQuest?.id || '',
-          category: linkedQuest?.tier || next[index].category || 'custom',
+          category: linkedQuest?.category || next[index].category || 'custom',
           note: noteInput.value,
         };
         draftItems = next;
