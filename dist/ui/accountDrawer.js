@@ -7,7 +7,25 @@ const createMetricRow = (label, value) => {
   return row;
 };
 
-export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountState, navigate, playSfx }) => {
+const summarizeHistory = (history = [], days = 1) => {
+  const now = new Date();
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - (days - 1));
+  const from = start.getTime();
+
+  return (Array.isArray(history) ? history : []).reduce((acc, entry) => {
+    const source = entry?.timestamp || entry?.result?.timestamp || entry?.created_at || entry?.published_at;
+    if (!source) return acc;
+    const at = new Date(source).getTime();
+    if (Number.isNaN(at) || at < from) return acc;
+    acc.calories += Number(entry?.calories || 0);
+    acc.runs += 1;
+    return acc;
+  }, { calories: 0, runs: 0 });
+};
+
+export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountState, navigate, playSfx, store }) => {
   if (!triggerEl || !drawerEl || !overlayEl) return null;
 
   const closeDrawer = () => {
@@ -23,6 +41,11 @@ export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountSta
 
   const renderDrawer = () => {
     const status = accountState.getStatus();
+    const history = store?.getHistory?.() || [];
+    const today = summarizeHistory(history, 1);
+    const weekly = summarizeHistory(history, 7);
+    const monthly = summarizeHistory(history, 30);
+
     drawerEl.innerHTML = '';
 
     const header = document.createElement('div');
@@ -34,6 +57,12 @@ export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountSta
 
     const summary = document.createElement('div');
     summary.className = 'account-summary';
+
+    const profileLink = document.createElement('button');
+    profileLink.type = 'button';
+    profileLink.className = 'account-summary__link';
+    profileLink.setAttribute('aria-label', 'アカウント情報へ移動');
+
     const identity = document.createElement('div');
     identity.className = 'list-account-row';
     const avatar = createAccountAvatar({
@@ -45,6 +74,7 @@ export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountSta
         icon_center_object: status.profile?.icon_center_object,
       },
     });
+
     const name = document.createElement('div');
     name.className = 'account-summary__name';
     const visibility = accountState.getStatus().profile?.account_visibility || 'private';
@@ -56,14 +86,24 @@ export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountSta
     id.className = 'account-summary__id';
     id.textContent = `ID: ${status.id || 'guest'}`;
 
-    summary.append(identity, id);
+    profileLink.append(identity, id);
+    profileLink.addEventListener('click', () => {
+      playSfx('ui:navigate');
+      navigate('#/account');
+      closeDrawer();
+    });
+
+    summary.append(profileLink);
 
     const metrics = document.createElement('div');
     metrics.className = 'account-metrics';
     metrics.append(
       createMetricRow('総消費カロリー', `${status.calories} kcal`),
-      createMetricRow('ストリーク', `${status.streak} 日`),
       createMetricRow('完了ワークアウト', `${status.completedRuns || 0} 件`),
+      createMetricRow('ストリーク', `${status.streak} 日`),
+      createMetricRow('本日', `${Math.round(today.calories)}kcal / ${today.runs} 件`),
+      createMetricRow('直近7日', `${Math.round(weekly.calories)}kcal / ${weekly.runs} 件`),
+      createMetricRow('直近30日', `${Math.round(monthly.calories)}kcal / ${monthly.runs} 件`),
     );
 
     const actions = document.createElement('div');

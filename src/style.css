@@ -898,7 +898,11 @@ section.panel::after {
   display: grid;
   place-items: center;
   padding: 0;
-  overflow: visible;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  z-index: 2;
+  pointer-events: auto;
 }
 
 .account-avatar {
@@ -977,19 +981,40 @@ section.panel::after {
 }
 
 .account-counts-summary {
-  display: grid;
-  grid-template-columns: 1fr auto;
+  display: flex;
   gap: 0.6rem;
-  align-items: start;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.account-metrics-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: flex-start;
+  align-items: stretch;
+  flex: 1;
+}
+
+.account-metrics-grid .account-metric__row {
+  justify-content: flex-start;
+  gap: 0.55rem;
+  min-width: 138px;
 }
 
 .account-add-follow {
-  width: 42px;
-  height: 42px;
-  border-radius: 999px;
+  min-height: 44px;
+  height: 44px;
+  aspect-ratio: 1 / 1;
+  width: auto;
+  border-radius: 12px;
   padding: 0;
-  font-size: 1.4rem;
+  display: inline-grid;
+  place-items: center;
+  font-size: 1.35rem;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .account-view input[type='search'],
@@ -1004,11 +1029,12 @@ section.panel::after {
 
 @media (max-width: 520px) {
   .account-counts-summary {
-    grid-template-columns: 1fr;
+    flex-wrap: wrap;
+    align-items: center;
   }
 
   .account-add-follow {
-    justify-self: start;
+    align-self: flex-start;
   }
 
   .list-header {

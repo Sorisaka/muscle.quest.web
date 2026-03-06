@@ -418,3 +418,166 @@ All primary hash routes can be checked without extra tooling:
 - [ ] local fallback / Supabase の両モードで主要導線が成立する
 - [ ] body_metrics は両 null を拒否する
 - [ ] OR ではなく AND で部位フィルタされる
+
+## Phase 1 追加: ナビ active / 履歴グラフ編集 / アカウント導線修正
+
+### ローカルデバッグ手順（Phase 1 観点）
+1. 依存インストール: `npm i`
+2. 開発サーバー起動: `npm run dev`
+3. 下部ナビ active 確認:
+   - `#/`, `#/timeline`, `#/rank/local`, `#/rank`, `#/history`, `#/history/2026-01-01`, `#/account`, `#/settings` へ直接遷移
+   - ブラウザ戻る/進む、ハッシュ手入力、UIボタン遷移の全てで active が一致すること
+4. 履歴グラフ編集確認 (`#/history`):
+   - 体重プロット/体脂肪プロットをクリックして編集UIが開くこと
+   - 日付・体重・体脂肪を更新後、グラフ表示が即更新されること
+   - 片方のみ値がある日の更新/削除が成功すること
+   - 削除時に確認ダイアログが出ること
+5. アカウント導線確認 (`#/account`):
+   - 画面末尾に「フォローリクエスト一覧へ」ボタンが表示されないこと
+
+### SQL適用手順（必要時のみ）
+- この Phase 1 では DB スキーマ変更を伴わないため、新規 migration / 手動 SQL の追加は不要です。
+- 今後 Supabase スキーマを変更する場合は以下を必ず実施:
+  1. `supabase/migrations/*.sql` に migration 追加
+  2. 必要に応じて `supabase/sql/*.sql` に手動適用版 SQL を追加
+  3. `supabase db push` で適用
+
+### デプロイ手順（再掲）
+1. `npm run build` で `dist/` を再生成（`dist/` 手編集は禁止）
+2. `npm run preview` で本番相当確認
+3. GitHub Pages 向けに push（Actions で build + `dist/config.js` 注入 + deploy）
+4. デプロイ後に `#/history` と下部ナビ active を実機/モバイルで再確認
+
+## Phase 4: 身体プロフィール設定（Simple / Advance）の責務分離
+- **Simple モード**
+  - 入力を最小限（性別・身長・体重）に絞り、歩幅/腕長/脚長/胴体長は自動推定で扱うモード。
+  - 迷わず短時間で保存したい利用者向け。
+- **Advance モード**
+  - Simple と同じ自動推定を初期値として利用しつつ、各寸法を項目単位で `auto/manual` 切替し手動上書きできるモード。
+  - 推定値をベースに、個別の身体寸法を詳細調整したい利用者向け。
+
+## Phase 5: 一般設定集約 + 新規フォロー検索修正
+
+### 追加SQL（適用順）
+1. migration（推奨）
+   - `supabase/migrations/20260306_0009_phase5_general_settings_follow_search_fix.sql`
+2. 既存環境に SQL Editor で差分適用する場合
+   - `supabase/sql/017_phase5_follow_search_fix.sql`
+
+### 変更内容
+- 設定画面の「一般設定」に、専用カテゴリ外の共通設定を集約:
+  - 言語
+  - 難易度
+  - 効果音 ON/OFF
+  - 効果音ボリューム
+- 新規フォロー検索の `search_accounts` RPC を見直し、以下を改善:
+  - private/public を問わず検索対象化（認証済みユーザー前提）
+  - 自分自身は検索結果から除外
+  - `ID` / `表示名` の exact・prefix・partial を順位付けして返却
+  - `account_visibility` / アイコン情報を返却
+
+### ローカルで Supabase 接続時に検索検証する方法
+1. `npm i`
+2. `npm run build`（必要なら `dist/config.js` に Supabase 設定を配置）
+3. `npm run dev`
+4. Google ログイン後、`#/account` を開いて `+` ボタンから検索モーダルを表示
+5. 以下を確認:
+   - 正しい `ID` で結果が返る
+   - private アカウントが結果表示され、Request フローに進める
+   - public アカウントは Follow フローに進める
+
+### 依存追加
+- Phase 5 では新規依存追加なし
+
+### デプロイ手順（Phase 5 反映）
+1. SQL 反映: `supabase db push`（または `supabase/sql/017_phase5_follow_search_fix.sql` を手動適用）
+2. アプリ反映: `npm run build`
+3. GitHub Pages へ push（Actions で build + `dist/config.js` 注入 + deploy）
+4. デプロイ後、`#/settings/general` と `#/account` 検索を実機確認
+
+## 最終レビューコメント（Phase 1-5 統合）
+
+### 1. 変更概要
+- Phase 1: 下部ナビ active 判定をルーター由来の共通ロジックへ集約、履歴グラフの点クリック編集/削除を実装、アカウント画面の重複導線を整理。
+- Phase 2: プロフィール保存時のドロワー/トリガー即時反映、アカウントヘッダのフォロー数エリア配置改善。
+- Phase 3: メニュー設定を曜日/特別日トグル化し、1画面で両方編集可能に統合。
+- Phase 4: 身体プロフィール設定を再実装し、Simple/Advance 推定フローを復活。
+- Phase 5: 一般設定へ共通設定を集約し、新規フォロー検索 RPC を修正。
+
+### 2. 主な修正ファイル
+- `src/app.js`
+- `src/core/router.js`
+- `src/core/accountState.js`
+- `src/views/historyView.js`
+- `src/views/accountView.js`
+- `src/views/settingsView.js`
+- `src/style.css`
+- `src/ui/chart/sparkline.js`
+- `src/ui/accountDrawer.js`
+- `src/services/supabase/supabaseAdapter.js`
+- `src/data/adapters/localPersistence.js`
+- `src/core/store.js`
+
+### 3. 追加 migration / sql 一覧
+- migrations
+  - `supabase/migrations/20260306_0008_phase1_ranking_follow_queries.sql`
+  - `supabase/migrations/20260306_0009_phase5_general_settings_follow_search_fix.sql`
+- manual SQL
+  - `supabase/sql/016_phase1_ranking_follow_queries.sql`
+  - `supabase/sql/017_phase5_follow_search_fix.sql`
+
+### 4. SQL適用順
+1. `supabase db push`（migrations を時系列適用）
+2. SQL Editor で手動適用が必要な場合のみ以下を順に適用
+   1. `supabase/sql/013_phase2_follow_requests.sql`
+   2. `supabase/sql/015_phase4_icon_settings.sql`
+   3. `supabase/sql/016_phase1_ranking_follow_queries.sql`
+   4. `supabase/sql/017_phase5_follow_search_fix.sql`
+
+### 5. ローカル開発手順（詳細）
+1. Node.js 20 系を利用（`.nvmrc`）。
+2. 依存インストール: `npm ci`（ローカル検証時に必要なら `npm i`）。
+3. `dist/config.js` を準備:
+   - `cp src/config.example.js dist/config.js`
+   - `SUPABASE_URL` / `SUPABASE_ANON_KEY` / 必要なら `OAUTH_REDIRECT_TO` を設定。
+4. 開発サーバー: `npm run dev`
+5. 本番ビルド: `npm run build`
+6. 本番相当確認: `npm run preview`
+
+### 6. Supabase 接続時のローカル確認方法
+1. Google ログイン後、`#/account` の `+` から ID 検索を実施。
+2. 正しい ID で候補表示されることを確認（public/private 両方）。
+3. public は Follow、private は Request フローに遷移できることを確認。
+4. `#/timeline` / `#/rank` / `#/account/following` / `#/account/followers` の整合性を確認。
+
+### 7. デプロイ手順
+1. SQL を先に適用（`supabase db push` もしくは対象 SQL 手動適用）。
+2. `npm run build` で `dist/` を再生成。
+3. GitHub Pages 用に push（Actions で `dist/config.js` 注入 + deploy）。
+4. デプロイ後に主要画面とモバイル表示を実機確認。
+
+### 8. 変更ファイル一覧の整理方針
+- 実装は必ず `src/` を正として修正。
+- `dist/` は `npm run build` でのみ再生成。
+- SQL は migration と manual SQL を用途別に分離。
+
+### 9. 画面別の確認手順
+- `#/` : 下部ナビ active、主要導線。
+- `#/timeline` : 表示範囲切替、投稿表示。
+- `#/rank/local` : ランキング描画。
+- `#/history` : グラフ点クリック編集/削除、即時更新。
+- `#/account` : ドロワー表示反映、フォロー検索モーダル。
+- `#/settings/account` : 表示名/公開範囲/アイコン保存反映。
+- `#/settings/body-profile` : Simple/Advance 推定と保存保持。
+- `#/settings/menu` : 曜日/特別日トグル、保存後再表示。
+- `#/settings/general` : 言語/難易度/SFX 保存。
+
+### 10. モバイルブラウザ確認観点
+- 下部ナビが URLバー・safe-area と重ならない。
+- 入力中（キーボード表示）に CTA が隠れない。
+- 画面回転後にレイアウト崩れがない。
+- ドロワーとモーダルの重なり順（z-index）とタップ挙動が正常。
+
+### 11. 未解決事項
+- 現時点で既知の未解決重大事項なし。
+- ただし Supabase 側の既存ポリシーが環境差分で異なる場合は、README 記載の SQL 順で再適用して整合させること。

@@ -109,8 +109,15 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
   let editTarget = null;
   let activeDateKey = null;
 
-  const metricsRows = await Promise.resolve(store.getBodyMetricsRange(null, null));
-  const rowsByDate = new Map((metricsRows || []).map((row) => [row.date, row]));
+  let metricsRows = [];
+  let rowsByDate = new Map();
+
+  const refreshMetrics = async () => {
+    metricsRows = await Promise.resolve(store.getBodyMetricsRange(null, null)) || [];
+    rowsByDate = new Map(metricsRows.map((row) => [row.date, row]));
+  };
+
+  await refreshMetrics();
 
   const addToggle = document.createElement('button');
   addToggle.type = 'button';
@@ -126,7 +133,7 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
 
   const defaultTooltip = () => {
     tooltip.innerHTML = '';
-    tooltip.append(createEmpty('点をタップ/クリックすると、その日の体重・体脂肪率を表示します。'));
+    tooltip.append(createEmpty('点をタップ/クリックすると、その日の体重・体脂肪率を編集できます。'));
   };
 
   const showTooltipForDate = (dateKey) => {
@@ -145,7 +152,10 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
   };
 
   const openEdit = (dateKey) => {
+    activeDateKey = dateKey;
     editTarget = rowsByDate.get(dateKey) || { date: dateKey, weight_kg: null, body_fat_pct: null };
+    showTooltipForDate(dateKey);
+    renderCharts();
     renderEditors();
   };
 
@@ -193,19 +203,34 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
     });
   };
 
-  const saveMetric = async ({ date, weight_kg, body_fat_pct }) => {
+  const saveMetric = async ({ originalDate, date, weight_kg, body_fat_pct }) => {
     playSfx('ui:select');
+    if (originalDate && originalDate !== date) {
+      await Promise.resolve(store.deleteBodyMetric(originalDate));
+    }
     await Promise.resolve(store.upsertBodyMetric(date, {
       weight_kg,
       body_fat_pct,
       visibility: 'private',
     }));
+    activeDateKey = date;
+    editTarget = null;
+    await refreshMetrics();
+    showTooltipForDate(activeDateKey);
+    renderCharts();
+    renderEditors();
     await onMetricsChanged?.();
   };
 
   const deleteMetric = async (date) => {
     playSfx('ui:select');
     await Promise.resolve(store.deleteBodyMetric(date));
+    if (activeDateKey === date) activeDateKey = null;
+    editTarget = null;
+    await refreshMetrics();
+    showTooltipForDate(activeDateKey);
+    renderCharts();
+    renderEditors();
     await onMetricsChanged?.();
   };
 
@@ -218,7 +243,7 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
         initialBodyFat: editTarget.body_fat_pct,
         submitLabel: '更新',
         showDelete: true,
-        onSubmit: async (payload) => saveMetric(payload),
+        onSubmit: async (payload) => saveMetric({ ...payload, originalDate: editTarget.date }),
         onDelete: async (date) => deleteMetric(date),
         onCancel: () => {
           editTarget = null;

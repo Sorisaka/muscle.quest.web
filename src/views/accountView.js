@@ -40,7 +40,7 @@ const createEmpty = (text = 'データはありません。') => {
   return p;
 };
 
-export const renderAccount = (_params, { navigate, accountState, store, playSfx }) => {
+export const renderAccount = (_params, { navigate, accountState, store }) => {
   const container = document.createElement('section');
   container.className = 'stack account-view';
 
@@ -215,16 +215,7 @@ export const renderAccount = (_params, { navigate, accountState, store, playSfx 
   else entries.forEach((entry) => list.append(Object.assign(document.createElement('div'), { className: 'row', textContent: `${entry.exerciseSlug || entry.questId || 'workout'} / ${entry.calories || 0} kcal` })));
   postCard.append(list);
 
-  const requestButton = document.createElement('button');
-  requestButton.type = 'button';
-  requestButton.className = 'ghost';
-  requestButton.textContent = 'フォローリクエスト一覧へ';
-  requestButton.addEventListener('click', () => {
-    playSfx('ui:navigate');
-    navigate('#/follow-requests');
-  });
-
-  container.append(profileCard, activityCard, postCard, feedback, requestButton, followModalOverlay);
+  container.append(profileCard, activityCard, postCard, feedback, followModalOverlay);
   return container;
 };
 
