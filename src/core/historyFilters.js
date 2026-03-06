@@ -26,7 +26,7 @@ export const filterRuns = (runs = [], filter = defaultHistoryFilter) => {
     const tags = resolveRunTags(run);
     if (current.category !== 'all' && tags.category !== current.category) return false;
     if (!current.muscles.length) return true;
-    return current.muscles.some((muscle) => tags.muscles.includes(muscle));
+    return current.muscles.every((muscle) => tags.muscles.includes(muscle));
   });
 };
 
