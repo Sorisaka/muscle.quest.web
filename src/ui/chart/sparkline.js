@@ -12,9 +12,16 @@ const toDayTimestamp = (value) => {
 
 const getXAxisStep = (visibleDays) => {
   if (visibleDays <= 7) return 1;
-  if (visibleDays <= 30) return 5;
-  if (visibleDays <= 90) return 15;
+  if (visibleDays <= 30) return 7;
+  if (visibleDays <= 90) return 14;
   return 30;
+};
+
+const getDayWidth = (visibleDays) => {
+  if (visibleDays <= 7) return 42;
+  if (visibleDays <= 30) return 26;
+  if (visibleDays <= 90) return 16;
+  return 10;
 };
 
 const getSafeRange = (values = []) => {
@@ -38,7 +45,6 @@ const appendText = ({ svg, x, y, text, anchor = 'middle' }) => {
 };
 
 export const createSparkline = ({
-  width = 320,
   height = 190,
   visibleDays = 30,
   points = [],
@@ -49,6 +55,7 @@ export const createSparkline = ({
 } = {}) => {
   const wrapper = document.createElement('div');
   wrapper.className = 'sparkline';
+  wrapper.style.setProperty('--sparkline-height', `${height}px`);
 
   const safePoints = (Array.isArray(points) ? points : []).map((entry) => ({
     xTs: toDayTimestamp(entry?.x),
@@ -64,41 +71,59 @@ export const createSparkline = ({
   }
 
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
   svg.setAttribute('role', 'img');
   svg.setAttribute('aria-label', label || 'sparkline chart');
-  svg.setAttribute('preserveAspectRatio', 'none');
 
   const axis = {
     top: 12,
-    right: 12,
-    bottom: 24,
-    left: 54,
+    right: 14,
+    bottom: 30,
+    left: 56,
   };
-  const plotWidth = width - axis.left - axis.right;
-  const plotHeight = height - axis.top - axis.bottom;
+  const viewport = document.createElement('div');
+  viewport.className = 'sparkline__viewport';
 
-  const { min, max } = getSafeRange(safePoints.map((p) => p.y));
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayTs = today.getTime();
-  const oldestTs = Math.min(...safePoints.map((p) => p.xTs));
-  const historyDays = Math.max(1, Math.round((todayTs - oldestTs) / DAY_MS));
-  const totalDays = Math.max(visibleDays - 1, historyDays);
+  const content = document.createElement('div');
+  content.className = 'sparkline__content';
+
+  const rangeDays = Math.max(1, visibleDays);
+  const startTs = toDayTimestamp(Date.now() - rangeDays * DAY_MS);
+  const endTs = toDayTimestamp(Date.now());
+
+  const visiblePoints = safePoints.filter((point) => point.xTs >= startTs && point.xTs <= endTs);
+  if (visiblePoints.length <= 1) {
+    const empty = document.createElement('p');
+    empty.className = 'muted';
+    empty.textContent = `${label || 'グラフ'}: データ不足`;
+    wrapper.append(empty);
+    return wrapper;
+  }
+
+  const targetPlotWidth = rangeDays * getDayWidth(visibleDays);
+  const baseWidth = 320;
+  const chartWidth = Math.max(baseWidth, axis.left + axis.right + targetPlotWidth);
+  const plotWidth = chartWidth - axis.left - axis.right;
+  const plotHeight = height - axis.top - axis.bottom;
+  svg.setAttribute('viewBox', `0 0 ${chartWidth} ${height}`);
+  svg.setAttribute('width', String(chartWidth));
+  svg.setAttribute('height', String(height));
+  content.style.width = `${chartWidth}px`;
+
+  const { min, max } = getSafeRange(visiblePoints.map((p) => p.y));
   const xTickStep = getXAxisStep(visibleDays);
 
   const toX = (timestamp) => {
-    const dayAgo = Math.round((todayTs - timestamp) / DAY_MS);
-    return axis.left + (1 - clamp(dayAgo / totalDays, 0, 1)) * plotWidth;
+    const dayAgo = (endTs - timestamp) / DAY_MS;
+    return axis.left + (1 - clamp(dayAgo / rangeDays, 0, 1)) * plotWidth;
   };
   const toY = (value) => axis.top + (1 - clamp((value - min) / (max - min), 0, 1)) * plotHeight;
 
   const xTicks = [];
-  for (let dayAgo = 0; dayAgo <= totalDays; dayAgo += xTickStep) xTicks.push(dayAgo);
-  if (xTicks[xTicks.length - 1] !== totalDays) xTicks.push(totalDays);
+  for (let dayAgo = 0; dayAgo <= rangeDays; dayAgo += xTickStep) xTicks.push(dayAgo);
+  if (xTicks[xTicks.length - 1] !== rangeDays) xTicks.push(rangeDays);
 
   xTicks.forEach((dayAgo) => {
-    const x = axis.left + (1 - dayAgo / totalDays) * plotWidth;
+    const x = axis.left + (1 - dayAgo / rangeDays) * plotWidth;
     const grid = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     grid.setAttribute('x1', String(x));
     grid.setAttribute('x2', String(x));
@@ -140,7 +165,7 @@ export const createSparkline = ({
   }
 
   const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-  const linePoints = safePoints.map((point) => `${toX(point.xTs)},${toY(point.y)}`).join(' ');
+  const linePoints = visiblePoints.map((point) => `${toX(point.xTs)},${toY(point.y)}`).join(' ');
   polyline.setAttribute('points', linePoints);
   polyline.setAttribute('fill', 'none');
   polyline.setAttribute('stroke', color);
@@ -149,7 +174,7 @@ export const createSparkline = ({
   polyline.setAttribute('stroke-linejoin', 'round');
   svg.append(polyline);
 
-  safePoints.forEach((point) => {
+  visiblePoints.forEach((point) => {
     const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     dot.setAttribute('cx', String(toX(point.xTs)));
     dot.setAttribute('cy', String(toY(point.y)));
@@ -158,17 +183,23 @@ export const createSparkline = ({
     svg.append(dot);
   });
 
-  const scroll = document.createElement('div');
-  scroll.className = 'sparkline__scroll';
-  const widthRatio = totalDays / Math.max(1, visibleDays - 1);
-  svg.style.width = `max(100%, calc(${widthRatio} * 100%))`;
-  svg.style.height = `${height}px`;
-  scroll.append(svg);
-  wrapper.append(scroll);
+  const scrollToLatest = () => {
+    viewport.scrollLeft = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+  };
+
+  content.append(svg);
+  viewport.append(content);
+  wrapper.append(viewport);
 
   requestAnimationFrame(() => {
-    scroll.scrollLeft = Math.max(0, scroll.scrollWidth - scroll.clientWidth);
+    scrollToLatest();
+    requestAnimationFrame(scrollToLatest);
   });
+
+  const resizeObserver = new ResizeObserver(() => {
+    scrollToLatest();
+  });
+  resizeObserver.observe(viewport);
 
   return wrapper;
 };

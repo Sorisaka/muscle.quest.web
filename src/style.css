@@ -785,28 +785,27 @@ section.panel {
 
 .sparkline {
   width: 100%;
-  height: 210px;
+  --sparkline-height: 190px;
 }
 
-.sparkline svg {
+.sparkline__viewport {
   width: 100%;
-  display: block;
-  background: #0f1623;
-  border: 1px solid #1f2937;
-  border-radius: 10px;
-}
-
-.sparkline__scroll {
-  width: 100%;
-  height: 100%;
-  max-height: 210px;
+  height: var(--sparkline-height);
   overflow-x: auto;
   overflow-y: auto;
   scrollbar-gutter: stable both-edges;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  background: #0f1623;
 }
 
-.sparkline__scroll svg {
+.sparkline__content {
   min-width: 100%;
+  min-height: 100%;
+}
+
+.sparkline svg {
+  display: block;
 }
 
 
