@@ -78,9 +78,7 @@ const createBodyMetricsPanel = async ({ store, playSfx }) => {
 
   const renderCharts = async () => {
     chartSlot.innerHTML = '';
-    const toDate = toDateKey(Date.now());
-    const fromDate = toDateKey(Date.now() - (activePeriod - 1) * 86400000);
-    const rows = await Promise.resolve(store.getBodyMetricsRange(fromDate, toDate));
+    const rows = await Promise.resolve(store.getBodyMetricsRange(null, null));
 
     const weightCard = document.createElement('div');
     weightCard.className = 'card account-card';
@@ -90,6 +88,7 @@ const createBodyMetricsPanel = async ({ store, playSfx }) => {
       label: '体重',
       color: '#93c5fd',
       points: (rows || []).map((row) => ({ x: row.date, y: row.weight_kg })),
+      visibleDays: activePeriod,
     }));
 
     const fatCard = document.createElement('div');
@@ -100,6 +99,7 @@ const createBodyMetricsPanel = async ({ store, playSfx }) => {
       label: '体脂肪率',
       color: '#fca5a5',
       points: (rows || []).map((row) => ({ x: row.date, y: row.body_fat_pct })),
+      visibleDays: activePeriod,
     }));
 
     chartSlot.append(weightCard, fatCard);

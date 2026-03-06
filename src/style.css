@@ -796,6 +796,19 @@ section.panel {
   border-radius: 10px;
 }
 
+
+.sparkline__scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-gutter: stable both-edges;
+}
+
+.sparkline__scroll svg {
+  min-width: 100%;
+}
+
+
 .history-calendar__cell--selected {
   outline: 2px solid #60a5fa;
   outline-offset: -2px;
