@@ -10,7 +10,7 @@ const TODO_STATE_KEY = 'musclequest:todoState';
 const HISTORY_FILTER_KEY = 'musclequest:historyFilter';
 
 const defaultSettings = {
-  language: 'en',
+  language: 'ja',
   difficulty: 'beginner',
   sfxEnabled: true,
   sfxVolume: 0.6,
@@ -23,7 +23,7 @@ const defaultSettings = {
 
 const defaultProfile = {
   id: 'local-user',
-  displayName: 'Guest',
+  displayName: 'ゲスト',
   totalCalories: 0,
   completedRuns: 0,
   lastResult: null,
@@ -72,6 +72,7 @@ const readSettings = () => {
     if (typeof parsed.sound === 'boolean' && typeof parsed.sfxEnabled === 'undefined') {
       normalized.sfxEnabled = parsed.sound;
     }
+    normalized.language = 'ja';
     if (!normalized.timerType) {
       normalized.timerType = normalized.mode || defaultSettings.timerType;
     }
@@ -156,7 +157,7 @@ export const createStore = (driver = 'supabase') => {
   const normalizeTimelineItem = (entry = {}) => ({
     runId: entry.runId ?? entry.run_id ?? null,
     userId: entry.userId ?? entry.user_id ?? null,
-    authorDisplayName: entry.authorDisplayName ?? entry.author_display_name ?? entry.displayName ?? entry.display_name ?? 'Unknown',
+    authorDisplayName: entry.authorDisplayName ?? entry.author_display_name ?? entry.displayName ?? entry.display_name ?? '不明',
     createdAt: entry.createdAt ?? entry.created_at ?? null,
     publishedAt: entry.publishedAt ?? entry.published_at ?? null,
     visibility: entry.visibility || 'private',
@@ -612,6 +613,21 @@ export const createStore = (driver = 'supabase') => {
     return sync || result;
   };
 
+  const deleteWorkoutPost = (runId) => {
+    const result = persistence.deleteWorkoutPost(runId);
+    const sync = resolveMaybeAsync(result, () => {
+      const nextHistory = resolveMaybeAsync(persistence.loadHistory(), applyHistory);
+      if (nextHistory) applyHistory(nextHistory);
+      clearWorkoutDatesMonthCache();
+    });
+    if (sync) {
+      const nextHistory = resolveMaybeAsync(persistence.loadHistory(), applyHistory);
+      if (nextHistory) applyHistory(nextHistory);
+      clearWorkoutDatesMonthCache();
+    }
+    return sync || result;
+  };
+
 
   const fetchTimeline = ({ scope = 'following', limit = 30, before = null, force = false } = {}) => {
     const normalizedScope = scope || 'following';
@@ -755,6 +771,7 @@ export const createStore = (driver = 'supabase') => {
     getFollowers,
     listVisibleWorkouts,
     updateWorkoutPost,
+    deleteWorkoutPost,
     fetchTimeline,
     toggleLike,
     getTimelineState,

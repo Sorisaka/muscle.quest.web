@@ -17,6 +17,30 @@ const SETTINGS_SECTIONS = [
 
 const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'];
 
+const SEX_LABELS = { male: '男性', female: '女性', unknown: '未設定' };
+
+
+const ICON_BORDER_LABELS = {
+  'ring-slate': 'スレート',
+  'ring-emerald': 'エメラルド',
+  'ring-amber': 'アンバー',
+  'ring-rose': 'ローズ',
+};
+
+const ICON_BACKGROUND_LABELS = {
+  'bg-night': 'ナイト',
+  'bg-ocean': 'オーシャン',
+  'bg-sunset': 'サンセット',
+  'bg-forest': 'フォレスト',
+};
+
+const ICON_CENTER_OBJECT_LABELS = {
+  dot: 'ドット',
+  diamond: 'ダイヤ',
+  barbell: 'バーベル',
+  bolt: 'ボルト',
+};
+
 const buildExerciseOptions = () => {
   const seen = new Set();
   (quests || []).forEach((quest) => {
@@ -106,16 +130,19 @@ const createAccountSettings = ({ store, playSfx, accountState }) => {
   nameInput.placeholder = '表示名を入力';
   nameField.append(nameLabel, nameInput);
 
-  const visField = createSelect('公開範囲', profile.account_visibility || profile.default_visibility || 'private', ['public', 'private']);
-  const borderField = createSelect('外枠', icon.icon_border, ICON_BORDER_OPTIONS);
-  const bgField = createSelect('背景色', icon.icon_background, ICON_BACKGROUND_OPTIONS);
-  const centerField = createSelect('中心オブジェクト', icon.icon_center_object, ICON_CENTER_OBJECT_OPTIONS);
+  const visField = createSelect('公開範囲', profile.account_visibility || profile.default_visibility || 'private', ['public', 'private'], (opt) => ({
+    value: opt,
+    label: opt === 'public' ? '公開' : '非公開',
+  }));
+  const borderField = createSelect('外枠', icon.icon_border, ICON_BORDER_OPTIONS, (opt) => ({ value: opt, label: ICON_BORDER_LABELS[opt] || opt }));
+  const bgField = createSelect('背景色', icon.icon_background, ICON_BACKGROUND_OPTIONS, (opt) => ({ value: opt, label: ICON_BACKGROUND_LABELS[opt] || opt }));
+  const centerField = createSelect('中心オブジェクト', icon.icon_center_object, ICON_CENTER_OBJECT_OPTIONS, (opt) => ({ value: opt, label: ICON_CENTER_OBJECT_LABELS[opt] || opt }));
 
   const feedback = document.createElement('p');
   feedback.className = 'muted';
 
   const renderPreview = () => {
-    const displayName = nameInput.value.trim() || 'Guest';
+    const displayName = nameInput.value.trim() || 'ゲスト';
     const visibility = visField.select.value || 'private';
     previewAvatarSlot.innerHTML = '';
     previewAvatarSlot.append(createAccountAvatar({
@@ -143,7 +170,7 @@ const createAccountSettings = ({ store, playSfx, accountState }) => {
     playSfx('ui:select');
 
     const payload = {
-      displayName: nameInput.value.trim() || 'Guest',
+      displayName: nameInput.value.trim() || 'ゲスト',
       account_visibility: visField.select.value,
       default_visibility: visField.select.value,
       icon_border: borderField.select.value,
@@ -192,17 +219,12 @@ const createGeneralSettings = ({ store, playSfx }) => {
 
   const hint = document.createElement('p');
   hint.className = 'muted';
-  hint.textContent = '言語・難易度・操作感など、専用カテゴリ外の共通設定をまとめています。';
-
-  const languageField = createSelect('言語', settings.language || 'ja', [
-    { value: 'ja', label: '日本語' },
-    { value: 'en', label: 'English' },
-  ], (opt) => opt);
+  hint.textContent = '表示言語は日本語固定です。難易度・操作感などの共通設定をまとめています。';
 
   const difficultyField = createSelect('難易度', settings.difficulty || 'beginner', [
-    { value: 'beginner', label: 'beginner' },
-    { value: 'intermediate', label: 'intermediate' },
-    { value: 'advanced', label: 'advanced' },
+    { value: 'beginner', label: '初級' },
+    { value: 'intermediate', label: '中級' },
+    { value: 'advanced', label: '上級' },
   ], (opt) => opt);
 
   const sfxEnabledField = document.createElement('label');
@@ -243,7 +265,7 @@ const createGeneralSettings = ({ store, playSfx }) => {
   saveBtn.addEventListener('click', () => {
     playSfx('ui:select');
     const payload = {
-      language: languageField.select.value,
+      language: 'ja',
       difficulty: difficultyField.select.value,
       sfxEnabled: Boolean(sfxEnabledInput.checked),
       sfxVolume: Math.max(0, Math.min(1, Number(sfxVolumeInput.value) || 0)),
@@ -253,7 +275,7 @@ const createGeneralSettings = ({ store, playSfx }) => {
   });
 
   applyPreview();
-  card.append(title, hint, languageField.wrap, difficultyField.wrap, sfxEnabledField, sfxVolumeField, saveBtn, status);
+  card.append(title, hint, difficultyField.wrap, sfxEnabledField, sfxVolumeField, saveBtn, status);
   return card;
 };
 
@@ -402,13 +424,13 @@ const createBodyProfileSettings = ({ store, playSfx, accountState }) => {
     const pHint = document.createElement('p');
     pHint.className = 'muted';
     pHint.textContent = editorMode === 'simple'
-      ? 'Simple: 身長・体重・性別から各寸法を自動推定して保存します。'
-      : 'Advance: 各寸法を自動推定しつつ、manual を選んだ項目のみ手動上書きできます。';
+      ? 'かんたんモード: 身長・体重・性別から各寸法を自動推定して保存します。'
+      : '詳細モード: 各寸法を自動推定しつつ、手動を選んだ項目のみ上書きできます。';
 
     const summary = document.createElement('div');
     summary.className = 'stack';
     const items = [
-      `性別: ${autoApplied.sex || 'unknown'}`,
+      `性別: ${SEX_LABELS[autoApplied.sex] || '未設定'}`,
       `身長: ${autoApplied.height_cm ?? '-'} cm`,
       `体重: ${autoApplied.weight_kg ?? '-'} kg`,
       ...metricDefs.map((field) => {
@@ -434,8 +456,8 @@ const createBodyProfileSettings = ({ store, playSfx, accountState }) => {
   const renderModeTabs = () => {
     modeTabs.innerHTML = '';
     [
-      { key: 'simple', label: 'Simple' },
-      { key: 'advance', label: 'Advance' },
+      { key: 'simple', label: 'かんたん' },
+      { key: 'advance', label: '詳細' },
     ].forEach((entry) => {
       const tab = document.createElement('button');
       tab.type = 'button';
@@ -456,13 +478,13 @@ const createBodyProfileSettings = ({ store, playSfx, accountState }) => {
     form.append(sexField.wrap, heightField, weightField);
     if (editorMode === 'advance') {
       const advancedTitle = document.createElement('strong');
-      advancedTitle.textContent = '追加パラメータ (Advance)';
+      advancedTitle.textContent = '追加パラメータ（詳細モード）';
       form.append(advancedTitle, ...advancedFields.map((field) => field.wrap));
     }
 
     hint.textContent = editorMode === 'simple'
-      ? 'Simple は最小入力で自動推定を利用するモードです。'
-      : 'Advance は推定値を初期値として、必要項目のみ手動上書きするモードです。';
+      ? 'かんたんモードは最小入力で自動推定を利用するモードです。'
+      : '詳細モードは推定値を初期値として、必要項目のみ手動上書きするモードです。';
   };
 
   const validate = () => {

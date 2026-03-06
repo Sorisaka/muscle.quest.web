@@ -1,0 +1,48 @@
+{
+  "id": "run_20260306_120000_ab12cd",
+  "user_id": "00000000-0000-0000-0000-000000000000",
+  "questId": "push-ups-quest",
+  "exerciseSlug": "push-ups",
+  "calories": 86.5,
+  "points": 0,
+  "mode": "interval",
+  "difficulty": "beginner",
+  "sets": [
+    {
+      "reps": 15,
+      "weight": 0
+    }
+  ],
+  "startTime": 1760000000000,
+  "endTime": 1760000300000,
+  "timestamp": 1760000300000,
+  "visibility": "private",
+  "published_at": "2026-03-06T12:00:00.000Z",
+  "note": "フォームを意識して実施",
+  "breakdown": [
+    {
+      "exerciseSlug": "push-ups",
+      "met": 3.8,
+      "minutes": 5,
+      "calories": 18.4
+    }
+  ],
+  "category": "bodyweight",
+  "muscles": ["chest", "triceps"],
+  "result": {
+    "questId": "push-ups-quest",
+    "exerciseSlug": "push-ups",
+    "difficulty": "beginner",
+    "mode": "interval",
+    "sets": [
+      {
+        "reps": 15,
+        "weight": 0
+      }
+    ],
+    "startTime": 1760000000000,
+    "endTime": 1760000300000,
+    "visibilityOverride": "private",
+    "note": "フォームを意識して実施"
+  }
+}

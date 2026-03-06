@@ -76,7 +76,7 @@ export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountSta
     const name = document.createElement('div');
     name.className = 'account-summary__name';
     const visibility = accountState.getStatus().profile?.account_visibility || 'private';
-    const label = status.displayName || 'Guest';
+    const label = status.displayName || 'ゲスト';
     name.textContent = visibility === 'private' ? `${label} 🔒` : label;
     identity.append(avatar, name);
 
@@ -98,7 +98,7 @@ export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountSta
 
     const id = document.createElement('div');
     id.className = 'account-summary__id';
-    id.textContent = `ID: ${status.id || 'guest'}`;
+    id.textContent = `ID: ${status.id || '未設定'}`;
 
     const copyStatus = document.createElement('p');
     copyStatus.className = 'account-summary__copy-status';

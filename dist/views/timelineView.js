@@ -126,7 +126,7 @@ export const renderTimeline = (_params, { playSfx, store }) => {
       top.className = 'timeline-card__top';
 
       const author = document.createElement('strong');
-      author.textContent = item.authorDisplayName || 'Unknown';
+      author.textContent = item.authorDisplayName || '不明';
 
       const date = document.createElement('span');
       date.className = 'muted';

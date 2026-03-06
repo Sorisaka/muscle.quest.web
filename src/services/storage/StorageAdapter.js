@@ -29,6 +29,7 @@ const REQUIRED_METHODS = [
   'getFollowers',
   'listVisibleWorkouts',
   'updateWorkoutPost',
+  'deleteWorkoutPost',
   'getTimeline',
   'toggleLike',
   'upsertBodyMetric',

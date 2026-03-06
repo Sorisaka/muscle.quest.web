@@ -405,16 +405,70 @@ const createDayDetail = async ({ store, dateKey, navigate, playSfx, filterState 
   } else {
     runs.forEach((entry) => {
       const row = document.createElement('div');
-      row.className = 'row';
+      row.className = 'card stack';
       const name = document.createElement('strong');
-      name.textContent = entry.exerciseSlug || entry.questId || 'workout';
+      name.textContent = entry.exerciseSlug || entry.questId || 'ワークアウト';
       const meta = document.createElement('span');
       meta.className = 'muted';
       const tags = getRunTags(entry);
       const category = HISTORY_CATEGORY_LABELS[tags.category] || HISTORY_CATEGORY_LABELS.unknown;
       const muscles = tags.muscles.map(toMuscleLabel).join('・') || '未設定';
       meta.textContent = `${entry.calories || 0} kcal / ${entry.points || 0} pt / ${category} / ${muscles}`;
-      row.append(name, meta);
+
+      const sub = document.createElement('p');
+      sub.className = 'muted';
+      const visibilityLabel = entry.visibility === 'public' ? '公開' : entry.visibility === 'archived' ? 'アーカイブ' : '非公開';
+      sub.textContent = `公開範囲: ${visibilityLabel} / メモ: ${entry.note || 'なし'}`;
+
+      const itemActions = document.createElement('div');
+      itemActions.className = 'hero__actions';
+
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'ghost';
+      editBtn.textContent = '投稿設定を編集';
+      editBtn.addEventListener('click', async () => {
+        const currentVisibility = entry.visibility || 'private';
+        const rawVisibility = prompt('公開範囲を入力してください（public / private / archived）', currentVisibility);
+        if (rawVisibility == null) return;
+        const normalizedVisibility = String(rawVisibility).trim().toLowerCase();
+        if (!['public', 'private', 'archived'].includes(normalizedVisibility)) {
+          alert('公開範囲は public / private / archived のいずれかを入力してください。');
+          return;
+        }
+        const rawNote = prompt('メモを入力してください（空欄でメモなし）', entry.note || '');
+        if (rawNote == null) return;
+
+        try {
+          playSfx('ui:select');
+          await Promise.resolve(store.updateWorkoutPost(entry.id, {
+            visibility: normalizedVisibility,
+            note: rawNote.trim(),
+          }));
+          navigate(`#/history/${dateKey}`);
+        } catch (error) {
+          alert(error?.message || '投稿設定の更新に失敗しました。');
+        }
+      });
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'ghost';
+      deleteBtn.textContent = 'この記録を削除';
+      deleteBtn.addEventListener('click', async () => {
+        const ok = confirm('このワークアウト記録を削除しますか？この操作は元に戻せません。');
+        if (!ok) return;
+        try {
+          playSfx('ui:select');
+          await Promise.resolve(store.deleteWorkoutPost(entry.id));
+          navigate(`#/history/${dateKey}`);
+        } catch (error) {
+          alert(error?.message || '削除に失敗しました。');
+        }
+      });
+
+      itemActions.append(editBtn, deleteBtn);
+      row.append(name, meta, sub, itemActions);
       list.append(row);
     });
   }

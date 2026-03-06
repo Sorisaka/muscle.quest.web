@@ -67,7 +67,7 @@ export const renderAccount = (_params, { navigate, accountState, store }) => {
       },
     }),
     Object.assign(document.createElement('strong'), {
-      textContent: withPrivateLock(status.displayName || 'Guest', profile.account_visibility || profile.default_visibility || 'private'),
+      textContent: withPrivateLock(status.displayName || 'ゲスト', profile.account_visibility || profile.default_visibility || 'private'),
     }),
   );
 

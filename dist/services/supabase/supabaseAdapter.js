@@ -105,7 +105,7 @@ const mapTimelineRow = (row) => {
 
 const mapAccountRow = (row = {}) => ({
   id: row.id,
-  display_name: row.display_name || row.id || 'Unknown',
+  display_name: row.display_name || row.id || '不明',
   account_visibility: normalizeAccountVisibility(row.account_visibility, 'private'),
   icon_border: row.icon_border || null,
   icon_background: row.icon_background || null,
@@ -123,7 +123,7 @@ const mapLeaderboardRow = (row = {}, period = 'overall') => {
 
   return {
     id: row.user_id,
-    displayName: row.display_name || row.user_id || 'Unknown',
+    displayName: row.display_name || row.user_id || '不明',
     calories: Math.max(Number(periodCalories || 0), 0),
     account_visibility: normalizeAccountVisibility(row.account_visibility, 'private'),
     icon_border: row.icon_border || null,
@@ -155,7 +155,7 @@ export const createSupabaseAdapter = (options = {}) => {
     return () => subscribers.delete(callback);
   };
 
-  const defaultName = () => runtimeConfig.profileDisplayName || 'Guest';
+  const defaultName = () => runtimeConfig.profileDisplayName || 'ゲスト';
 
 
   const upsertWithFallback = async ({ table, keys, payload, selectColumns = '*' }) => {
@@ -1001,6 +1001,28 @@ export const createSupabaseAdapter = (options = {}) => {
       });
   };
 
+  const deleteWorkoutPost = (runId) => {
+    if (!runId) return false;
+
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.deleteWorkoutPost(runId);
+    }
+
+    return client
+      .from('workout_runs')
+      .delete()
+      .eq('id', runId)
+      .eq('user_id', session.user.id)
+      .then(({ error }) => {
+        if (error) {
+          authWarn('workout post delete failed', error.message || error);
+          return local.deleteWorkoutPost(runId);
+        }
+        refreshHistoryFromSupabase();
+        return true;
+      });
+  };
+
 
 
   const toBodyMetricPayload = (metric = {}) => ({
@@ -1224,6 +1246,7 @@ export const createSupabaseAdapter = (options = {}) => {
     getFollowers,
     listVisibleWorkouts,
     updateWorkoutPost,
+    deleteWorkoutPost,
     getTimeline,
     toggleLike,
     upsertBodyMetric,

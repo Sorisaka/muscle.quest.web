@@ -31,7 +31,7 @@ const writeJson = (key, value) => {
 
 const defaultProfile = {
   id: 'local-user',
-  displayName: 'Guest',
+  displayName: 'ゲスト',
   totalCalories: 0,
   points: 0,
   completedRuns: 0,
@@ -178,7 +178,7 @@ export const createLocalPersistence = () => {
 
   const updateDisplayName = (name) => {
     const profile = loadProfile();
-    const next = { ...profile, displayName: name || 'Guest' };
+    const next = { ...profile, displayName: name || 'ゲスト' };
     saveProfile(next);
     return next;
   };
@@ -197,7 +197,7 @@ export const createLocalPersistence = () => {
 
     return [{
       id: profile.id,
-      displayName: profile.displayName || 'Guest',
+      displayName: profile.displayName || 'ゲスト',
       account_visibility: normalizeAccountVisibility(profile.account_visibility || profile.default_visibility, 'private'),
       icon_border: profile.icon_border || null,
       icon_background: profile.icon_background || null,
@@ -214,7 +214,7 @@ export const createLocalPersistence = () => {
     if (profile.id === userId) {
       return {
         id: profile.id,
-        display_name: profile.displayName || 'Guest',
+        display_name: profile.displayName || 'ゲスト',
         account_visibility: normalizeAccountVisibility(profile.account_visibility || profile.default_visibility, 'private'),
         icon_border: profile.icon_border || null,
         icon_background: profile.icon_background || null,
@@ -399,6 +399,22 @@ export const createLocalPersistence = () => {
     return next;
   };
 
+  const deleteWorkoutPost = (runId) => {
+    if (!runId) return false;
+    const history = loadHistory();
+    const nextHistory = history.filter((entry) => entry.id !== runId);
+    if (nextHistory.length === history.length) return false;
+    writeJson(HISTORY_KEY, nextHistory);
+
+    const likes = loadLikes();
+    if (likes[String(runId)]) {
+      const nextLikes = { ...likes };
+      delete nextLikes[String(runId)];
+      writeJson(LIKES_KEY, nextLikes);
+    }
+    return true;
+  };
+
   const getTimeline = ({ scope: _scope = 'following', limit = 30, before = null } = {}) => {
     const profile = loadProfile();
     const history = loadHistory();
@@ -416,7 +432,7 @@ export const createLocalPersistence = () => {
         return {
           runId: entry.id,
           userId: entry.user_id,
-          authorDisplayName: profile.displayName || 'Guest',
+          authorDisplayName: profile.displayName || 'ゲスト',
           createdAt,
           publishedAt,
           visibility: entry.visibility || 'private',
@@ -563,6 +579,7 @@ export const createLocalPersistence = () => {
     getFollowers,
     listVisibleWorkouts,
     updateWorkoutPost,
+    deleteWorkoutPost,
     getTimeline,
     toggleLike,
     upsertBodyMetric,

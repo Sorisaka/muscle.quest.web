@@ -4,7 +4,7 @@ const DEFAULT_CONFIG = {
   supabaseUrl: undefined,
   supabaseAnonKey: undefined,
   oauthRedirectTo: undefined,
-  profileDisplayName: 'Guest',
+  profileDisplayName: 'ゲスト',
 };
 
 /*
