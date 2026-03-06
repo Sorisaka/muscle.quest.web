@@ -2,7 +2,7 @@ import { getQuestsByTier } from '../core/content.js';
 
 const starBadge = (count) => `${'★'.repeat(count)} (${count})`;
 
-const createQuestItem = (quest, navigate, playSfx) => {
+const createWorkoutItem = (quest, navigate, playSfx) => {
   const item = document.createElement('article');
   item.className = 'card quest-card';
 
@@ -34,19 +34,18 @@ const createQuestItem = (quest, navigate, playSfx) => {
   detailButton.textContent = '詳細';
   detailButton.addEventListener('click', () => {
     playSfx('ui:navigate');
-    navigate(`#/quest/${quest.id}`);
+    navigate(`#/workout/${quest.id}`);
   });
 
   actions.append(detailButton);
-
   item.append(header, description, meta, actions);
   return item;
 };
 
 const tierLabels = {
-  beginner: '初級',
-  intermediate: '中級',
-  advanced: '上級',
+  beginner: '有酸素',
+  intermediate: '自重',
+  advanced: 'ウエイト',
 };
 
 export const renderQuestList = (params, { navigate, playSfx }) => {
@@ -56,11 +55,41 @@ export const renderQuestList = (params, { navigate, playSfx }) => {
   const tier = params.tier;
   const filtered = getQuestsByTier(tier);
 
-  const heading = document.createElement('div');
-  heading.className = 'list-header';
-
   const title = document.createElement('h2');
-  title.textContent = `${tierLabels[tier] || tier} クエスト一覧`;
+  title.textContent = `${tierLabels[tier] || tier} ワークアウト一覧`;
+
+  const filterCard = document.createElement('div');
+  filterCard.className = 'card stack';
+  const filterTitle = document.createElement('h3');
+  filterTitle.textContent = '効く部位で絞り込み（準備中）';
+  const filterRow = document.createElement('div');
+  filterRow.className = 'tabs';
+  ['全身', '上半身', '下半身', '体幹'].forEach((part) => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'tab';
+    chip.textContent = part;
+    chip.disabled = true;
+    filterRow.append(chip);
+  });
+  filterCard.append(filterTitle, filterRow);
+
+  const description = document.createElement('p');
+  description.className = 'muted';
+  description.textContent = '設定済みトレーニング種類に応じて、ここに候補を出し分ける想定です。';
+
+  const grid = document.createElement('div');
+  grid.className = 'card-grid';
+
+  if (filtered.length === 0) {
+    const empty = document.createElement('p');
+    empty.textContent = 'このカテゴリのワークアウトはまだありません。';
+    grid.append(empty);
+  } else {
+    filtered.forEach((quest) => {
+      grid.append(createWorkoutItem(quest, navigate, playSfx));
+    });
+  }
 
   const back = document.createElement('button');
   back.type = 'button';
@@ -71,25 +100,6 @@ export const renderQuestList = (params, { navigate, playSfx }) => {
     navigate('#/');
   });
 
-  heading.append(title, back);
-
-  const description = document.createElement('p');
-  description.className = 'muted';
-  description.textContent = '★の少ない順で並べています。気になるクエストを選択してください。';
-
-  const grid = document.createElement('div');
-  grid.className = 'card-grid';
-
-  if (filtered.length === 0) {
-    const empty = document.createElement('p');
-    empty.textContent = 'この級のクエストはまだありません。';
-    grid.append(empty);
-  } else {
-    filtered.forEach((quest) => {
-      grid.append(createQuestItem(quest, navigate, playSfx));
-    });
-  }
-
-  listContainer.append(heading, description, grid);
+  listContainer.append(title, filterCard, description, grid, back);
   return listContainer;
 };

@@ -141,3 +141,111 @@ All primary hash routes can be checked without extra tooling:
 2. 2回目以降（同一セッション・同一スコープ）は自動再取得されず、`更新` ボタン押下時のみ再取得されること
 3. `following` ↔ `global` 切替直後に、前タブの投稿が残らないこと（残像がないこと）
 4. `global` が 0 件の場合でも、空状態（投稿なし）として表示されること
+
+## Phase 1 UI再編メモ（下部ナビ・画面遷移基盤）
+
+### ローカル開発手順
+1. Node.js 20 系を利用（`.nvmrc`）。
+2. 依存をクリーンインストール: `npm ci`。
+3. 開発サーバー起動: `npm run dev`。
+4. Supabase 連携を試す場合は `dist/config.js` を用意（`src/config.example.js` をコピーして値を設定）。
+   - `dist/config.js` はビルド成果物側のランタイム設定ファイルであり、コミットしない。
+   - `npm run build` 後は `dist/` が再生成されるため、必要なら再配置する。
+
+### 下部ナビのスマホブラウザ対応仕様
+- `safe-area-inset-bottom` を `--safe-area-bottom` として使用し、iOSノッチ/ホームインジケータ領域を吸収。
+- `window.visualViewport` を使って `window.innerHeight - (visualViewport.height + visualViewport.offsetTop)` を計算し、ブラウザ下部UI占有分を `--browser-ui-offset` へ反映。
+- 下部ナビは `position: fixed` のまま `bottom: calc(var(--safe-area-bottom) + var(--browser-ui-offset))` で動的に持ち上げる。
+- 本文側は `padding-bottom: var(--bottom-nav-total)`（ナビ高さ + safe area + 動的オフセット）を確保し、コンテンツ被りを防止。
+- 再計算イベント:
+  - `resize`
+  - `orientationchange`
+  - `visualViewport.resize`
+  - `visualViewport.scroll`
+- キーボード表示推定（下部占有が閾値超え）時は `--browser-ui-offset` を 0 扱いにし、入力中の極端な浮き上がりを避ける。
+
+### Safari/スマホブラウザのデバッグ観点
+- DevTools のモバイルエミュレーションは viewport 変化を完全再現しないため、`visualViewport` 差分検証は実機確認を推奨。
+- iPhone Safari で以下を確認:
+  1. URLバー表示時: ナビがURLバーに重ならず上に寄る
+  2. URLバー縮小時: 余白が残留せず最下部に戻る
+  3. 入力フォーカス時: キーボード表示で不自然な大ジャンプが起きない
+
+### ローカル確認方法
+1. `npm run dev` で起動。
+2. `#/`, `#/timeline`, `#/rank/local`, `#/history`, `#/account`, `#/settings` を遷移。
+3. ドロワー表示→再度左上アイコンタップで `#/account` に遷移することを確認。
+4. ワークアウト導線（ホーム→カテゴリ→一覧→詳細→実行）が成立することを確認。
+
+### デプロイ確認方法
+1. 本番ビルド: `npm run build`。
+2. 本番相当サーブ: `npm run preview`。
+3. GitHub Pages 配信時の確認観点:
+   - ハッシュルーティング遷移が壊れていない
+   - 下部固定ナビのアクティブ表示と重なり回避が機能する
+   - `dist/config.js` 注入（Secrets 経由）が必要な環境で認証設定が反映される
+
+## Phase 2: フォロー / フォローリクエスト検証観点
+- public アカウント: Follow 押下で即フォロー成立すること
+- private アカウント: Request 送信後、相手が Approve した時のみフォロー成立すること
+- Reject 時: リクエストが拒否状態となり、フォロー関係が作られないこと
+- Request取消: 送信者が pending request を cancel できること
+- フォロー解除: Unfollow で follows から削除されること
+- follower / following 一覧が表示できること
+- private アカウント表示名の末尾に `🔒` が付与されること
+
+## Phase 4: アイコン編集 + 設定画面接続
+
+### ローカルセットアップ（詳細）
+1. Node.js 20 系を利用（`.nvmrc`）。
+2. 依存インストール: `npm ci`。
+3. 開発起動: `npm run dev`。
+4. 本番ビルド: `npm run build`。
+5. 本番相当の確認: `npm run preview`。
+6. ランタイム設定:
+   - `cp src/config.example.js dist/config.js`
+   - `dist/config.js` に `SUPABASE_URL` / `SUPABASE_ANON_KEY` を設定
+   - 秘匿値はコミットしない（`dist/config.js` は `.gitignore`）
+7. 依存追加が必要な場合:
+   - `npm i <package>`
+   - `package-lock.json` を含めてコミット
+
+### Supabase SQL 適用手順（migration + 手動SQL）
+- migration で適用（推奨）
+  1. `supabase link --project-ref <project-ref>`
+  2. `supabase db push`
+- 手動 SQL で既存環境へ差分適用する場合（SQL Editor）
+  1. `supabase/sql/013_phase2_follow_requests.sql`
+  2. `supabase/sql/015_phase4_icon_settings.sql`
+  3. 検証: `supabase/sql/014_phase2_follow_requests_verification.sql`
+- 既存環境の差分適用時に失敗した場合の確認クエリ例
+  - `select column_name from information_schema.columns where table_schema='public' and table_name='profiles' and column_name in ('account_visibility','icon_border','icon_background','icon_center_object');`
+  - `select conname from pg_constraint where conrelid='public.profiles'::regclass and conname like 'profiles_icon_%';`
+  - `select policyname,tablename from pg_policies where schemaname='public' and tablename in ('profiles','follows','follow_requests');`
+
+### UIデバッグ手順（モバイル）
+- 基本確認:
+  1. `npm run dev` 後に `#/account`, `#/account/following`, `#/account/followers`, `#/follow-requests`, `#/settings/account` を確認。
+  2. `+` ボタンから ID 検索 → follow/request/unfollow/cancel が反映されることを確認。
+  3. 設定画面で表示名/公開範囲/アイコン構成（外枠・背景・中心）を変更し、ドロワー/一覧/検索結果で同一描画されることを確認。
+- 下部ナビのブラウザUI追従:
+  - `safe-area-inset-bottom` と `visualViewport` 差分を利用。
+  - 判定は `window.innerHeight - (visualViewport.height + visualViewport.offsetTop)`。
+  - 再計算イベントは `resize` / `orientationchange` / `visualViewport.resize` / `visualViewport.scroll`。
+  - キーボード表示推定時は下部オフセットを 0 扱いにし、ナビの過剰な浮き上がりを防ぐ。
+- Safari / iPhone 確認ポイント:
+  - URLバー表示/非表示で下余白が残留しないか
+  - キーボード表示時に下部ナビや入力欄が極端に崩れないか
+  - ドロワー開閉 + ルート遷移（アカウント/リクエスト）が破綻しないか
+
+### デプロイ手順（GitHub Pages）
+1. `main` への push で Actions が `npm run build` を実行。
+2. ワークフロー内で Secrets から `dist/config.js` を生成して Pages へ配信。
+3. 必須 Secrets:
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+   - （必要なら）`OAUTH_REDIRECT_TO`
+4. デプロイ後の確認観点:
+   - ハッシュルーティング（`#/account`, `#/follow-requests`, `#/settings/account`）
+   - アイコン構成の表示統一（ドロワー/一覧/検索結果）
+   - モバイル下部ナビ追従挙動

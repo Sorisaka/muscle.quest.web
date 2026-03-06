@@ -7,7 +7,7 @@ import { normalizeAccountVisibility, normalizePostVisibility, resolvePostVisibil
 import { toDateKey, startOfDay, endOfDay } from '../../lib/dateKey.js';
 import { decorateResultWithTags, getExerciseTags, normalizeCategory, normalizeMuscles } from '../../core/exerciseTaxonomy.js';
 
-const PROFILE_COLUMNS = 'id,display_name,account_visibility,default_visibility,points,total_calories,completed_runs,last_result,height_cm,weight_kg,sex,step_length_m,arm_length_m,leg_length_m,torso_length_m,step_length_m_mode,arm_length_m_mode,leg_length_m_mode,torso_length_m_mode,updated_at';
+const PROFILE_COLUMNS = 'id,display_name,account_visibility,default_visibility,icon_border,icon_background,icon_center_object,points,total_calories,completed_runs,last_result,height_cm,weight_kg,sex,step_length_m,arm_length_m,leg_length_m,torso_length_m,step_length_m_mode,arm_length_m_mode,leg_length_m_mode,torso_length_m_mode,updated_at';
 const HISTORY_LIMIT = 100;
 const MIGRATION_FLAG_PREFIX = 'musclequest:migration:';
 
@@ -186,6 +186,9 @@ export const createSupabaseAdapter = (options = {}) => {
     displayName: row?.display_name || row?.displayName || session?.user?.email || defaultName(),
     account_visibility: normalizeAccountVisibility(row?.account_visibility || row?.default_visibility || row?.defaultVisibility, 'private'),
     default_visibility: normalizeAccountVisibility(row?.account_visibility || row?.default_visibility || row?.defaultVisibility, 'private'),
+    icon_border: row?.icon_border ?? null,
+    icon_background: row?.icon_background ?? null,
+    icon_center_object: row?.icon_center_object ?? null,
     points: row?.points ?? 0,
     totalCalories: row?.total_calories ?? row?.totalCalories ?? 0,
     completedRuns: row?.completed_runs ?? row?.completedRuns ?? 0,
@@ -428,6 +431,9 @@ export const createSupabaseAdapter = (options = {}) => {
     const payload = {
       display_name: mergedProfile.displayName,
       account_visibility: normalizeAccountVisibility(mergedProfile.account_visibility || mergedProfile.default_visibility, 'private'),
+      icon_border: mergedProfile.icon_border,
+      icon_background: mergedProfile.icon_background,
+      icon_center_object: mergedProfile.icon_center_object,
       height_cm: mergedProfile.height_cm,
       weight_kg: mergedProfile.weight_kg,
       sex: mergedProfile.sex,
@@ -617,8 +623,16 @@ export const createSupabaseAdapter = (options = {}) => {
   };
 
 
+  const normalizeFollowError = (error) => {
+    const message = String(error?.message || error || '').toLowerCase();
+    if (message.includes('self') || message.includes('follower') && message.includes('followee')) return 'SELF_FOLLOW_NOT_ALLOWED';
+    if (message.includes('duplicate') || message.includes('already')) return 'ALREADY_EXISTS';
+    if (message.includes('permission') || message.includes('policy') || message.includes('rls')) return 'FORBIDDEN';
+    return 'UNKNOWN_ERROR';
+  };
+
   const followUser = (followerId, followeeId) => {
-    if (!followerId || !followeeId || followerId === followeeId) return false;
+    if (!followerId || !followeeId || followerId === followeeId) return { ok: false, code: 'SELF_FOLLOW_NOT_ALLOWED' };
     if (!supabaseEnabled || !session?.user?.id) {
       return local.followUser(followerId, followeeId);
     }
@@ -629,9 +643,10 @@ export const createSupabaseAdapter = (options = {}) => {
       .then(({ error }) => {
         if (error) {
           authWarn('follows insert failed', error.message || error);
-          return local.followUser(followerId, followeeId);
+          const code = normalizeFollowError(error);
+          return { ok: code === 'ALREADY_EXISTS', code };
         }
-        return true;
+        return { ok: true, code: 'FOLLOWED' };
       });
   };
 
@@ -644,11 +659,132 @@ export const createSupabaseAdapter = (options = {}) => {
       table: 'follows',
       keys: { follower_id: followerId, followee_id: followeeId },
     }).then(({ error }) => {
+      if (error) {
+        authWarn('follows delete failed', error.message || error);
+        return { ok: false, code: normalizeFollowError(error) };
+      }
+      return { ok: true, code: 'UNFOLLOWED' };
+    });
+  };
+
+  const requestFollow = (requesterId, targetId) => {
+    if (!requesterId || !targetId || requesterId === targetId) return { ok: false, code: 'SELF_FOLLOW_NOT_ALLOWED' };
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.requestFollow(requesterId, targetId);
+    }
+    return client.rpc('follow_action', { p_target_id: targetId }).then(({ data, error }) => {
+      if (error) {
+        authWarn('follow_action failed', error.message || error);
+        return { ok: false, code: normalizeFollowError(error), message: error.message || String(error) };
+      }
+      return { ok: true, code: String(data || 'OK').toUpperCase() };
+    });
+  };
+
+  const cancelFollowRequest = (requesterId, targetId) => {
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.cancelFollowRequest(requesterId, targetId);
+    }
+    return client.rpc('cancel_follow_request', { p_target_id: targetId }).then(({ data, error }) => {
+      if (error) {
+        authWarn('cancel_follow_request failed', error.message || error);
+        return { ok: false, code: normalizeFollowError(error), message: error.message || String(error) };
+      }
+      return { ok: Boolean(data), code: data ? 'REQUEST_CANCELLED' : 'REQUEST_NOT_FOUND' };
+    });
+  };
+
+  const respondFollowRequest = (targetId, requesterId, action = 'reject') => {
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.respondFollowRequest(targetId, requesterId, action);
+    }
+    return client.rpc('respond_follow_request', { p_requester_id: requesterId, p_action: action }).then(({ data, error }) => {
+      if (error) {
+        authWarn('respond_follow_request failed', error.message || error);
+        return { ok: false, code: normalizeFollowError(error), message: error.message || String(error) };
+      }
+      return { ok: Boolean(data), code: action === 'approve' ? 'REQUEST_ACCEPTED' : 'REQUEST_REJECTED' };
+    });
+  };
+
+  const getFollowState = (viewerId, targetId) => {
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.getFollowState(viewerId, targetId);
+    }
+    return client.rpc('get_follow_state', { p_target_id: targetId }).then(({ data, error }) => {
+      if (error) {
+        authWarn('get_follow_state failed', error.message || error);
+        return local.getFollowState(viewerId, targetId);
+      }
+      const row = Array.isArray(data) ? data[0] : data;
+      return {
+        targetId,
+        accountVisibility: row?.account_visibility || 'public',
+        isFollowing: Boolean(row?.is_following),
+        hasPendingRequest: Boolean(row?.has_pending_request),
+        hasIncomingRequest: Boolean(row?.has_incoming_request),
+        requestStatus: row?.request_status || null,
+      };
+    });
+  };
+
+  const listFollowRequests = (userId, direction = 'incoming') => {
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.listFollowRequests(userId, direction);
+    }
+    return client.rpc('get_follow_requests', { p_direction: direction }).then(({ data, error }) => {
+      if (error) {
+        authWarn('get_follow_requests failed', error.message || error);
+        return local.listFollowRequests(userId, direction);
+      }
+      return (data || []).map((row) => ({
+        requester_id: row.requester_id,
+        target_id: row.target_id,
+        status: row.status,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        requester: {
+          id: row.requester_id,
+          display_name: row.requester_display_name,
+          account_visibility: row.requester_visibility,
+          icon_border: row.requester_icon_border,
+          icon_background: row.requester_icon_background,
+          icon_center_object: row.requester_icon_center_object,
+        },
+        target: {
+          id: row.target_id,
+          display_name: row.target_display_name,
+          account_visibility: row.target_visibility,
+          icon_border: row.target_icon_border,
+          icon_background: row.target_icon_background,
+          icon_center_object: row.target_icon_center_object,
+        },
+      }));
+    });
+  };
+
+  const searchAccounts = (query = '', viewerId = null, limit = 20) => {
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.searchAccounts(query, viewerId, limit);
+    }
+    return client
+      .from('profiles')
+      .select('id,display_name,account_visibility,icon_border,icon_background,icon_center_object')
+      .or(`id.ilike.%${String(query || '').replace(/[%]/g, '')}%,display_name.ilike.%${String(query || '').replace(/[%]/g, '')}%`)
+      .limit(Math.max(1, Number(limit) || 20))
+      .then(({ data, error }) => {
         if (error) {
-          authWarn('follows delete failed', error.message || error);
-          return local.unfollowUser(followerId, followeeId);
+          authWarn('profiles search failed', error.message || error);
+          return local.searchAccounts(query, viewerId, limit);
         }
-        return true;
+        return (data || []).map((row) => ({
+          id: row.id,
+          display_name: row.display_name,
+          account_visibility: normalizeAccountVisibility(row.account_visibility, 'private'),
+          icon_border: row.icon_border,
+          icon_background: row.icon_background,
+          icon_center_object: row.icon_center_object,
+        }));
       });
   };
 
@@ -687,6 +823,18 @@ export const createSupabaseAdapter = (options = {}) => {
         return (data || []).map((row) => row.follower_id);
       });
   };
+
+  const getFollowCounts = (userId) => Promise.all([
+    getFollowing(userId),
+    getFollowers(userId),
+    listFollowRequests(userId, 'incoming'),
+    listFollowRequests(userId, 'outgoing'),
+  ]).then(([following, followers, incoming, outgoing]) => ({
+    following: (following || []).length,
+    followers: (followers || []).length,
+    pendingIncoming: (incoming || []).length,
+    pendingOutgoing: (outgoing || []).length,
+  }));
 
   const listVisibleWorkouts = (viewerId, targetUserId) => {
     if (!supabaseEnabled || !session?.user?.id) {
@@ -1021,6 +1169,13 @@ export const createSupabaseAdapter = (options = {}) => {
     setSpecialPlan,
     followUser,
     unfollowUser,
+    requestFollow,
+    cancelFollowRequest,
+    respondFollowRequest,
+    getFollowState,
+    listFollowRequests,
+    searchAccounts,
+    getFollowCounts,
     getFollowing,
     getFollowers,
     listVisibleWorkouts,

@@ -505,6 +505,20 @@ export const createStore = (driver = 'supabase') => {
 
   const unfollowUser = (followerId, followeeId) => persistence.unfollowUser(followerId, followeeId);
 
+  const requestFollow = (requesterId, targetId) => persistence.requestFollow(requesterId, targetId);
+
+  const cancelFollowRequest = (requesterId, targetId) => persistence.cancelFollowRequest(requesterId, targetId);
+
+  const respondFollowRequest = (targetId, requesterId, action) => persistence.respondFollowRequest(targetId, requesterId, action);
+
+  const getFollowState = (viewerId, targetId) => persistence.getFollowState(viewerId, targetId);
+
+  const listFollowRequests = (userId, direction = 'incoming') => persistence.listFollowRequests(userId, direction);
+
+  const searchAccounts = (query = '', viewerId = null, limit = 20) => persistence.searchAccounts(query, viewerId, limit);
+
+  const getFollowCounts = (userId) => persistence.getFollowCounts(userId);
+
   const getFollowing = (userId) => persistence.getFollowing(userId);
 
   const getFollowers = (userId) => persistence.getFollowers(userId);
@@ -656,6 +670,13 @@ export const createStore = (driver = 'supabase') => {
     setTodoDone,
     followUser,
     unfollowUser,
+    requestFollow,
+    cancelFollowRequest,
+    respondFollowRequest,
+    getFollowState,
+    listFollowRequests,
+    searchAccounts,
+    getFollowCounts,
     getFollowing,
     getFollowers,
     listVisibleWorkouts,

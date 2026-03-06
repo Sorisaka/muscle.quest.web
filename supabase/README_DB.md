@@ -78,3 +78,59 @@ select set_config('request.jwt.claim.sub', '<viewer>', true);
 select * from public.get_timeline('global', 50, null);
 select * from public.get_timeline('following', 50, null);
 ```
+
+## Phase2: フォロー / フォローリクエスト適用手順
+
+### 追加ファイル
+- migration: `supabase/migrations/20260306_0006_phase2_follow_requests.sql`
+- 手動SQL: `supabase/sql/013_phase2_follow_requests.sql`
+- 検証SQL: `supabase/sql/014_phase2_follow_requests_verification.sql`
+
+### 実行順
+1. `supabase db push`（migration適用）
+2. 既存環境へ手動反映したい場合は SQL Editor で `013_phase2_follow_requests.sql` を実行
+3. `014_phase2_follow_requests_verification.sql` で制約/ポリシー/関数を確認
+
+### 含まれるDB変更
+- `profiles` に `account_visibility` / `icon_border` / `icon_background` / `icon_center_object` を追加
+- `follows` の自己フォロー禁止制約を補強
+- `follow_requests` テーブル追加（`pending` / `accepted` / `rejected` / `cancelled`）
+- RLS再設計
+  - profiles: 本人 or public or 承認済みフォロワー
+  - follows: 本人と、閲覧許可された対象アカウントの一覧取得
+  - follow_requests: 送受信者のみ閲覧、送信者のみ作成、送受信者ごとの更新制御
+- RPC追加
+  - `follow_action`（public は即follow / private はrequest）
+  - `get_follow_state`
+  - `get_follow_requests`
+  - `cancel_follow_request`
+  - `respond_follow_request`
+
+### テスト観点
+- public アカウントへの follow_action が即フォロー成立する
+- private アカウントへの follow_action が pending request を作成する
+- target 側の respond_follow_request(approve) で follows へ反映される
+- respond_follow_request(reject) でフォロー不成立のまま request 状態が更新される
+- requester 側の cancel_follow_request が pending request を取り下げる
+- unfollow（`follows` delete）が成立する
+- private アカウントは UI で表示名末尾に `🔒` を付与する
+
+## Phase4: アイコン設定列・制約
+
+### 追加ファイル
+- migration: `supabase/migrations/20260306_0007_phase4_icon_settings.sql`
+- 手動SQL: `supabase/sql/015_phase4_icon_settings.sql`
+
+### 実行順（既存環境）
+1. `013_phase2_follow_requests.sql`
+2. `015_phase4_icon_settings.sql`
+3. `014_phase2_follow_requests_verification.sql`（follow系確認）
+4. 必要なら下記追加確認
+   - `select icon_border, icon_background, icon_center_object from public.profiles limit 5;`
+   - `select conname from pg_constraint where conname like 'profiles_icon_%';`
+
+### 仕様
+- `profiles.icon_border`: `ring-slate|ring-emerald|ring-amber|ring-rose`
+- `profiles.icon_background`: `bg-night|bg-ocean|bg-sunset|bg-forest`
+- `profiles.icon_center_object`: `dot|diamond|barbell|bolt`
+- デフォルト値を設定し、既存データは `coalesce` で埋め戻し

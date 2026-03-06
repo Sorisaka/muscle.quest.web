@@ -1,567 +1,196 @@
-import { trainingDefinitions } from '../data/trainingDefinitions.js';
-import { applyAutoProfileEstimation, estimateProfileMetrics } from '../core/calorie/estimateProfile.js';
+import {
+  ICON_BACKGROUND_OPTIONS,
+  ICON_BORDER_OPTIONS,
+  ICON_CENTER_OBJECT_OPTIONS,
+  normalizeIconConfig,
+} from '../core/iconOptions.js';
+import { createAccountAvatar, getAvatarLabel } from '../ui/accountAvatar.js';
 
-const SEX_OPTIONS = [
-  { value: 'unknown', label: 'Unknown' },
-  { value: 'male', label: 'Male' },
-  { value: 'female', label: 'Female' },
+const SETTINGS_SECTIONS = [
+  { key: 'account', label: 'アカウント設定', description: '表示名 / アイコン / 公開範囲' },
+  { key: 'body-profile', label: '身体プロフィール設定', description: '身長・体重など' },
+  { key: 'menu', label: 'メニュー設定', description: '曜日ごとのトレーニング計画' },
+  { key: 'general', label: '一般設定', description: '通知や表示設定' },
 ];
 
-const MODE_OPTIONS = [
-  { value: 'auto', label: 'auto' },
-  { value: 'manual', label: 'manual' },
-];
+export const renderSettings = (_params, { navigate, playSfx }) => {
+  const container = document.createElement('section');
+  container.className = 'stack';
 
-const CATEGORY_OPTIONS = [
-  { value: 'cardio', label: 'cardio' },
-  { value: 'bodyweight', label: 'bodyweight' },
-  { value: 'weights', label: 'weights' },
-];
+  const title = document.createElement('h2');
+  title.textContent = '設定';
 
-const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const ACCOUNT_VIS_OPTIONS = [
-  { value: 'private', label: 'private' },
-  { value: 'public', label: 'public' },
-];
-
-const LENGTH_FIELDS = [
-  { key: 'step_length_m', label: 'Step length (m)' },
-  { key: 'arm_length_m', label: 'Arm length (m)' },
-  { key: 'leg_length_m', label: 'Leg length (m)' },
-  { key: 'torso_length_m', label: 'Torso length (m)' },
-];
-
-const profileDefaults = {
-  height_cm: '',
-  weight_kg: '',
-  sex: 'unknown',
-  step_length_m: '',
-  arm_length_m: '',
-  leg_length_m: '',
-  torso_length_m: '',
-  step_length_m_mode: 'auto',
-  arm_length_m_mode: 'auto',
-  leg_length_m_mode: 'auto',
-  torso_length_m_mode: 'auto',
-  account_visibility: 'private',
-};
-
-const toTextValue = (value, digits = 3) => {
-  const num = Number(value);
-  if (!Number.isFinite(num)) return '';
-  return String(Number(num.toFixed(digits)));
-};
-
-const normalizeDraft = (profile = {}) => ({
-  ...profileDefaults,
-  ...profile,
-  account_visibility: profile?.account_visibility || profile?.default_visibility || 'private',
-  height_cm: profile?.height_cm ?? '',
-  weight_kg: profile?.weight_kg ?? '',
-});
-
-const createToggleField = (labelText, checked, onToggle) => {
-  const field = document.createElement('label');
-  field.className = 'field';
-
-  const text = document.createElement('span');
-  text.textContent = labelText;
-
-  const input = document.createElement('input');
-  input.type = 'checkbox';
-  input.checked = checked;
-  input.addEventListener('change', (event) => onToggle(event.target.checked));
-
-  field.append(text, input);
-  return field;
-};
-
-const createRangeField = (labelText, value, onChange) => {
-  const field = document.createElement('label');
-  field.className = 'field';
-
-  const text = document.createElement('span');
-  text.textContent = labelText;
-
-  const wrapper = document.createElement('div');
-  wrapper.className = 'range-field';
-
-  const display = document.createElement('span');
-  display.className = 'muted';
-  display.textContent = `${Math.round(value * 100)}%`;
-
-  const input = document.createElement('input');
-  input.type = 'range';
-  input.min = '0';
-  input.max = '1';
-  input.step = '0.05';
-  input.value = value;
-  input.addEventListener('input', (event) => {
-    const nextValue = Number(event.target.value);
-    display.textContent = `${Math.round(nextValue * 100)}%`;
-    onChange(nextValue);
+  const list = document.createElement('div');
+  list.className = 'stack';
+  SETTINGS_SECTIONS.forEach((section) => {
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'row';
+    row.innerHTML = `<span><strong>${section.label}</strong><p class="muted">${section.description}</p></span><span>→</span>`;
+    row.addEventListener('click', () => {
+      playSfx('ui:navigate');
+      navigate(`#/settings/${section.key}`);
+    });
+    list.append(row);
   });
 
-  wrapper.append(display, input);
-  field.append(text, wrapper);
-  return field;
+  container.append(title, list);
+  return container;
 };
 
-const createSelectField = (labelText, value, options, onChange) => {
-  const field = document.createElement('label');
-  field.className = 'field';
+const createPlaceholder = (titleText, bodyText) => {
+  const card = document.createElement('div');
+  card.className = 'card stack';
+  card.append(
+    Object.assign(document.createElement('h3'), { textContent: titleText }),
+    Object.assign(document.createElement('p'), { className: 'muted', textContent: bodyText }),
+  );
+  return card;
+};
 
+const createSelect = (label, value, options = []) => {
+  const wrap = document.createElement('label');
+  wrap.className = 'field';
   const text = document.createElement('span');
-  text.textContent = labelText;
-
+  text.textContent = label;
   const select = document.createElement('select');
-  options.forEach((option) => {
-    const element = document.createElement('option');
-    element.value = option.value;
-    element.textContent = option.label;
-    if (option.value === value) element.selected = true;
-    select.append(element);
+  options.forEach((opt) => {
+    const o = document.createElement('option');
+    o.value = opt;
+    o.textContent = opt;
+    if (opt === value) o.selected = true;
+    select.append(o);
+  });
+  wrap.append(text, select);
+  return { wrap, select };
+};
+
+const createAccountSettings = ({ store, playSfx }) => {
+  const profile = store.getProfile() || {};
+  const icon = normalizeIconConfig(profile);
+
+  const card = document.createElement('div');
+  card.className = 'card stack';
+
+  const title = document.createElement('h3');
+  title.textContent = 'アカウント設定';
+
+  const previewWrap = document.createElement('div');
+  previewWrap.className = 'list-account-row';
+  const previewAvatarSlot = document.createElement('div');
+  const previewName = document.createElement('strong');
+  previewWrap.append(previewAvatarSlot, previewName);
+
+  const nameField = document.createElement('label');
+  nameField.className = 'field';
+  const nameLabel = document.createElement('span');
+  nameLabel.textContent = '表示名';
+  const nameInput = document.createElement('input');
+  nameInput.type = 'text';
+  nameInput.value = profile.displayName || '';
+  nameInput.placeholder = '表示名を入力';
+  nameField.append(nameLabel, nameInput);
+
+  const visField = createSelect('公開範囲', profile.account_visibility || profile.default_visibility || 'private', ['public', 'private']);
+  const borderField = createSelect('外枠', icon.icon_border, ICON_BORDER_OPTIONS);
+  const bgField = createSelect('背景色', icon.icon_background, ICON_BACKGROUND_OPTIONS);
+  const centerField = createSelect('中心オブジェクト', icon.icon_center_object, ICON_CENTER_OBJECT_OPTIONS);
+
+  const feedback = document.createElement('p');
+  feedback.className = 'muted';
+
+  const renderPreview = () => {
+    const displayName = nameInput.value.trim() || 'Guest';
+    const visibility = visField.select.value || 'private';
+    previewAvatarSlot.innerHTML = '';
+    previewAvatarSlot.append(createAccountAvatar({
+      label: getAvatarLabel(displayName, 'G'),
+      className: 'account-avatar--inline',
+      icon: {
+        icon_border: borderField.select.value,
+        icon_background: bgField.select.value,
+        icon_center_object: centerField.select.value,
+      },
+    }));
+    previewName.textContent = visibility === 'private' ? `${displayName} 🔒` : displayName;
+  };
+
+  [nameInput, visField.select, borderField.select, bgField.select, centerField.select].forEach((el) => {
+    el.addEventListener('input', renderPreview);
+    el.addEventListener('change', renderPreview);
   });
 
-  select.addEventListener('change', (event) => onChange(event.target.value));
-  field.append(text, select);
-  return field;
+  const save = document.createElement('button');
+  save.type = 'button';
+  save.textContent = '保存';
+  save.addEventListener('click', async () => {
+    save.disabled = true;
+    playSfx('ui:select');
+
+    const payload = {
+      displayName: nameInput.value.trim() || 'Guest',
+      account_visibility: visField.select.value,
+      default_visibility: visField.select.value,
+      icon_border: borderField.select.value,
+      icon_background: bgField.select.value,
+      icon_center_object: centerField.select.value,
+    };
+
+    try {
+      await Promise.resolve(store.saveProfileSettings(payload));
+      feedback.textContent = '保存しました。';
+    } catch (_error) {
+      feedback.textContent = '保存に失敗しました。';
+    }
+    save.disabled = false;
+    renderPreview();
+  });
+
+  renderPreview();
+
+  card.append(
+    title,
+    previewWrap,
+    nameField,
+    visField.wrap,
+    borderField.wrap,
+    bgField.wrap,
+    centerField.wrap,
+    save,
+    feedback,
+  );
+
+  return card;
 };
 
-const createInputField = (labelText, value, { type = 'number', step = '0.1', min = '0', readOnly = false } = {}, onChange) => {
-  const field = document.createElement('label');
-  field.className = 'field';
-  const text = document.createElement('span');
-  text.textContent = labelText;
-
-  const input = document.createElement('input');
-  input.type = type;
-  input.step = step;
-  input.min = min;
-  input.value = value;
-  input.readOnly = readOnly;
-  if (readOnly) input.classList.add('muted');
-  input.addEventListener('input', (event) => onChange?.(event.target.value));
-
-  field.append(text, input);
-  return { field, input };
-};
-
-const defaultMenuItem = () => ({
-  exerciseSlug: Object.keys(trainingDefinitions)[0] || 'squats',
-  category: 'bodyweight',
-  target: {},
-});
-
-const cloneItems = (items = []) => (Array.isArray(items) ? items.map((item) => ({ ...defaultMenuItem(), ...item })) : []);
-
-export const renderSettings = (_params, { store, navigate, playSfx }) => {
-  const settings = store.getSettings();
-  const profile = store.getProfile();
-  let activeTab = 'simple';
-  let draft = normalizeDraft(profile);
-  let activeWeekday = String(new Date().getDay());
-  let specialDate = new Date().toISOString().slice(0, 10);
-  let weeklyItems = [];
-  let specialItems = [];
-
+export const renderSettingsSection = (params, { navigate, playSfx, store }) => {
+  const section = params.section;
   const container = document.createElement('section');
   container.className = 'stack';
 
   const back = document.createElement('button');
   back.type = 'button';
   back.className = 'ghost';
-  back.textContent = '← ホームに戻る';
+  back.textContent = '← 設定トップへ戻る';
   back.addEventListener('click', () => {
     playSfx('ui:navigate');
-    navigate('#/');
+    navigate('#/settings');
   });
 
-  const title = document.createElement('h2');
-  title.textContent = 'Settings';
-  const description = document.createElement('p');
-  description.className = 'muted';
-  description.textContent = 'Simple/Advanced でプロフィール値を管理し、消費カロリー計算に利用します。';
+  container.append(back);
 
-  const saveFeedback = document.createElement('p');
-  saveFeedback.className = 'muted';
+  if (section === 'account') {
+    container.append(createAccountSettings({ store, playSfx }));
+  } else if (section === 'body-profile') {
+    const profile = store.getProfile();
+    container.append(createPlaceholder('身体プロフィール設定', `height: ${profile.height_cm || '-'} / weight: ${profile.weight_kg || '-'}`));
+  } else if (section === 'menu') {
+    container.append(createPlaceholder('メニュー設定', '曜日別メニュー編集UIをここに集約します（既存データ層に接続予定）。'));
+  } else if (section === 'general') {
+    container.append(createPlaceholder('一般設定', '通知・言語・表示挙動の設定を追加予定です。'));
+  } else {
+    container.append(createPlaceholder('未定義セクション', '存在しない設定画面です。'));
+  }
 
-  const tabs = document.createElement('div');
-  tabs.className = 'tabs';
-  const tabSimple = document.createElement('button');
-  tabSimple.type = 'button';
-  tabSimple.className = 'tab is-active';
-  tabSimple.textContent = 'Simple';
-  const tabAdvanced = document.createElement('button');
-  tabAdvanced.type = 'button';
-  tabAdvanced.className = 'tab';
-  tabAdvanced.textContent = 'Advanced';
-  tabs.append(tabSimple, tabAdvanced);
-
-  const profileCard = document.createElement('div');
-  profileCard.className = 'card stack';
-  const weeklyCard = document.createElement('div');
-  weeklyCard.className = 'card stack';
-  const specialCard = document.createElement('div');
-  specialCard.className = 'card stack';
-
-  const profileId = () => store.getProfile()?.id || 'local-user';
-
-  const recomputeAutoFields = () => {
-    const merged = applyAutoProfileEstimation(draft, draft);
-    draft = {
-      ...draft,
-      ...merged,
-      step_length_m: toTextValue(merged.step_length_m),
-      arm_length_m: toTextValue(merged.arm_length_m),
-      leg_length_m: toTextValue(merged.leg_length_m),
-      torso_length_m: toTextValue(merged.torso_length_m),
-    };
-  };
-
-  const setTab = (next) => {
-    activeTab = next;
-    tabSimple.classList.toggle('is-active', next === 'simple');
-    tabAdvanced.classList.toggle('is-active', next === 'advanced');
-    renderProfileForm();
-  };
-
-  tabSimple.addEventListener('click', () => setTab('simple'));
-  tabAdvanced.addEventListener('click', () => setTab('advanced'));
-
-  const renderMenuItemsEditor = (items, onChange) => {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'stack';
-
-    items.forEach((item, index) => {
-      const row = document.createElement('div');
-      row.className = 'card stack';
-
-      row.append(
-        createSelectField('Exercise', item.exerciseSlug, Object.keys(trainingDefinitions).map((slug) => ({ value: slug, label: slug })), (value) => {
-          const next = cloneItems(items);
-          next[index].exerciseSlug = value;
-          onChange(next);
-        }),
-      );
-
-      row.append(
-        createSelectField('Category', item.category || 'bodyweight', CATEGORY_OPTIONS, (value) => {
-          const next = cloneItems(items);
-          next[index].category = value;
-          onChange(next);
-        }),
-      );
-
-      const { field: targetField } = createInputField('Target(JSON)', JSON.stringify(item.target || {}), { type: 'text' }, (value) => {
-        const next = cloneItems(items);
-        try {
-          next[index].target = value ? JSON.parse(value) : {};
-        } catch (_error) {
-          next[index].target = next[index].target || {};
-        }
-        onChange(next);
-      });
-      row.append(targetField);
-
-      const actions = document.createElement('div');
-      actions.className = 'hero__actions';
-
-      const up = document.createElement('button');
-      up.type = 'button';
-      up.className = 'ghost';
-      up.textContent = '↑';
-      up.disabled = index === 0;
-      up.addEventListener('click', () => {
-        if (index === 0) return;
-        const next = cloneItems(items);
-        [next[index - 1], next[index]] = [next[index], next[index - 1]];
-        onChange(next);
-      });
-
-      const down = document.createElement('button');
-      down.type = 'button';
-      down.className = 'ghost';
-      down.textContent = '↓';
-      down.disabled = index === items.length - 1;
-      down.addEventListener('click', () => {
-        if (index >= items.length - 1) return;
-        const next = cloneItems(items);
-        [next[index + 1], next[index]] = [next[index], next[index + 1]];
-        onChange(next);
-      });
-
-      const remove = document.createElement('button');
-      remove.type = 'button';
-      remove.className = 'ghost';
-      remove.textContent = '削除';
-      remove.addEventListener('click', () => {
-        const next = cloneItems(items).filter((_, i) => i !== index);
-        onChange(next);
-      });
-
-      actions.append(up, down, remove);
-      row.append(actions);
-      wrapper.append(row);
-    });
-
-    return wrapper;
-  };
-
-  const renderProfileForm = () => {
-    profileCard.innerHTML = '';
-    const heading = document.createElement('h3');
-    heading.textContent = activeTab === 'simple' ? 'Simple profile' : 'Advanced profile';
-    profileCard.append(heading);
-
-    const baseFields = document.createElement('div');
-    baseFields.className = 'stack';
-
-    const height = createInputField('Height (cm)', draft.height_cm, { step: '1', min: '0' }, (value) => {
-      draft.height_cm = value;
-      recomputeAutoFields();
-      renderProfileForm();
-    });
-    const weight = createInputField('Weight (kg)', draft.weight_kg, { step: '0.1', min: '1' }, (value) => {
-      draft.weight_kg = value;
-      recomputeAutoFields();
-      renderProfileForm();
-    });
-
-    baseFields.append(height.field, weight.field);
-    baseFields.append(
-      createSelectField('Sex', draft.sex, SEX_OPTIONS, (value) => {
-        draft.sex = value;
-        recomputeAutoFields();
-        renderProfileForm();
-      }),
-    );
-
-    baseFields.append(
-      createSelectField('アカウント公開範囲', draft.account_visibility || 'private', ACCOUNT_VIS_OPTIONS, (value) => {
-        draft.account_visibility = value;
-      }),
-    );
-
-    const visHint = document.createElement('p');
-    visHint.className = 'muted';
-    visHint.textContent = '通常の「投稿」はこの設定をデフォルトに使います。投稿ごとに public/private/archived へ上書きできます。';
-    baseFields.append(visHint);
-
-    profileCard.append(baseFields);
-
-    if (activeTab === 'simple') {
-      const { estimated } = estimateProfileMetrics(draft);
-      LENGTH_FIELDS.forEach(({ key, label }) => {
-        const { field } = createInputField(`${label} (estimated)`, toTextValue(estimated[key]), { readOnly: true }, null);
-        profileCard.append(field);
-      });
-      return;
-    }
-
-    LENGTH_FIELDS.forEach(({ key, label }) => {
-      const modeKey = `${key}_mode`;
-      const row = document.createElement('div');
-      row.className = 'card stack';
-
-      row.append(
-        createSelectField(`${label} mode`, draft[modeKey] || 'auto', MODE_OPTIONS, (value) => {
-          draft[modeKey] = value;
-          recomputeAutoFields();
-          renderProfileForm();
-        }),
-      );
-
-      const isManual = draft[modeKey] === 'manual';
-      const { field } = createInputField(label, draft[key], { step: '0.001', min: '0', readOnly: !isManual }, (value) => {
-        draft[key] = value;
-      });
-      row.append(field);
-
-      const resetBtn = document.createElement('button');
-      resetBtn.type = 'button';
-      resetBtn.className = 'ghost';
-      resetBtn.textContent = '推定に戻す';
-      resetBtn.addEventListener('click', () => {
-        draft[modeKey] = 'auto';
-        recomputeAutoFields();
-        renderProfileForm();
-      });
-      row.append(resetBtn);
-
-      profileCard.append(row);
-    });
-  };
-
-  const renderWeeklyEditor = () => {
-    weeklyCard.innerHTML = '';
-    const heading = document.createElement('h3');
-    heading.textContent = '週間メニュー';
-
-    weeklyCard.append(heading);
-    weeklyCard.append(
-      createSelectField('Weekday', activeWeekday, WEEKDAY_LABELS.map((label, idx) => ({ value: String(idx), label })), async (value) => {
-        activeWeekday = value;
-        const next = await Promise.resolve(store.loadWeeklyPlan(profileId()));
-        weeklyItems = cloneItems(next?.[activeWeekday] || []);
-        renderWeeklyEditor();
-      }),
-    );
-
-    weeklyCard.append(renderMenuItemsEditor(weeklyItems, (next) => {
-      weeklyItems = next;
-      renderWeeklyEditor();
-    }));
-
-    const actions = document.createElement('div');
-    actions.className = 'hero__actions';
-
-    const add = document.createElement('button');
-    add.type = 'button';
-    add.className = 'ghost';
-    add.textContent = '項目追加';
-    add.addEventListener('click', () => {
-      weeklyItems = [...weeklyItems, defaultMenuItem()];
-      renderWeeklyEditor();
-    });
-
-    const save = document.createElement('button');
-    save.type = 'button';
-    save.textContent = `${WEEKDAY_LABELS[Number(activeWeekday)]} を保存`;
-    save.addEventListener('click', async () => {
-      await Promise.resolve(store.saveWeeklyPlan(profileId(), Number(activeWeekday), weeklyItems));
-      saveFeedback.textContent = '週間メニューを保存しました。';
-    });
-
-    actions.append(add, save);
-    weeklyCard.append(actions);
-  };
-
-  const renderSpecialEditor = () => {
-    specialCard.innerHTML = '';
-    const heading = document.createElement('h3');
-    heading.textContent = '特別日メニュー';
-
-    specialCard.append(heading);
-    const dateField = createInputField('Date', specialDate, { type: 'date' }, async (value) => {
-      specialDate = value;
-      specialItems = cloneItems((await Promise.resolve(store.loadSpecialPlan(profileId(), specialDate))) || []);
-      renderSpecialEditor();
-    });
-    specialCard.append(dateField.field);
-
-    specialCard.append(renderMenuItemsEditor(specialItems, (next) => {
-      specialItems = next;
-      renderSpecialEditor();
-    }));
-
-    const actions = document.createElement('div');
-    actions.className = 'hero__actions';
-
-    const add = document.createElement('button');
-    add.type = 'button';
-    add.className = 'ghost';
-    add.textContent = '項目追加';
-    add.addEventListener('click', () => {
-      specialItems = [...specialItems, defaultMenuItem()];
-      renderSpecialEditor();
-    });
-
-    const save = document.createElement('button');
-    save.type = 'button';
-    save.textContent = '特別日を保存';
-    save.addEventListener('click', async () => {
-      await Promise.resolve(store.saveSpecialPlan(profileId(), specialDate, specialItems));
-      saveFeedback.textContent = '特別日メニューを保存しました。';
-    });
-
-    actions.append(add, save);
-    specialCard.append(actions);
-  };
-
-  recomputeAutoFields();
-  renderProfileForm();
-
-  const saveProfileButton = document.createElement('button');
-  saveProfileButton.type = 'button';
-  saveProfileButton.textContent = 'プロフィールを保存';
-  saveProfileButton.addEventListener('click', async () => {
-    saveProfileButton.disabled = true;
-    saveFeedback.textContent = '保存中...';
-    const payload = {
-      height_cm: draft.height_cm === '' ? null : Number(draft.height_cm),
-      weight_kg: draft.weight_kg === '' ? null : Number(draft.weight_kg),
-      sex: draft.sex,
-      step_length_m: draft.step_length_m === '' ? null : Number(draft.step_length_m),
-      arm_length_m: draft.arm_length_m === '' ? null : Number(draft.arm_length_m),
-      leg_length_m: draft.leg_length_m === '' ? null : Number(draft.leg_length_m),
-      torso_length_m: draft.torso_length_m === '' ? null : Number(draft.torso_length_m),
-      step_length_m_mode: draft.step_length_m_mode || 'auto',
-      arm_length_m_mode: draft.arm_length_m_mode || 'auto',
-      leg_length_m_mode: draft.leg_length_m_mode || 'auto',
-      torso_length_m_mode: draft.torso_length_m_mode || 'auto',
-      account_visibility: draft.account_visibility || 'private',
-    };
-
-    const result = await Promise.resolve(store.saveProfileSettings(payload));
-    draft = normalizeDraft(result || store.getProfile());
-    recomputeAutoFields();
-    renderProfileForm();
-    saveFeedback.textContent = result ? 'プロフィールを保存しました。' : '保存に失敗しました。';
-    saveProfileButton.disabled = false;
-  });
-
-  const appSettingsCard = document.createElement('div');
-  appSettingsCard.className = 'card stack';
-  appSettingsCard.append(
-    createSelectField(
-      'Preferred language',
-      settings.language,
-      [
-        { value: 'en', label: 'English' },
-        { value: 'ja', label: '日本語' },
-      ],
-      (value) => store.updateSettings({ language: value }),
-    ),
-    createSelectField(
-      'Difficulty',
-      settings.difficulty,
-      [
-        { value: 'beginner', label: 'Beginner' },
-        { value: 'intermediate', label: 'Intermediate' },
-        { value: 'advanced', label: 'Advanced' },
-      ],
-      (value) => store.updateSettings({ difficulty: value }),
-    ),
-    createToggleField('効果音を鳴らす', settings.sfxEnabled, (checked) =>
-      store.updateSettings({ sfxEnabled: checked }),
-    ),
-    createRangeField('効果音の音量', settings.sfxVolume, (value) =>
-      store.updateSettings({ sfxVolume: Math.max(0, Math.min(1, value)) }),
-    ),
-  );
-
-  const initMenus = async () => {
-    const weekly = await Promise.resolve(store.loadWeeklyPlan(profileId()));
-    weeklyItems = cloneItems(weekly?.[activeWeekday] || []);
-    specialItems = cloneItems((await Promise.resolve(store.loadSpecialPlan(profileId(), specialDate))) || []);
-    renderWeeklyEditor();
-    renderSpecialEditor();
-  };
-
-  initMenus();
-
-  container.append(
-    back,
-    title,
-    description,
-    tabs,
-    profileCard,
-    saveProfileButton,
-    saveFeedback,
-    weeklyCard,
-    specialCard,
-    appSettingsCard,
-  );
   return container;
 };

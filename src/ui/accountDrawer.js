@@ -1,180 +1,18 @@
+import { createAccountAvatar, getAvatarLabel } from './accountAvatar.js';
+
 const createMetricRow = (label, value) => {
   const row = document.createElement('div');
   row.className = 'account-metrics__row';
-
-  const name = document.createElement('span');
-  name.textContent = label;
-
-  const val = document.createElement('strong');
-  val.textContent = value;
-
-  row.append(name, val);
+  row.append(Object.assign(document.createElement('span'), { textContent: label }), Object.assign(document.createElement('strong'), { textContent: value }));
   return row;
 };
 
-export const createAccountDrawer = ({
-  triggerEl,
-  drawerEl,
-  overlayEl,
-  accountState,
-  navigate,
-  playSfx,
-}) => {
+export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountState, navigate, playSfx }) => {
   if (!triggerEl || !drawerEl || !overlayEl) return null;
 
-  const renderDrawer = () => {
-    const status = accountState.getStatus();
-    drawerEl.innerHTML = '';
-
-    const header = document.createElement('div');
-    header.className = 'account-drawer__header';
-    const title = document.createElement('strong');
-    title.textContent = 'Account';
-    const closeBtn = document.createElement('button');
-    closeBtn.type = 'button';
-    closeBtn.className = 'ghost';
-    closeBtn.textContent = '閉じる';
-    closeBtn.addEventListener('click', () => closeDrawer());
-    header.append(title, closeBtn);
-
-    const body = document.createElement('div');
-    body.className = 'account-drawer__body';
-
-    const summary = document.createElement('div');
-    summary.className = 'account-summary';
-    const name = document.createElement('div');
-    name.className = 'account-summary__name';
-    name.textContent = status.displayName || 'Guest';
-    const meta = document.createElement('div');
-    meta.className = 'account-summary__meta';
-    meta.textContent = status.isGuest
-      ? 'ゲストとして利用中。データは端末にのみ保存されます。'
-      : status.email || 'ログイン中';
-    summary.append(name, meta);
-
-    if (status.supabaseError && !status.supabaseReady) {
-      const warning = document.createElement('p');
-      warning.className = 'account-summary__meta muted';
-      warning.textContent = 'Supabase 設定を dist/config.js に追加してください。';
-      summary.append(warning);
-    }
-
-    const metrics = document.createElement('div');
-    metrics.className = 'account-metrics';
-    metrics.append(
-      createMetricRow('総保有消費カロリー', `${status.calories} kcal`),
-      createMetricRow('Streak', `${status.streak} 日`),
-      createMetricRow('本日', `${status.totals.daily || 0} kcal`),
-      createMetricRow('直近7日', `${status.totals.weekly || 0} kcal`),
-      createMetricRow('直近30日', `${status.totals.monthly || 0} kcal`),
-    );
-
-    const actions = document.createElement('div');
-    actions.className = 'drawer-actions';
-
-    if (status.isGuest) {
-      const helper = document.createElement('p');
-      helper.className = 'muted drawer-actions__note';
-      helper.textContent = 'Supabase OAuth を使ってログインできます。';
-
-      const loginBtn = document.createElement('button');
-      loginBtn.type = 'button';
-      loginBtn.textContent = 'Google でログイン';
-      loginBtn.addEventListener('click', async () => {
-        playSfx('ui:navigate');
-        await accountState.login();
-        closeDrawer();
-      });
-
-      const settingsLink = document.createElement('button');
-      settingsLink.type = 'button';
-      settingsLink.className = 'ghost';
-      settingsLink.textContent = '設定';
-      settingsLink.addEventListener('click', () => {
-        playSfx('ui:navigate');
-        navigate('#/settings');
-        closeDrawer();
-      });
-
-      const timelineLink = document.createElement('button');
-      timelineLink.type = 'button';
-      timelineLink.className = 'ghost';
-      timelineLink.textContent = 'Timeline';
-      timelineLink.addEventListener('click', () => {
-        playSfx('ui:navigate');
-        navigate('#/timeline');
-        closeDrawer();
-      });
-
-      const historyLink = document.createElement('button');
-      historyLink.type = 'button';
-      historyLink.className = 'ghost';
-      historyLink.textContent = '履歴';
-      historyLink.addEventListener('click', () => {
-        playSfx('ui:navigate');
-        navigate('#/history');
-        closeDrawer();
-      });
-
-      actions.append(helper, loginBtn, timelineLink, historyLink, settingsLink);
-    } else {
-      const idRow = document.createElement('p');
-      idRow.className = 'account-summary__meta account-summary__id';
-      idRow.textContent = `ID: ${status.id}`;
-
-      const accountButton = document.createElement('button');
-      accountButton.type = 'button';
-      accountButton.textContent = 'アカウント情報へ';
-      accountButton.addEventListener('click', () => {
-        playSfx('ui:navigate');
-        navigate('#/account');
-        closeDrawer();
-      });
-
-      const settingsLink = document.createElement('button');
-      settingsLink.type = 'button';
-      settingsLink.className = 'ghost';
-      settingsLink.textContent = '設定';
-      settingsLink.addEventListener('click', () => {
-        playSfx('ui:navigate');
-        navigate('#/settings');
-        closeDrawer();
-      });
-
-      const timelineLink = document.createElement('button');
-      timelineLink.type = 'button';
-      timelineLink.className = 'ghost';
-      timelineLink.textContent = 'Timeline';
-      timelineLink.addEventListener('click', () => {
-        playSfx('ui:navigate');
-        navigate('#/timeline');
-        closeDrawer();
-      });
-
-      const historyLink = document.createElement('button');
-      historyLink.type = 'button';
-      historyLink.className = 'ghost';
-      historyLink.textContent = '履歴';
-      historyLink.addEventListener('click', () => {
-        playSfx('ui:navigate');
-        navigate('#/history');
-        closeDrawer();
-      });
-
-      const logoutBtn = document.createElement('button');
-      logoutBtn.type = 'button';
-      logoutBtn.textContent = 'ログアウト';
-      logoutBtn.addEventListener('click', async () => {
-        playSfx('ui:navigate');
-        await accountState.logout();
-        closeDrawer();
-      });
-
-      actions.append(idRow, accountButton, timelineLink, historyLink, settingsLink, logoutBtn);
-    }
-
-    body.append(summary, metrics, actions);
-    drawerEl.append(header, body);
+  const closeDrawer = () => {
+    drawerEl.classList.remove('is-open');
+    overlayEl.classList.remove('is-active');
   };
 
   const openDrawer = () => {
@@ -183,28 +21,122 @@ export const createAccountDrawer = ({
     overlayEl.classList.add('is-active');
   };
 
-  const closeDrawer = () => {
-    drawerEl.classList.remove('is-open');
-    overlayEl.classList.remove('is-active');
+  const renderDrawer = () => {
+    const status = accountState.getStatus();
+    drawerEl.innerHTML = '';
+
+    const header = document.createElement('div');
+    header.className = 'account-drawer__header';
+    header.append(Object.assign(document.createElement('strong'), { textContent: 'メニュー' }));
+
+    const body = document.createElement('div');
+    body.className = 'account-drawer__body';
+
+    const summary = document.createElement('div');
+    summary.className = 'account-summary';
+    const identity = document.createElement('div');
+    identity.className = 'list-account-row';
+    const avatar = createAccountAvatar({
+      label: getAvatarLabel(status.displayName, 'G'),
+      className: 'account-avatar--inline',
+      icon: {
+        icon_border: status.profile?.icon_border,
+        icon_background: status.profile?.icon_background,
+        icon_center_object: status.profile?.icon_center_object,
+      },
+    });
+    const name = document.createElement('div');
+    name.className = 'account-summary__name';
+    const visibility = accountState.getStatus().profile?.account_visibility || 'private';
+    const label = status.displayName || 'Guest';
+    name.textContent = visibility === 'private' ? `${label} 🔒` : label;
+    identity.append(avatar, name);
+
+    const id = document.createElement('div');
+    id.className = 'account-summary__id';
+    id.textContent = `ID: ${status.id || 'guest'}`;
+
+    summary.append(identity, id);
+
+    const metrics = document.createElement('div');
+    metrics.className = 'account-metrics';
+    metrics.append(
+      createMetricRow('総消費カロリー', `${status.calories} kcal`),
+      createMetricRow('ストリーク', `${status.streak} 日`),
+      createMetricRow('完了ワークアウト', `${status.completedRuns || 0} 件`),
+    );
+
+    const actions = document.createElement('div');
+    actions.className = 'drawer-actions';
+
+    const settingsBtn = document.createElement('button');
+    settingsBtn.type = 'button';
+    settingsBtn.textContent = '設定';
+    settingsBtn.addEventListener('click', () => {
+      playSfx('ui:navigate');
+      navigate('#/settings');
+      closeDrawer();
+    });
+
+    const logoutBtn = document.createElement('button');
+    logoutBtn.type = 'button';
+    logoutBtn.className = 'ghost';
+    logoutBtn.textContent = status.isGuest ? 'Google でログイン' : 'ログアウト';
+    logoutBtn.addEventListener('click', async () => {
+      playSfx('ui:navigate');
+      if (status.isGuest) await accountState.login();
+      else await accountState.logout();
+      closeDrawer();
+    });
+
+    const requestsBtn = document.createElement('button');
+    requestsBtn.type = 'button';
+    requestsBtn.className = 'ghost';
+    requestsBtn.textContent = 'フォローリクエスト一覧';
+    requestsBtn.addEventListener('click', () => {
+      playSfx('ui:navigate');
+      navigate('#/follow-requests');
+      closeDrawer();
+    });
+
+    actions.append(settingsBtn, requestsBtn, logoutBtn);
+    body.append(summary, metrics, actions);
+    drawerEl.append(header, body);
   };
 
-  overlayEl.addEventListener('click', () => closeDrawer());
+  const triggerAvatar = () => {
+    const status = accountState.getStatus();
+    triggerEl.innerHTML = '';
+    triggerEl.append(createAccountAvatar({
+      label: getAvatarLabel(status.displayName, 'G'),
+      icon: {
+        icon_border: status.profile?.icon_border,
+        icon_background: status.profile?.icon_background,
+        icon_center_object: status.profile?.icon_center_object,
+      },
+    }));
+  };
+
+  overlayEl.addEventListener('click', closeDrawer);
   triggerEl.addEventListener('click', () => {
     playSfx('ui:navigate');
+    if (drawerEl.classList.contains('is-open')) {
+      closeDrawer();
+      navigate('#/account');
+      return;
+    }
     openDrawer();
   });
 
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      closeDrawer();
-    }
+    if (event.key === 'Escape') closeDrawer();
   });
 
   accountState.subscribe(() => {
-    if (drawerEl.classList.contains('is-open')) {
-      renderDrawer();
-    }
+    triggerAvatar();
+    if (drawerEl.classList.contains('is-open')) renderDrawer();
   });
+  triggerAvatar();
 
   return { openDrawer, closeDrawer };
 };

@@ -1,6 +1,7 @@
 import { aggregateCalories } from '../../core/history.js';
 import { normalizeAccountVisibility, normalizePostVisibility, resolvePostVisibility } from '../../core/visibility.js';
 import { decorateResultWithTags } from '../../core/exerciseTaxonomy.js';
+import { normalizeIconConfig } from '../../core/iconOptions.js';
 import { toDateKey } from '../../lib/dateKey.js';
 
 const PROFILE_KEY = 'musclequest:profile';
@@ -9,6 +10,7 @@ const LAST_PLAN_KEY = 'musclequest:lastPlans';
 const WEEKLY_PLAN_KEY = 'musclequest:weeklyPlans';
 const SPECIAL_PLAN_KEY = 'musclequest:specialPlans';
 const FOLLOWS_KEY = 'musclequest:follows';
+const FOLLOW_REQUESTS_KEY = 'musclequest:followRequests';
 const LIKES_KEY = 'musclequest:likesByRunId';
 const BODY_METRICS_KEY = 'musclequest:bodyMetrics';
 const BODY_METRICS_NS = 'mq:bodyMetrics';
@@ -35,6 +37,9 @@ const defaultProfile = {
   completedRuns: 0,
   lastResult: null,
   account_visibility: 'private',
+  icon_border: 'ring-slate',
+  icon_background: 'bg-night',
+  icon_center_object: 'dot',
 };
 
 export const createLocalPersistence = () => {
@@ -44,6 +49,7 @@ export const createLocalPersistence = () => {
   const loadWeeklyPlans = () => readJson(WEEKLY_PLAN_KEY, {});
   const loadSpecialPlans = () => readJson(SPECIAL_PLAN_KEY, {});
   const loadFollows = () => readJson(FOLLOWS_KEY, []);
+  const loadFollowRequests = () => readJson(FOLLOW_REQUESTS_KEY, []);
   const loadLikes = () => readJson(LIKES_KEY, {});
   const getBodyMetricsStorageKey = (userId) => `${BODY_METRICS_NS}:${userId || loadProfile().id || 'local-user'}`;
   const loadBodyMetricsData = (userId) => {
@@ -58,6 +64,7 @@ export const createLocalPersistence = () => {
     const accountVisibility = normalizeAccountVisibility(safeProfile.account_visibility || safeProfile.default_visibility, 'private');
     safeProfile.account_visibility = accountVisibility;
     safeProfile.default_visibility = accountVisibility;
+    Object.assign(safeProfile, normalizeIconConfig(safeProfile));
     writeJson(PROFILE_KEY, safeProfile);
     return safeProfile;
   };
@@ -73,6 +80,7 @@ export const createLocalPersistence = () => {
     const accountVisibility = normalizeAccountVisibility(next.account_visibility || next.default_visibility, 'private');
     next.account_visibility = accountVisibility;
     next.default_visibility = accountVisibility;
+    Object.assign(next, normalizeIconConfig(next));
     writeJson(PROFILE_KEY, next);
     return next;
   };
@@ -205,27 +213,153 @@ export const createLocalPersistence = () => {
   };
 
 
+  const ensureLocalProfile = (userId) => {
+    if (!userId) return null;
+    const profile = loadProfile();
+    if (profile.id === userId) {
+      return {
+        id: profile.id,
+        display_name: profile.displayName || 'Guest',
+        account_visibility: normalizeAccountVisibility(profile.account_visibility || profile.default_visibility, 'private'),
+        icon_border: profile.icon_border || null,
+        icon_background: profile.icon_background || null,
+        icon_center_object: profile.icon_center_object || null,
+      };
+    }
+    return {
+      id: userId,
+      display_name: userId,
+      account_visibility: 'public',
+      icon_border: null,
+      icon_background: null,
+      icon_center_object: null,
+    };
+  };
+
+  const getFollowing = (userId) => loadFollows().filter((row) => row.follower_id === userId).map((row) => row.followee_id);
+
+  const getFollowers = (userId) => loadFollows().filter((row) => row.followee_id === userId).map((row) => row.follower_id);
+
+  const getFollowState = (viewerId, targetId) => {
+    const follows = loadFollows();
+    const requests = loadFollowRequests();
+    const following = follows.some((row) => row.follower_id === viewerId && row.followee_id === targetId);
+    const incomingPending = requests.some((row) => row.requester_id === targetId && row.target_id === viewerId && row.status === 'pending');
+    const outgoing = requests.find((row) => row.requester_id === viewerId && row.target_id === targetId && row.status === 'pending');
+    const targetProfile = ensureLocalProfile(targetId);
+    return {
+      targetId,
+      accountVisibility: targetProfile?.account_visibility || 'public',
+      isFollowing: following,
+      hasPendingRequest: Boolean(outgoing),
+      hasIncomingRequest: incomingPending,
+      requestStatus: outgoing?.status || null,
+    };
+  };
+
   const followUser = (followerId, followeeId) => {
-    if (!followerId || !followeeId || followerId === followeeId) return false;
+    if (!followerId || !followeeId || followerId === followeeId) {
+      return { ok: false, code: 'SELF_FOLLOW_NOT_ALLOWED' };
+    }
     const follows = loadFollows();
     const exists = follows.some((row) => row.follower_id === followerId && row.followee_id === followeeId);
-    if (!exists) {
-      follows.push({ follower_id: followerId, followee_id: followeeId, created_at: new Date().toISOString() });
-      writeJson(FOLLOWS_KEY, follows);
-    }
-    return true;
+    if (exists) return { ok: true, code: 'ALREADY_FOLLOWING' };
+    follows.push({ follower_id: followerId, followee_id: followeeId, created_at: new Date().toISOString() });
+    writeJson(FOLLOWS_KEY, follows);
+    return { ok: true, code: 'FOLLOWED' };
   };
 
   const unfollowUser = (followerId, followeeId) => {
     const follows = loadFollows();
     const next = follows.filter((row) => !(row.follower_id === followerId && row.followee_id === followeeId));
     writeJson(FOLLOWS_KEY, next);
-    return true;
+    return { ok: true, code: 'UNFOLLOWED' };
   };
 
-  const getFollowing = (userId) => loadFollows().filter((row) => row.follower_id === userId).map((row) => row.followee_id);
+  const requestFollow = (requesterId, targetId) => {
+    if (!requesterId || !targetId || requesterId === targetId) return { ok: false, code: 'SELF_FOLLOW_NOT_ALLOWED' };
+    const target = ensureLocalProfile(targetId);
+    if ((target?.account_visibility || 'public') === 'public') {
+      return followUser(requesterId, targetId);
+    }
+    const requests = loadFollowRequests();
+    const existing = requests.find((row) => row.requester_id === requesterId && row.target_id === targetId && row.status === 'pending');
+    if (existing) return { ok: true, code: 'REQUEST_PENDING' };
+    requests.push({ requester_id: requesterId, target_id: targetId, status: 'pending', created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+    writeJson(FOLLOW_REQUESTS_KEY, requests);
+    return { ok: true, code: 'REQUESTED' };
+  };
 
-  const getFollowers = (userId) => loadFollows().filter((row) => row.followee_id === userId).map((row) => row.follower_id);
+  const cancelFollowRequest = (requesterId, targetId) => {
+    const requests = loadFollowRequests();
+    let changed = false;
+    const next = requests.map((row) => {
+      if (row.requester_id === requesterId && row.target_id === targetId && row.status === 'pending') {
+        changed = true;
+        return { ...row, status: 'cancelled', updated_at: new Date().toISOString() };
+      }
+      return row;
+    });
+    writeJson(FOLLOW_REQUESTS_KEY, next);
+    return { ok: changed, code: changed ? 'REQUEST_CANCELLED' : 'REQUEST_NOT_FOUND' };
+  };
+
+  const respondFollowRequest = (targetId, requesterId, action = 'reject') => {
+    const decision = action === 'approve' ? 'accepted' : 'rejected';
+    const requests = loadFollowRequests();
+    let changed = false;
+    const next = requests.map((row) => {
+      if (row.requester_id === requesterId && row.target_id === targetId && row.status === 'pending') {
+        changed = true;
+        return { ...row, status: decision, updated_at: new Date().toISOString() };
+      }
+      return row;
+    });
+    writeJson(FOLLOW_REQUESTS_KEY, next);
+    if (!changed) return { ok: false, code: 'REQUEST_NOT_FOUND' };
+    if (decision === 'accepted') {
+      return followUser(requesterId, targetId);
+    }
+    return { ok: true, code: 'REQUEST_REJECTED' };
+  };
+
+  const listFollowRequests = (userId, direction = 'incoming') => {
+    const requests = loadFollowRequests();
+    const filtered = requests.filter((row) => direction === 'incoming' ? row.target_id === userId : row.requester_id === userId);
+    return filtered
+      .filter((row) => row.status === 'pending')
+      .map((row) => ({
+        ...row,
+        requester: ensureLocalProfile(row.requester_id),
+        target: ensureLocalProfile(row.target_id),
+      }));
+  };
+
+  const searchAccounts = (query = '', _viewerId = null, limit = 20) => {
+    const profile = ensureLocalProfile(loadProfile().id);
+    const ids = new Set([profile.id]);
+    loadFollows().forEach((row) => {
+      ids.add(row.follower_id);
+      ids.add(row.followee_id);
+    });
+    loadFollowRequests().forEach((row) => {
+      ids.add(row.requester_id);
+      ids.add(row.target_id);
+    });
+    const list = Array.from(ids).map((id) => ensureLocalProfile(id));
+    const q = String(query || '').trim().toLowerCase();
+    const matched = q
+      ? list.filter((row) => String(row.id).toLowerCase().includes(q) || String(row.display_name || '').toLowerCase().includes(q))
+      : list;
+    return matched.slice(0, Math.max(1, Number(limit) || 20));
+  };
+
+  const getFollowCounts = (userId) => ({
+    following: getFollowing(userId).length,
+    followers: getFollowers(userId).length,
+    pendingIncoming: listFollowRequests(userId, 'incoming').length,
+    pendingOutgoing: listFollowRequests(userId, 'outgoing').length,
+  });
 
   const canView = (viewerId, entry) => {
     if (!entry) return false;
@@ -414,6 +548,13 @@ export const createLocalPersistence = () => {
     setSpecialPlan,
     followUser,
     unfollowUser,
+    requestFollow,
+    cancelFollowRequest,
+    respondFollowRequest,
+    getFollowState,
+    listFollowRequests,
+    searchAccounts,
+    getFollowCounts,
     getFollowing,
     getFollowers,
     listVisibleWorkouts,
