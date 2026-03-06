@@ -67,6 +67,7 @@ export const createSparkline = ({
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
   svg.setAttribute('role', 'img');
   svg.setAttribute('aria-label', label || 'sparkline chart');
+  svg.setAttribute('preserveAspectRatio', 'none');
 
   const axis = {
     top: 12,
@@ -78,14 +79,16 @@ export const createSparkline = ({
   const plotHeight = height - axis.top - axis.bottom;
 
   const { min, max } = getSafeRange(safePoints.map((p) => p.y));
-  const latestTs = Math.max(...safePoints.map((p) => p.xTs));
-  const earliestTs = Math.min(...safePoints.map((p) => p.xTs));
-  const spanDays = Math.max(1, Math.round((latestTs - earliestTs) / DAY_MS));
-  const totalDays = Math.max(visibleDays - 1, spanDays);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayTs = today.getTime();
+  const oldestTs = Math.min(...safePoints.map((p) => p.xTs));
+  const historyDays = Math.max(1, Math.round((todayTs - oldestTs) / DAY_MS));
+  const totalDays = Math.max(visibleDays - 1, historyDays);
   const xTickStep = getXAxisStep(visibleDays);
 
   const toX = (timestamp) => {
-    const dayAgo = Math.round((latestTs - timestamp) / DAY_MS);
+    const dayAgo = Math.round((todayTs - timestamp) / DAY_MS);
     return axis.left + (1 - clamp(dayAgo / totalDays, 0, 1)) * plotWidth;
   };
   const toY = (value) => axis.top + (1 - clamp((value - min) / (max - min), 0, 1)) * plotHeight;
