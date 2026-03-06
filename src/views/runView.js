@@ -66,7 +66,7 @@ const clampNumber = (value, min, max) => {
   return Math.max(min, Math.min(max, numeric));
 };
 
-const buildSetInputs = (unit, limits, planSets, onChange) => {
+const buildSetInputs = (inputMode, limits, planSets, onChange) => {
   const wrapper = document.createElement('div');
   wrapper.className = 'stack set-editor';
 
@@ -79,7 +79,7 @@ const buildSetInputs = (unit, limits, planSets, onChange) => {
     label.textContent = `セット ${index + 1}`;
     row.append(label);
 
-    if (unit === 'time') {
+    if (inputMode === 'hold') {
       const input = document.createElement('input');
       input.type = 'number';
       input.min = limits.timeSeconds?.min ?? 0;
@@ -95,7 +95,7 @@ const buildSetInputs = (unit, limits, planSets, onChange) => {
       unitLabel.className = 'muted';
       unitLabel.textContent = '秒';
       row.append(unitLabel);
-    } else {
+    } else if (inputMode === 'weightReps') {
       const weight = document.createElement('input');
       weight.type = 'number';
       weight.min = limits.weight?.min ?? 0;
@@ -129,6 +129,22 @@ const buildSetInputs = (unit, limits, planSets, onChange) => {
       repLabel.className = 'muted';
       repLabel.textContent = '回';
       row.append(repLabel);
+    } else if (inputMode === 'reps') {
+      const reps = document.createElement('input');
+      reps.type = 'number';
+      reps.min = limits.reps?.min ?? 1;
+      reps.max = limits.reps?.max ?? 100;
+      reps.step = 1;
+      reps.value = set.reps;
+      reps.addEventListener('change', (event) => {
+        const next = clampNumber(event.target.value, limits.reps?.min, limits.reps?.max);
+        onChange(index, { reps: next });
+      });
+      row.append(reps);
+      const repLabel = document.createElement('span');
+      repLabel.className = 'muted';
+      repLabel.textContent = '回';
+      row.append(repLabel);
     }
 
     wrapper.append(row);
@@ -154,15 +170,23 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   const previousPlan = store.getLastPlan(params.id, settings.difficulty);
   let runPlan = createPlanFromDefinition(quest, settings.difficulty, previousPlan);
 
+  const hasDistanceMetric = Array.isArray(runPlan.trackingMetrics) && runPlan.trackingMetrics.includes('distance');
+  const distanceGoalConfig = runPlan.goalConfig?.type === 'distance'
+    ? runPlan.goalConfig
+    : { type: 'distance', min: 100, max: 100000, step: 100, unitLabel: 'm' };
+  let distanceMeters = hasDistanceMetric
+    ? (runPlan.metricGoals?.distanceMeters ?? distanceGoalConfig.defaultValue ?? distanceGoalConfig.min)
+    : null;
+
   const timerPrefs = store.getTimerPreferences();
   let timerConfig = {
-    mode: timerPrefs.mode || runPlan.mode,
-    workSeconds: runPlan.unit === 'time' ? runPlan.sets[0]?.timeSeconds || runPlan.trainingSeconds : timerPrefs.workSeconds,
+    mode: runPlan.defaultTimerMode || runPlan.mode || timerPrefs.mode,
+    workSeconds: runPlan.inputMode === 'hold' ? runPlan.sets[0]?.timeSeconds || runPlan.trainingSeconds : (timerPrefs.workSeconds || runPlan.trainingSeconds),
     restSeconds: runPlan.restSeconds ?? timerPrefs.restSeconds,
-    sets: runPlan.unit === 'time' ? runPlan.sets.length : timerPrefs.sets,
+    sets: runPlan.inputMode === 'stopwatch' ? 1 : (runPlan.sets.length || timerPrefs.sets),
   };
   timerConfig.sets = Math.max(timerConfig.sets || 1, 1);
-  timerConfig.mode = timerConfig.mode || 'interval';
+  timerConfig.mode = runPlan.defaultTimerMode || timerConfig.mode || 'interval';
 
   const buildEngineConfig = () => ({
     mode: timerConfig.mode,
@@ -220,7 +244,7 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
           ? trainingConfig.descriptions.timer
           : trainingConfig.descriptions.stopwatch;
     subMeta.textContent = `${description} / 運動 ${formatTime(timerConfig.workSeconds)}${
-      timerConfig.mode === 'interval' ? ` / 休憩 ${formatTime(timerConfig.restSeconds)} / ${timerConfig.sets} セット` : ''
+      (timerConfig.mode === 'interval' && timerConfig.sets > 1) ? ` / 休憩 ${formatTime(timerConfig.restSeconds)} / ${timerConfig.sets} セット` : (timerConfig.mode === 'interval' ? ` / ${timerConfig.sets} セット` : '')
     }`;
   };
   updateMeta();
@@ -237,11 +261,7 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   const modeLabel = document.createElement('span');
   modeLabel.textContent = 'タイマー種別';
   const modeSelect = document.createElement('select');
-  [
-    { value: 'interval', label: 'インターバル' },
-    { value: 'timer', label: 'シンプルタイマー' },
-    { value: 'stopwatch', label: 'ストップウォッチ' },
-  ].forEach((option) => {
+  [{ value: runPlan.defaultTimerMode || 'stopwatch', label: (runPlan.defaultTimerMode || 'stopwatch') === 'interval' ? 'インターバル' : 'ストップウォッチ' }].forEach((option) => {
     const el = document.createElement('option');
     el.value = option.value;
     el.textContent = option.label;
@@ -271,7 +291,7 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   workInput.addEventListener('change', (event) => {
     const next = clampNumber(event.target.value, trainingConfig.limits.trainingSeconds.min, trainingConfig.limits.trainingSeconds.max);
     timerConfig.workSeconds = next;
-    if (runPlan.unit === 'time') {
+    if (runPlan.inputMode === 'hold') {
       runPlan.sets = runPlan.sets.map(() => ({ timeSeconds: next }));
       runPlan.trainingSeconds = next;
       refreshSetEditor();
@@ -303,6 +323,26 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   });
   restField.append(restLabel, restInput);
 
+
+  const distanceField = document.createElement('label');
+  distanceField.className = 'field';
+  const distanceLabel = document.createElement('span');
+  distanceLabel.textContent = '距離（m）';
+  const distanceInput = document.createElement('input');
+  distanceInput.type = 'number';
+  distanceInput.min = distanceGoalConfig.min ?? 0;
+  distanceInput.max = distanceGoalConfig.max ?? 100000;
+  distanceInput.step = distanceGoalConfig.step ?? 100;
+  distanceInput.value = distanceMeters ?? '';
+  distanceInput.placeholder = hasDistanceMetric ? `例: ${distanceGoalConfig.defaultValue || 1500}` : '';
+  distanceInput.addEventListener('change', (event) => {
+    if (!hasDistanceMetric) return;
+    const next = clampNumber(event.target.value, distanceGoalConfig.min, distanceGoalConfig.max);
+    distanceMeters = next;
+    runPlan.metricGoals = { ...(runPlan.metricGoals || {}), distanceMeters: next };
+    store.rememberPlan(runPlan.questId, runPlan.difficulty, runPlan);
+  });
+  distanceField.append(distanceLabel, distanceInput);
 
   let postNote = '';
 
@@ -338,7 +378,15 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
 
   postActions.append(publishPublic, publishPrivate, publishArchived);
 
-  timerControls.append(modeField, workField, restField, noteField, postActions);
+  const syncRestFieldVisibility = () => {
+    restField.style.display = runPlan.inputMode !== 'stopwatch' && runPlan.sets.length > 1 ? '' : 'none';
+  };
+  timerControls.append(modeField);
+  if (runPlan.inputMode === 'hold') timerControls.append(workField);
+  timerControls.append(restField);
+  syncRestFieldVisibility();
+  if (hasDistanceMetric) timerControls.append(distanceField);
+  timerControls.append(noteField, postActions);
 
   const timerNotice = document.createElement('p');
   timerNotice.className = 'muted';
@@ -372,9 +420,9 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   const refreshSetEditor = () => {
     setEditorContainer.innerHTML = '';
     setEditorContainer.append(
-      buildSetInputs(runPlan.unit, runPlan.limits, runPlan.sets, (index, updated) => {
+      buildSetInputs(runPlan.inputMode, runPlan.limits, runPlan.sets, (index, updated) => {
         runPlan.sets[index] = { ...runPlan.sets[index], ...updated };
-        if (runPlan.unit === 'time') {
+        if (runPlan.inputMode === 'hold') {
           timerConfig.workSeconds = runPlan.sets[0].timeSeconds;
           store.rememberTimerConfig({ ...timerConfig, sets: runPlan.sets.length });
           engine.reset(buildEngineConfig());
@@ -408,16 +456,22 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
     refreshSetEditor();
     store.rememberPlan(runPlan.questId, runPlan.difficulty, runPlan);
     updateMeta();
+    syncRestFieldVisibility();
   });
 
-  setSliderField.append(setSliderLabel, setSlider, setSliderValue);
+  if (runPlan.maxSets > 1 && runPlan.inputMode !== 'stopwatch') {
+    setSliderField.append(setSliderLabel, setSlider, setSliderValue);
+  }
   refreshSetEditor();
 
   const howto = document.createElement('p');
   howto.className = 'muted';
   howto.textContent = runPlan.description;
 
-  planBox.append(planHeading, planLead, setSliderField, setEditorContainer, howto);
+  planBox.append(planHeading, planLead);
+  if (runPlan.maxSets > 1 && runPlan.inputMode !== 'stopwatch') planBox.append(setSliderField);
+  if (runPlan.inputMode !== 'stopwatch') planBox.append(setEditorContainer);
+  planBox.append(howto);
 
   const { sectionOne, sectionTwo } = ((questInfo) => {
     const sectionOneEl = document.createElement('div');
@@ -508,6 +562,7 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
       visibilityOverride,
       published_at: visibilityOverride ? new Date().toISOString() : null,
       note: postNote,
+      distanceMeters: hasDistanceMetric ? distanceMeters : null,
     });
     completionRecorded = true;
     completeButton.disabled = true;
@@ -540,7 +595,7 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   const updateDisplay = (snapshot) => {
     if (snapshot.mode === 'stopwatch') {
       phaseBadge.textContent = snapshot.state === 'running' ? '計測中' : '停止中';
-      setProgress.textContent = `${runPlan.sets.length} セット入力済み`;
+      setProgress.textContent = runPlan.inputMode === 'stopwatch' ? 'ストップウォッチ計測' : `${runPlan.sets.length} セット入力済み`;
       nextInfo.textContent = '次: 完了ボタンで終了';
       timeDisplay.textContent = formatTime(snapshot.elapsedSeconds);
       return;
