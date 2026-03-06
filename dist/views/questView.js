@@ -104,7 +104,7 @@ export const renderQuest = (params, { navigate, store, playSfx }) => {
   backToList.textContent = '一覧に戻る';
   backToList.addEventListener('click', () => {
     playSfx('ui:navigate');
-    navigate(`#/workouts/${quest.tier}`);
+    navigate(`#/workouts/${quest.category || 'cardio'}`);
   });
 
   heading.append(title, backToList);

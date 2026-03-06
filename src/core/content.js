@@ -1,4 +1,4 @@
-import { exercises, findQuestById, listQuestsByTier, quests } from '../generated/contentMap.js';
+import { exercises, findQuestById, listQuestsByCategory, quests } from '../generated/contentMap.js';
 import { isWorkoutActive } from '../data/workoutMaster.js';
 
 export const getQuestById = (id) => {
@@ -8,8 +8,8 @@ export const getQuestById = (id) => {
 
 const isQuestActive = (quest) => (quest?.exercises || []).some((slug) => isWorkoutActive(slug));
 
-export const getQuestsByTier = (tier) =>
-  listQuestsByTier(tier).filter(isQuestActive).sort((a, b) => a.stars - b.stars || a.id.localeCompare(b.id));
+export const getQuestsByCategory = (category) =>
+  listQuestsByCategory(category).filter(isQuestActive).sort((a, b) => a.stars - b.stars || a.id.localeCompare(b.id));
 
 export const getExerciseContent = (slug) => exercises[slug];
 

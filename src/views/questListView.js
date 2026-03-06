@@ -1,9 +1,9 @@
-import { getQuestsByTier } from '../core/content.js';
+import { getQuestsByCategory } from '../core/content.js';
 import { getExerciseTags, MUSCLE_GROUPS } from '../core/exerciseTaxonomy.js';
 
 const starBadge = (count) => `${'★'.repeat(count)} (${count})`;
 
-const tierLabels = {
+const categoryLabels = {
   cardio: '有酸素',
   bodyweight: '自重',
   weights: 'ウエイト',
@@ -27,12 +27,12 @@ const FILTER_ORDER = ['fullbody', 'chest', 'back', 'shoulders', 'arms', 'core', 
 const readFilterState = () => {
   try {
     const parsed = JSON.parse(localStorage.getItem(FILTER_STORAGE_KEY) || '{}');
-    const byTier = parsed && typeof parsed === 'object' ? parsed : {};
-    Object.keys(byTier).forEach((tier) => {
-      if (!Array.isArray(byTier[tier])) byTier[tier] = [];
-      byTier[tier] = byTier[tier].filter((m) => MUSCLE_GROUPS.includes(m));
+    const byCategory = parsed && typeof parsed === 'object' ? parsed : {};
+    Object.keys(byCategory).forEach((category) => {
+      if (!Array.isArray(byCategory[category])) byCategory[category] = [];
+      byCategory[category] = byCategory[category].filter((m) => MUSCLE_GROUPS.includes(m));
     });
-    return byTier;
+    return byCategory;
   } catch (_error) {
     return {};
   }
@@ -91,13 +91,13 @@ export const renderQuestList = (params, { navigate, playSfx }) => {
   const listContainer = document.createElement('section');
   listContainer.className = 'stack';
 
-  const tier = params.tier;
-  const allQuests = getQuestsByTier(tier);
-  const filtersByTier = readFilterState();
-  let selectedMuscles = Array.isArray(filtersByTier[tier]) ? filtersByTier[tier] : [];
+  const category = params.category;
+  const allQuests = getQuestsByCategory(category);
+  const filtersByCategory = readFilterState();
+  let selectedMuscles = Array.isArray(filtersByCategory[category]) ? filtersByCategory[category] : [];
 
   const title = document.createElement('h2');
-  title.textContent = `${tierLabels[tier] || tier} ワークアウト一覧`;
+  title.textContent = `${categoryLabels[category] || category} ワークアウト一覧`;
 
   const filterCard = document.createElement('div');
   filterCard.className = 'card stack';
@@ -132,7 +132,7 @@ export const renderQuestList = (params, { navigate, playSfx }) => {
 
   const persist = () => {
     const next = readFilterState();
-    next[tier] = selectedMuscles.slice();
+    next[category] = selectedMuscles.slice();
     writeFilterState(next);
   };
 
