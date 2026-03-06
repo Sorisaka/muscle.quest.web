@@ -60,6 +60,7 @@ export const createSparkline = (initialOptions = {}) => {
 
   const content = document.createElement('div');
   content.className = 'sparkline__content';
+  viewport.style.touchAction = 'pan-x';
 
   const alignViewportToRight = () => {
     viewport.scrollLeft = Math.max(0, viewport.scrollWidth);
@@ -211,33 +212,79 @@ export const createSparkline = (initialOptions = {}) => {
     polyline.setAttribute('stroke-linejoin', 'round');
     svg.append(polyline);
 
+    let pressState = null;
+
     pointsUntilToday.forEach((point) => {
       const isActive = point.dateKey === state.activeDateKey;
+      const cx = toX(point.xTs);
+      const cy = toY(point.y);
+      const pointGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      const hitArea = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      hitArea.setAttribute('cx', String(cx));
+      hitArea.setAttribute('cy', String(cy));
+      hitArea.setAttribute('r', '13');
+      hitArea.setAttribute('fill', 'rgba(255,255,255,0.001)');
+      hitArea.style.cursor = 'pointer';
+
       const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      dot.setAttribute('cx', String(toX(point.xTs)));
-      dot.setAttribute('cy', String(toY(point.y)));
+      dot.setAttribute('cx', String(cx));
+      dot.setAttribute('cy', String(cy));
       dot.setAttribute('r', isActive ? '4.2' : '3.2');
       dot.setAttribute('fill', state.color || '#93c5fd');
       dot.setAttribute('stroke', 'rgba(13, 17, 23, 0.9)');
       dot.setAttribute('stroke-width', isActive ? '2' : '1');
-      dot.setAttribute('tabindex', '0');
-      dot.style.cursor = 'pointer';
+      dot.style.pointerEvents = 'none';
 
-      dot.addEventListener('mouseenter', () => emitHover(point));
-      dot.addEventListener('focus', () => emitHover(point));
-      dot.addEventListener('mouseleave', emitLeave);
-      dot.addEventListener('blur', emitLeave);
-      dot.addEventListener('click', () => emitSelect(point));
-      dot.addEventListener('touchstart', (event) => {
-        event.preventDefault();
-        emitHover(point);
-      }, { passive: false });
-      dot.addEventListener('touchend', (event) => {
-        event.preventDefault();
-        emitSelect(point);
-      }, { passive: false });
+      const interactive = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      interactive.setAttribute('cx', String(cx));
+      interactive.setAttribute('cy', String(cy));
+      interactive.setAttribute('r', '13');
+      interactive.setAttribute('fill', 'transparent');
+      interactive.setAttribute('tabindex', '0');
+      interactive.style.cursor = 'pointer';
 
-      svg.append(dot);
+      const handleSelect = () => emitSelect(point);
+
+      interactive.addEventListener('pointerdown', (event) => {
+        pressState = {
+          pointerId: event.pointerId,
+          x: event.clientX,
+          y: event.clientY,
+        };
+      });
+
+      interactive.addEventListener('pointerup', (event) => {
+        if (!pressState || pressState.pointerId !== event.pointerId) return;
+        const movedX = Math.abs(event.clientX - pressState.x);
+        const movedY = Math.abs(event.clientY - pressState.y);
+        pressState = null;
+        if (movedX > 8 || movedY > 8) return;
+        handleSelect();
+      });
+
+      interactive.addEventListener('pointercancel', () => {
+        pressState = null;
+      });
+
+      interactive.addEventListener('click', (event) => {
+        if (event.detail === 0) handleSelect();
+      });
+
+      interactive.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          handleSelect();
+        }
+      });
+
+      interactive.addEventListener('mouseenter', () => emitHover(point));
+      interactive.addEventListener('focus', () => emitHover(point));
+      interactive.addEventListener('mouseleave', emitLeave);
+      interactive.addEventListener('blur', emitLeave);
+      interactive.addEventListener('pointerenter', () => emitHover(point));
+
+      pointGroup.append(hitArea, dot, interactive);
+      svg.append(pointGroup);
     });
 
     content.style.width = `${chartWidth}px`;
