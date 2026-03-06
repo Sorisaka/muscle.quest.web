@@ -40,7 +40,7 @@ const createEmpty = (text = 'データはありません。') => {
   return p;
 };
 
-export const renderAccount = (_params, { navigate, accountState, store, playSfx }) => {
+export const renderAccount = (_params, { navigate, accountState, store }) => {
   const container = document.createElement('section');
   container.className = 'stack account-view';
 
@@ -74,11 +74,29 @@ export const renderAccount = (_params, { navigate, accountState, store, playSfx 
   const countsSlot = document.createElement('div');
   countsSlot.append(createLoading());
 
-  const followSearchCard = document.createElement('div');
-  followSearchCard.className = 'card stack';
-  followSearchCard.hidden = true;
+  const followModalOverlay = document.createElement('div');
+  followModalOverlay.className = 'follow-modal-overlay';
+  followModalOverlay.hidden = true;
+
+  const followModal = document.createElement('div');
+  followModal.className = 'follow-modal card stack';
+  followModal.setAttribute('role', 'dialog');
+  followModal.setAttribute('aria-modal', 'true');
+  followModal.setAttribute('aria-labelledby', 'follow-modal-title');
+
+  const modalHeader = document.createElement('div');
+  modalHeader.className = 'list-header';
   const searchTitle = document.createElement('h3');
+  searchTitle.id = 'follow-modal-title';
   searchTitle.textContent = '新規フォロー';
+
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'ghost';
+  closeBtn.textContent = '閉じる';
+
+  modalHeader.append(searchTitle, closeBtn);
+
   const controls = document.createElement('div');
   controls.className = 'list-header';
   const idInput = document.createElement('input');
@@ -88,9 +106,29 @@ export const renderAccount = (_params, { navigate, accountState, store, playSfx 
   searchBtn.type = 'button';
   searchBtn.textContent = '検索';
   controls.append(idInput, searchBtn);
+
   const results = document.createElement('div');
   results.className = 'stack';
-  followSearchCard.append(searchTitle, controls, results);
+
+  followModal.append(modalHeader, controls, results);
+  followModalOverlay.append(followModal);
+
+  const closeModal = () => {
+    followModalOverlay.hidden = true;
+  };
+
+  const openModal = () => {
+    followModalOverlay.hidden = false;
+    idInput.focus();
+  };
+
+  followModalOverlay.addEventListener('click', (event) => {
+    if (event.target === followModalOverlay) closeModal();
+  });
+  closeBtn.addEventListener('click', closeModal);
+  container.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !followModalOverlay.hidden) closeModal();
+  });
 
   const performSearch = async () => {
     results.innerHTML = '';
@@ -143,13 +181,6 @@ export const renderAccount = (_params, { navigate, accountState, store, playSfx 
 
   searchBtn.addEventListener('click', performSearch);
 
-  const openFollowSearch = () => {
-    followSearchCard.hidden = !followSearchCard.hidden;
-    if (!followSearchCard.hidden) {
-      idInput.focus();
-    }
-  };
-
   Promise.resolve(store.getFollowCounts(currentUserId))
     .then((counts) => {
       countsSlot.innerHTML = '';
@@ -157,7 +188,7 @@ export const renderAccount = (_params, { navigate, accountState, store, playSfx 
         counts,
         onOpenFollowing: () => navigate('#/account/following'),
         onOpenFollowers: () => navigate('#/account/followers'),
-        onOpenFollowSearch: openFollowSearch,
+        onOpenFollowSearch: openModal,
       }));
     })
     .catch(() => {
@@ -165,7 +196,7 @@ export const renderAccount = (_params, { navigate, accountState, store, playSfx 
       countsSlot.append(createEmpty('フォロー数の取得に失敗しました。'));
     });
 
-  profileCard.append(identity, countsSlot, followSearchCard);
+  profileCard.append(identity, countsSlot);
 
   const activityCard = document.createElement('article');
   activityCard.className = 'card stack';
@@ -184,26 +215,15 @@ export const renderAccount = (_params, { navigate, accountState, store, playSfx 
   else entries.forEach((entry) => list.append(Object.assign(document.createElement('div'), { className: 'row', textContent: `${entry.exerciseSlug || entry.questId || 'workout'} / ${entry.calories || 0} kcal` })));
   postCard.append(list);
 
-  const requestButton = document.createElement('button');
-  requestButton.type = 'button';
-  requestButton.className = 'ghost';
-  requestButton.textContent = 'フォローリクエスト一覧へ';
-  requestButton.addEventListener('click', () => {
-    playSfx('ui:navigate');
-    navigate('#/follow-requests');
-  });
-
-  container.append(profileCard, activityCard, postCard, feedback, requestButton);
+  container.append(profileCard, activityCard, postCard, feedback, followModalOverlay);
   return container;
 };
 
-const renderAccountsByIds = async ({ ids = [], currentUserId, store, feedback, rerender }) => {
-  if (!ids.length) return [createEmpty('データはまだありません。')];
+const renderAccountsByIds = async ({ accounts = [], currentUserId, store, feedback, rerender }) => {
+  if (!accounts.length) return [createEmpty('データはまだありません。')];
 
   const rows = [];
-  for (const id of ids) {
-    const candidates = await Promise.resolve(store.searchAccounts(id, currentUserId, 1));
-    const account = candidates?.[0] || { id, display_name: id, account_visibility: 'public' };
+  for (const account of accounts) {
     const followState = await Promise.resolve(store.getFollowState(currentUserId, account.id));
     const uiState = resolveUiState({ currentUserId, account, followState });
     const actionEl = createFollowActionButton({
@@ -235,7 +255,7 @@ const renderAccountsByIds = async ({ ids = [], currentUserId, store, feedback, r
   return rows;
 };
 
-export const renderAccountConnections = (params, { navigate, store, accountState }) => {
+export const renderAccountConnections = (params, { navigate, store, accountState, followRequestsReturnPath }) => {
   const type = params.type;
   const status = accountState.getStatus();
   const currentUserId = status.id || 'guest';
@@ -246,8 +266,8 @@ export const renderAccountConnections = (params, { navigate, store, accountState
   const back = document.createElement('button');
   back.type = 'button';
   back.className = 'ghost';
-  back.textContent = '← アカウント情報へ戻る';
-  back.addEventListener('click', () => navigate('#/account'));
+  back.textContent = type === 'requests' ? '← 戻る' : '← アカウント情報へ戻る';
+  back.addEventListener('click', () => navigate(type === 'requests' ? (followRequestsReturnPath || '#/account') : '#/account'));
 
   const title = document.createElement('h2');
   title.textContent = type === 'followers' ? 'フォロワー一覧' : type === 'following' ? 'フォロー一覧' : 'フォローリクエスト一覧';
@@ -258,87 +278,103 @@ export const renderAccountConnections = (params, { navigate, store, accountState
   const list = document.createElement('div');
   list.className = 'stack';
 
-  const tabs = document.createElement('div');
-  tabs.className = 'tabs';
-  tabs.hidden = type !== 'requests';
-  const incomingTab = document.createElement('button');
-  incomingTab.type = 'button';
-  incomingTab.className = 'tab is-active';
-  incomingTab.textContent = '受信';
-  const outgoingTab = document.createElement('button');
-  outgoingTab.type = 'button';
-  outgoingTab.className = 'tab';
-  outgoingTab.textContent = '送信済み';
-  tabs.append(incomingTab, outgoingTab);
+  const isRequestList = type === 'requests';
+  const tabs = isRequestList ? document.createElement('div') : null;
+  const incomingTab = isRequestList ? document.createElement('button') : null;
+  const outgoingTab = isRequestList ? document.createElement('button') : null;
+  if (tabs && incomingTab && outgoingTab) {
+    tabs.className = 'tabs';
+    incomingTab.type = 'button';
+    incomingTab.className = 'tab is-active';
+    incomingTab.textContent = '受信';
+    outgoingTab.type = 'button';
+    outgoingTab.className = 'tab';
+    outgoingTab.textContent = '送信済み';
+    tabs.append(incomingTab, outgoingTab);
+  }
 
   let requestDirection = 'incoming';
+
+  const renderFollowList = async () => {
+    const accounts = await Promise.resolve(type === 'followers' ? store.getFollowers(currentUserId) : store.getFollowing(currentUserId));
+    const rows = await renderAccountsByIds({ accounts: accounts || [], currentUserId, store, feedback, rerender: render });
+    list.innerHTML = '';
+    rows.forEach((row) => list.append(row));
+  };
+
+  const renderRequestList = async () => {
+    const requests = await Promise.resolve(store.listFollowRequests(currentUserId, requestDirection));
+    list.innerHTML = '';
+    if (!requests?.length) {
+      list.append(createEmpty(requestDirection === 'incoming' ? '受信リクエストはありません。' : '送信済みリクエストはありません。'));
+      return;
+    }
+
+    requests.forEach((row) => {
+      const account = requestDirection === 'incoming' ? row.requester : row.target;
+      const actions = requestDirection === 'incoming'
+        ? createIncomingRequestActions({
+          onApprove: async () => {
+            const result = await Promise.resolve(store.respondFollowRequest(currentUserId, row.requester_id, 'approve'));
+            feedback.textContent = buildStatusText(result?.code || 'REQUEST_ACCEPTED');
+            render();
+          },
+          onReject: async () => {
+            const result = await Promise.resolve(store.respondFollowRequest(currentUserId, row.requester_id, 'reject'));
+            feedback.textContent = buildStatusText(result?.code || 'REQUEST_REJECTED');
+            render();
+          },
+        })
+        : createOutgoingRequestActions({
+          onCancel: async () => {
+            const result = await Promise.resolve(store.cancelFollowRequest(currentUserId, row.target_id));
+            feedback.textContent = buildStatusText(result?.code || 'REQUEST_CANCELLED');
+            render();
+          },
+        });
+
+      list.append(createAccountListRow({ account, actionEl: actions }));
+    });
+  };
 
   const render = async () => {
     list.innerHTML = '';
     list.append(createLoading());
 
     try {
-      if (type === 'followers' || type === 'following') {
-        const ids = await Promise.resolve(type === 'followers' ? store.getFollowers(currentUserId) : store.getFollowing(currentUserId));
-        const rows = await renderAccountsByIds({ ids: ids || [], currentUserId, store, feedback, rerender: render });
-        list.innerHTML = '';
-        rows.forEach((row) => list.append(row));
-        return;
+      if (isRequestList) {
+        await renderRequestList();
+      } else {
+        await renderFollowList();
       }
-
-      const requests = await Promise.resolve(store.listFollowRequests(currentUserId, requestDirection));
-      list.innerHTML = '';
-      if (!requests?.length) {
-        list.append(createEmpty(requestDirection === 'incoming' ? '受信リクエストはありません。' : '送信済みリクエストはありません。'));
-        return;
-      }
-
-      requests.forEach((row) => {
-        const account = requestDirection === 'incoming' ? row.requester : row.target;
-        const actions = requestDirection === 'incoming'
-          ? createIncomingRequestActions({
-            onApprove: async () => {
-              const result = await Promise.resolve(store.respondFollowRequest(currentUserId, row.requester_id, 'approve'));
-              feedback.textContent = buildStatusText(result?.code || 'REQUEST_ACCEPTED');
-              render();
-            },
-            onReject: async () => {
-              const result = await Promise.resolve(store.respondFollowRequest(currentUserId, row.requester_id, 'reject'));
-              feedback.textContent = buildStatusText(result?.code || 'REQUEST_REJECTED');
-              render();
-            },
-          })
-          : createOutgoingRequestActions({
-            onCancel: async () => {
-              const result = await Promise.resolve(store.cancelFollowRequest(currentUserId, row.target_id));
-              feedback.textContent = buildStatusText(result?.code || 'REQUEST_CANCELLED');
-              render();
-            },
-          });
-
-        list.append(createAccountListRow({ account, actionEl: actions }));
-      });
     } catch (_error) {
       list.innerHTML = '';
       list.append(createEmpty('一覧取得に失敗しました。再読み込みしてください。'));
     }
   };
 
-  incomingTab.addEventListener('click', () => {
-    requestDirection = 'incoming';
-    incomingTab.classList.add('is-active');
-    outgoingTab.classList.remove('is-active');
-    render();
-  });
-  outgoingTab.addEventListener('click', () => {
-    requestDirection = 'outgoing';
-    incomingTab.classList.remove('is-active');
-    outgoingTab.classList.add('is-active');
-    render();
-  });
+  if (incomingTab && outgoingTab) {
+    incomingTab.addEventListener('click', () => {
+      requestDirection = 'incoming';
+      incomingTab.classList.add('is-active');
+      outgoingTab.classList.remove('is-active');
+      render();
+    });
+
+    outgoingTab.addEventListener('click', () => {
+      requestDirection = 'outgoing';
+      incomingTab.classList.remove('is-active');
+      outgoingTab.classList.add('is-active');
+      render();
+    });
+  }
 
   render();
 
-  container.append(back, title, tabs, feedback, list);
+  if (tabs) {
+    container.append(back, title, tabs, feedback, list);
+  } else {
+    container.append(back, title, feedback, list);
+  }
   return container;
 };

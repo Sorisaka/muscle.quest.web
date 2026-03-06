@@ -20,6 +20,18 @@ const persistLocalSession = (session) => {
   return session;
 };
 
+
+const toProfilePatch = (profile = {}) => ({
+  ...(profile || {}),
+  display_name: profile.display_name ?? profile.displayName,
+  displayName: profile.displayName ?? profile.display_name,
+  account_visibility: profile.account_visibility ?? profile.accountVisibility,
+  default_visibility: profile.default_visibility ?? profile.defaultVisibility,
+  icon_border: profile.icon_border ?? profile.iconBorder,
+  icon_background: profile.icon_background ?? profile.iconBackground,
+  icon_center_object: profile.icon_center_object ?? profile.iconCenterObject,
+});
+
 const missingConfigMessage = [
   'Supabase settings are missing.',
   'Create dist/config.js from dist/config.example.js with SUPABASE_URL and SUPABASE_ANON_KEY.',
@@ -49,17 +61,21 @@ export const createAccountState = (store) => {
     subscribers.forEach((callback) => callback(snapshot));
   };
 
+  const getEffectiveProfile = () => ({
+    ...toProfilePatch(state.profile || {}),
+    ...toProfilePatch(store.getProfile() || {}),
+  });
+
   const deriveDisplayName = () => {
-    const profile = store.getProfile();
-    const supaName = state.profile?.display_name;
+    const profile = getEffectiveProfile();
+    const supaName = profile.display_name || profile.displayName;
     if (supaName) return supaName;
-    if (profile?.displayName) return profile.displayName;
     if (state.session?.user?.email) return state.session.user.email;
     return 'Guest';
   };
 
   const getStatus = () => {
-    const profile = store.getProfile();
+    const profile = getEffectiveProfile();
     const calorieSummary = store.getCalorieSummary ? store.getCalorieSummary() : store.getPointSummary();
     const loggedIn = Boolean(state.session && state.supabaseReady && !state.supabaseError);
 
@@ -68,7 +84,7 @@ export const createAccountState = (store) => {
       supabaseReady: state.supabaseReady,
       supabaseError: state.supabaseError,
       session: state.session,
-      profile: state.profile,
+      profile,
       loggedIn,
       isGuest: !loggedIn,
       id: loggedIn ? state.session?.user?.id || state.profile?.id : profile?.id || 'local-user',
@@ -164,6 +180,18 @@ export const createAccountState = (store) => {
     persistLocalSession({ ...state.localSession, loggedIn: false });
   };
 
+
+  const saveProfileSettings = async (partialProfile = {}) => {
+    const result = await Promise.resolve(store.saveProfileSettings(partialProfile));
+    const mergedProfile = {
+      ...toProfilePatch(state.profile || {}),
+      ...toProfilePatch(result || {}),
+      ...toProfilePatch(partialProfile || {}),
+    };
+    setState({ profile: mergedProfile, supabaseError: null });
+    return mergedProfile;
+  };
+
   const setDisplayName = async (name) => {
     const loggedIn = Boolean(state.session && state.supabaseReady && !state.supabaseError);
     if (!loggedIn) {
@@ -210,6 +238,7 @@ export const createAccountState = (store) => {
     login,
     logout,
     setDisplayName,
+    saveProfileSettings,
     refreshSession,
     destroy: () => authUnsubscribe && authUnsubscribe(),
   };

@@ -134,3 +134,70 @@ select * from public.get_timeline('following', 50, null);
 - `profiles.icon_background`: `bg-night|bg-ocean|bg-sunset|bg-forest`
 - `profiles.icon_center_object`: `dot|diamond|barbell|bolt`
 - デフォルト値を設定し、既存データは `coalesce` で埋め戻し
+
+
+## Phase1: ランキング / 検索 / フォロー一覧 取得の修正
+
+### 追加ファイル
+- migration: `supabase/migrations/20260306_0008_phase1_ranking_follow_queries.sql`
+- 手動SQL: `supabase/sql/016_phase1_ranking_follow_queries.sql`
+
+### 実行順
+1. `supabase db push`
+2. 既存環境への差分反映は SQL Editor で `016_phase1_ranking_follow_queries.sql` を実行
+
+### 含まれるDB変更
+- RPC追加
+  - `get_leaderboard(p_period, p_limit)`
+  - `search_accounts(p_query, p_limit)`
+  - `get_following_accounts(p_user_id)`
+  - `get_follower_accounts(p_user_id)`
+- インデックス補強
+  - `workout_runs(visibility, published_at desc, user_id)`
+  - `workout_runs(user_id, created_at desc)`
+  - `follows(follower_id, followee_id)`
+  - `follows(followee_id, follower_id)`
+
+### テスト観点
+- ranking が `public / self / following-private` のみを返す
+- search_accounts が表示名・公開範囲・アイコン構成を返す
+- following/followers がプロフィール情報付きで取得できる
+
+
+## Phase3: body_metrics の空レコード禁止
+
+### 追加ファイル
+- migration: `supabase/migrations/20260306_0009_phase3_body_metrics_non_empty.sql`
+- 手動SQL: `supabase/sql/017_phase3_body_metrics_non_empty.sql`
+
+### 仕様
+- `weight_kg` か `body_fat_pct` のどちらかは必須（両方 null は不可）。
+- 制約名: `body_metrics_not_both_null`
+- `(user_id, date)` 主キーの upsert モデルは維持。
+
+
+## Phase4: メニュー設定UI接続（DB追加なし）
+
+- `weekly_plans` / `special_plans` は既存 foundation migration で作成済みのため、今回の UI 接続で新規 SQL は不要です。
+- 未適用環境ではまず `supabase/migrations/20260305_0001_phase0_3_foundation.sql` を含む migration を適用してください。
+
+## 最終統合: 推奨 migration 適用順（Phase 1-6）
+
+CLI (`supabase db push`) を使う場合はタイムスタンプ順で自動適用されます。手動で順序確認する場合は以下を基準にしてください。
+
+1. `supabase/migrations/20260305_0001_phase0_3_foundation.sql`
+2. `supabase/migrations/20260306_0006_phase2_follow_requests.sql`
+3. `supabase/migrations/20260306_0007_phase4_icon_settings.sql`
+4. `supabase/migrations/20260306_0008_phase1_ranking_follow_queries.sql`
+5. `supabase/migrations/20260306_0009_phase3_body_metrics_non_empty.sql`
+
+### 手動 SQL（既存環境へ差分反映）の順序
+1. `supabase/sql/013_phase2_follow_requests.sql`
+2. `supabase/sql/015_phase4_icon_settings.sql`
+3. `supabase/sql/016_phase1_ranking_follow_queries.sql`
+4. `supabase/sql/017_phase3_body_metrics_non_empty.sql`
+5. 必要に応じて `supabase/sql/014_phase2_follow_requests_verification.sql`
+
+### 注意
+- SQL は README 記載だけでなく、必ず `supabase/sql/*.sql` 実ファイルを正とすること。
+- 既存データ保護のため、制約追加時は既存値を確認してから適用すること。
