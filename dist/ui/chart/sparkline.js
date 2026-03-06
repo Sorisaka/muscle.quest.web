@@ -1,3 +1,5 @@
+import { toDateKey as toLocalDateKey } from '../../lib/dateKey.js';
+
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 const DAY_MS = 86400000;
@@ -14,7 +16,7 @@ const toDayTimestamp = (value) => {
 const toDateKey = (value) => {
   const ts = toDayTimestamp(value);
   if (!Number.isFinite(ts)) return null;
-  return new Date(ts).toISOString().slice(0, 10);
+  return toLocalDateKey(ts);
 };
 
 const getNiceTickStep = (minimumStep) => {

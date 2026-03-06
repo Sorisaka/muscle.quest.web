@@ -213,7 +213,6 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
     onPointHover: ({ dateKey }) => {
       activeDateKey = dateKey;
       showTooltipForDate(dateKey);
-      if (!editTarget) renderCharts();
     },
     onPointLeave: () => {},
     onPointSelect: ({ dateKey }) => openEdit(dateKey),
@@ -228,7 +227,6 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
     onPointHover: ({ dateKey }) => {
       activeDateKey = dateKey;
       showTooltipForDate(dateKey);
-      if (!editTarget) renderCharts();
     },
     onPointLeave: () => {},
     onPointSelect: ({ dateKey }) => openEdit(dateKey),
