@@ -24,6 +24,8 @@ const createEmpty = (text) => {
 const toInputValue = (value) => (value == null ? '' : String(value));
 
 const createMetricEditor = ({
+  title = '計測を編集',
+  description = '',
   initialDate = toDateKey(Date.now()),
   initialWeight = null,
   initialBodyFat = null,
@@ -35,6 +37,13 @@ const createMetricEditor = ({
 }) => {
   const wrap = document.createElement('div');
   wrap.className = 'card stack';
+
+  const heading = document.createElement('h3');
+  heading.textContent = title;
+
+  const sub = document.createElement('p');
+  sub.className = 'muted';
+  sub.textContent = description;
 
   const dateInput = document.createElement('input');
   dateInput.type = 'date';
@@ -61,8 +70,10 @@ const createMetricEditor = ({
     fatInput.disabled = busy;
     submitBtn.disabled = busy;
     cancelBtn.disabled = busy;
+    if (deleteBtn) deleteBtn.disabled = busy;
   };
 
+  let deleteBtn = null;
   const actions = document.createElement('div');
   actions.className = 'hero__actions';
 
@@ -104,7 +115,7 @@ const createMetricEditor = ({
   actions.append(submitBtn, cancelBtn);
 
   if (showDelete) {
-    const deleteBtn = document.createElement('button');
+    deleteBtn = document.createElement('button');
     deleteBtn.type = 'button';
     deleteBtn.className = 'ghost';
     deleteBtn.textContent = '削除';
@@ -122,6 +133,8 @@ const createMetricEditor = ({
     actions.append(deleteBtn);
   }
 
+  wrap.append(heading);
+  if (description) wrap.append(sub);
   wrap.append(dateInput, weightInput, fatInput, error, actions);
   return wrap;
 };
@@ -184,6 +197,7 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
   const openEdit = (dateKey) => {
     activeDateKey = dateKey;
     addExpanded = false;
+    setAddToggleLabel();
     editTarget = rowsByDate.get(dateKey) || { date: dateKey, weight_kg: null, body_fat_pct: null };
     showTooltipForDate(dateKey);
     renderCharts();
@@ -199,7 +213,6 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
     onPointHover: ({ dateKey }) => {
       activeDateKey = dateKey;
       showTooltipForDate(dateKey);
-      renderCharts();
     },
     onPointLeave: () => {},
     onPointSelect: ({ dateKey }) => openEdit(dateKey),
@@ -214,7 +227,6 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
     onPointHover: ({ dateKey }) => {
       activeDateKey = dateKey;
       showTooltipForDate(dateKey);
-      renderCharts();
     },
     onPointLeave: () => {},
     onPointSelect: ({ dateKey }) => openEdit(dateKey),
@@ -238,17 +250,24 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
 
   const saveMetric = async ({ originalDate, date, weight_kg, body_fat_pct }) => {
     playSfx('ui:select');
-    if (originalDate && originalDate !== date) {
+    const trimmedDate = String(date || '').trim();
+    if (!trimmedDate) throw new Error('日付を入力してください。');
+    if (originalDate && originalDate !== trimmedDate && rowsByDate.has(trimmedDate)) {
+      const ok = confirm(`${trimmedDate} には既存データがあります。上書きしますか？`);
+      if (!ok) return;
+    }
+    if (originalDate && originalDate !== trimmedDate) {
       await Promise.resolve(store.deleteBodyMetric(originalDate));
     }
-    await Promise.resolve(store.upsertBodyMetric(date, {
+    await Promise.resolve(store.upsertBodyMetric(trimmedDate, {
       weight_kg,
       body_fat_pct,
       visibility: 'private',
     }));
-    activeDateKey = date;
+    activeDateKey = trimmedDate;
     editTarget = null;
     addExpanded = false;
+    setAddToggleLabel();
     await refreshMetrics();
     showTooltipForDate(activeDateKey);
     renderCharts();
@@ -262,6 +281,7 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
     if (activeDateKey === date) activeDateKey = null;
     editTarget = null;
     addExpanded = false;
+    setAddToggleLabel();
     await refreshMetrics();
     showTooltipForDate(activeDateKey);
     renderCharts();
@@ -273,6 +293,8 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
     addSlot.innerHTML = '';
     if (editTarget) {
       addSlot.append(createMetricEditor({
+        title: `${editTarget.date} の計測を編集`,
+        description: '既存の計測データを更新または削除できます。',
         initialDate: editTarget.date,
         initialWeight: editTarget.weight_kg,
         initialBodyFat: editTarget.body_fat_pct,
@@ -291,6 +313,8 @@ const createBodyMetricsPanel = async ({ store, playSfx, onMetricsChanged }) => {
     if (!addExpanded) return;
 
     addSlot.append(createMetricEditor({
+      title: '計測を追加',
+      description: '新しい日付の体重・体脂肪率を記録します。',
       submitLabel: '保存',
       onSubmit: async (payload) => saveMetric(payload),
       onCancel: () => {
