@@ -39,30 +39,19 @@ const normalizeTimelineResponse = (timelineState) => {
   };
 };
 
-export const renderTimeline = (_params, { navigate, playSfx, store }) => {
+export const renderTimeline = (_params, { playSfx, store }) => {
   const container = document.createElement('section');
   container.className = 'stack';
 
   const header = document.createElement('div');
   header.className = 'list-header';
-  const heading = document.createElement('h2');
-  heading.textContent = 'Timeline';
-
-  const back = document.createElement('button');
-  back.type = 'button';
-  back.className = 'ghost';
-  back.textContent = '← ホームに戻る';
-  back.addEventListener('click', () => {
-    playSfx('ui:navigate');
-    navigate('#/');
-  });
 
   const refreshButton = document.createElement('button');
   refreshButton.type = 'button';
   refreshButton.className = 'ghost';
   refreshButton.textContent = '更新';
 
-  header.append(heading, refreshButton, back);
+  header.append(refreshButton);
 
   const tabs = document.createElement('div');
   tabs.className = 'tabs';

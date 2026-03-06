@@ -26,34 +26,16 @@ const createRankRow = (position, entry, selfId) => {
   return row;
 };
 
-export const renderRank = (params, { navigate, store, playSfx }) => {
+export const renderRank = (_params, { store }) => {
   const container = document.createElement('section');
   container.className = 'stack rank-view';
 
-  const boardId = params.board || 'local';
   const profile = store.getProfile();
   const selfId = profile?.id || 'local-user';
 
-  const header = document.createElement('div');
-  header.className = 'list-header';
-
-  const heading = document.createElement('h2');
-  heading.textContent = `Rank board: ${boardId}`;
-
-  const back = document.createElement('button');
-  back.type = 'button';
-  back.className = 'ghost';
-  back.textContent = '← ホームに戻る';
-  back.addEventListener('click', () => {
-    playSfx('ui:navigate');
-    navigate('#/');
-  });
-
-  header.append(heading, back);
-
   const description = document.createElement('p');
   description.className = 'muted';
-  description.textContent = 'ローカル保存された消費カロリーとサンプル順位を表示します。将来的に Supabase へ差し替え可能なアダプタ構造です。';
+  description.textContent = 'ランキングは公開アカウント・自分・フォロー中の非公開アカウントを対象に集計されます。';
 
   const periods = [
     { id: 'daily', label: '本日' },
@@ -100,9 +82,18 @@ export const renderRank = (params, { navigate, store, playSfx }) => {
     });
   };
 
-  const renderLeaderboard = () => {
+  const renderLeaderboard = async () => {
     list.innerHTML = '';
-    const entries = store.getLeaderboard(activePeriod);
+    list.append(Object.assign(document.createElement('p'), { className: 'muted', textContent: '読み込み中...' }));
+    let entries = [];
+    try {
+      entries = await Promise.resolve(store.getLeaderboard(activePeriod));
+    } catch (_error) {
+      list.innerHTML = '';
+      list.append(Object.assign(document.createElement('p'), { className: 'muted', textContent: 'ランキング取得に失敗しました。' }));
+      return;
+    }
+
     const filtered = (entries || []).filter((entry) => {
       if (!searchTerm) return true;
       const id = (entry.id || '').toLowerCase();
@@ -110,6 +101,7 @@ export const renderRank = (params, { navigate, store, playSfx }) => {
       return id.includes(searchTerm) || name.includes(searchTerm);
     });
 
+    list.innerHTML = '';
     if (!filtered.length) {
       const empty = document.createElement('p');
       empty.className = 'muted';
@@ -145,6 +137,6 @@ export const renderRank = (params, { navigate, store, playSfx }) => {
 
   renderLeaderboard();
 
-  container.append(header, description, controls, board);
+  container.append(description, controls, board);
   return container;
 };

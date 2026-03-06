@@ -249,3 +249,172 @@ All primary hash routes can be checked without extra tooling:
    - ハッシュルーティング（`#/account`, `#/follow-requests`, `#/settings/account`）
    - アイコン構成の表示統一（ドロワー/一覧/検索結果）
    - モバイル下部ナビ追従挙動
+
+
+## Phase 1: Ranking / Follow 一覧 / ID検索（Supabase優先）
+
+### 追加ファイル
+- migration: `supabase/migrations/20260306_0008_phase1_ranking_follow_queries.sql`
+- 手動SQL: `supabase/sql/016_phase1_ranking_follow_queries.sql`
+
+### 変更概要
+- ランキング取得を Supabase RPC `get_leaderboard` ベースへ移行（公開アカウント + 自分 + フォロー中 private を対象）。
+- ID検索を Supabase RPC `search_accounts` ベースへ移行（表示名・アイコン・公開範囲を返却）。
+- フォロー一覧 / フォロワー一覧を Supabase RPC `get_following_accounts` / `get_follower_accounts` で取得。
+- local fallback は維持しつつ、ダミーランキングアカウントは廃止。
+
+### 適用順
+1. `supabase db push`（migration適用）
+2. 既存環境へ追加適用する場合は SQL Editor で `supabase/sql/016_phase1_ranking_follow_queries.sql` を実行
+
+### 最低限の確認観点
+- 未ログイン時：local fallback で画面が破綻しない
+- ログイン時：ランキングに sample/bot が出ない
+- ログイン時：ランキングに「自分 / public / フォロー中 private」が表示される
+- `#/account/following` / `#/account/followers` で表示名・アイコン・鍵マーク判定が崩れない
+- ID検索で対象アカウントが取得できる
+
+
+## Phase 3: 履歴ページの計測UI/グラフ編集
+
+### 追加SQL
+- migration: `supabase/migrations/20260306_0009_phase3_body_metrics_non_empty.sql`
+- idempotent SQL: `supabase/sql/017_phase3_body_metrics_non_empty.sql`
+
+### body_metrics の前提
+- `body_metrics` は `(user_id, date)` を主キーに 1日1件を upsert します。
+- `weight_kg` / `body_fat_pct` は片方 `null` でも保存できます。
+- ただし **両方 `null` は禁止**（UI バリデーション + DB CHECK 制約）です。
+- 削除は `deleteBodyMetric(date)` 経由で、対象日1件を削除します。
+
+
+## Phase 4: メニュー設定UI（曜日別計画）
+
+### 機能概要
+- `#/settings/menu` で曜日ごとのメニュー項目を編集できます。
+- 各項目は以下を保持します。
+  - 表示名（`title` / `displayName`）
+  - 対応種目（`exerciseSlug`）
+  - 対応ワークアウト（`questId`）
+  - 任意メモ（`note`）
+- 順序変更（↑↓）と削除・追加に対応しています。
+- 保存時は `store.saveWeeklyPlan(userId, weekday, items)` を通して persistence に反映されます。
+
+### データ保存先
+- local fallback: `localStorage`（`musclequest:weeklyPlans`）
+- Supabase: `weekly_plans` テーブル（既存実装）
+- 当日TODOは `getTodayPlan` が参照し、同日 `special_plans` がある場合は special が優先されます。
+
+### ローカル確認方法
+1. `npm run dev`
+2. `#/settings/menu` を開く
+3. 任意曜日で項目を追加・編集・並び替え・削除
+4. 「曜日メニューを保存」を押下
+5. 再読込後に内容が保持されることを確認
+6. `#/` の「今日のTODOメニュー」に反映されることを確認
+
+### Supabase適用
+- この Phase4 の UI 実装自体では新規 migration は不要です（`weekly_plans` / `special_plans` は既存）。
+- 既存環境で未作成の場合は foundation migration を先に適用してください。
+
+
+## Phase 5: ワークアウト一覧の効く部位フィルタ
+
+- `#/workouts/:tier`（`#/quests/:tier`）で、効く部位による絞り込みを実装しました。
+- 複数部位選択時の条件は **AND**（選択したすべての部位に一致）です。
+- フィルタ状態は `localStorage`（`musclequest:questListMuscleFilter`）に保存され、一覧再描画や再訪問で維持されます。
+- メタデータは `trainingDefinitions` → `exerciseTaxonomy.getExerciseTags` を正として判定します。
+
+## Phase 6: 下部ナビとモバイルブラウザUI干渉対策（2026-03）
+
+### 1) このフェーズで実施したこと（章立て）
+- **共通レイアウトの安全余白化**
+  - `section.panel` を全 view 共通のスクロールコンテナとして扱い、末尾に `::after` で安全余白を付与。
+  - 余白は `--panel-safe-bottom`（= 下部ナビ実測高さ + ブラウザUIオフセット + マージン）で算出。
+- **visualViewport 追従の改善**
+  - `window.visualViewport` の `resize` / `scroll` に追従して CSS 変数を更新。
+  - `window.innerHeight - (visualViewport.height + visualViewport.offsetTop)` で下部UI占有量を算出。
+  - キーボード表示推定時は下部UIオフセットを 0 として、過剰なレイアウトジャンプを抑止。
+- **下部ナビ重なり対策の適用範囲拡大**
+  - タイムライン、ランキング、履歴だけでなく全 view で共通に効く実装へ統一。
+  - 内部スクロールを持つ領域（例: ランキングリスト）にも安全余白を適用。
+- **Phase 5 修正**
+  - ワークアウト一覧の複数部位フィルタを **OR → AND** 条件に変更。
+
+### 2) ローカル開発手順（Node / npm / npm ci）
+1. Node.js 20 系を利用（`.nvmrc` 推奨）。
+2. 依存インストール: `npm ci`
+3. 開発サーバー: `npm run dev`（`http://localhost:4173`）
+4. 本番ビルド: `npm run build`
+5. 本番相当確認: `npm run preview`（`http://localhost:4174`）
+
+### 3) `dist/config.js` の用意方法
+- 開発時は `cp src/config.example.js dist/config.js` でひな型作成後、`SUPABASE_URL` / `SUPABASE_ANON_KEY` を設定。
+- `dist/config.js` は機密情報を含むためコミットしない（`.gitignore` 済み）。
+- `npm run build` で `dist/` は毎回再生成されるため、必要に応じて再配置する。
+
+### 4) Supabase を使うローカルデバッグ
+1. Supabase プロジェクトを用意し、`dist/config.js` に接続情報を設定。
+2. Redirect URL に `http://localhost:4173/auth/callback.html` を登録。
+3. `npm run dev` 起動後、ログイン→履歴取得/保存→ランキング/フォロー系画面を確認。
+
+### 5) migration / sql の適用順
+- **基本方針**: まず `supabase/migrations` を時系列で適用（CLI の `supabase db push` 推奨）。
+- **SQL Editor で手動適用する場合**（必要時）:
+  1. `supabase/sql/013_phase2_follow_requests.sql`
+  2. `supabase/sql/015_phase4_icon_settings.sql`
+  3. `supabase/sql/016_phase1_ranking_follow_queries.sql`
+  4. `supabase/sql/017_phase3_body_metrics_non_empty.sql`
+  5. 検証 SQL（必要に応じて）
+
+### 6) 依存追加の有無
+- この Phase 6 では **新規依存を追加していません**。
+- 理由: 既存の `visualViewport` + CSS 変数更新ロジックで、要求されたブラウザUI追従と安全余白を実現可能なため。
+
+### 7) GitHub Pages / 現行 deploy 更新手順
+1. `src/` を修正（**唯一のソース**）。
+2. `npm run build` で `dist/` を再生成。
+3. GitHub Actions で Secrets から `dist/config.js` を生成して Pages へ配信。
+4. 配信後にモバイル表示とハッシュルーティングを実機確認。
+
+> 重要: **`src` が唯一のソースであり、`dist` の手編集は禁止**。
+
+### 8) モバイルでの確認観点
+- iOS Safari の下端UI（表示/非表示で下部ナビと最終操作UIが重ならない）
+- Android Chrome の下端/上端UI（URLバー変化時の余白追従）
+- キーボード表示時（入力フォーカス時に過剰ジャンプしない）
+- 画面回転時（縦横切り替えで余白計算が破綻しない）
+
+### 9) 動作確認チェックリスト
+- [ ] 主要画面（ホーム/タイムライン/ランキング/履歴/設定/アカウント）で末尾操作UIが隠れない
+- [ ] 「ワークアウト開始」導線先のページ末尾ボタンが常に見える
+- [ ] active 下部ナビ表示が壊れていない
+- [ ] スクロール不能や二重スクロールが悪化していない
+- [ ] キーボード表示時に操作領域の末尾UIへ到達できる
+- [ ] 画面回転後も余白とナビ位置が破綻しない
+
+## 最終統合メモ（Phase 1-6）
+
+### 変更ファイル整理（src のみをソースとして編集）
+- アプリ実装の最終変更は `src/` を主対象に実施し、必要時のみ `npm run build` で `dist/` を再生成します。
+- 主な更新対象:
+  - `src/core/bottomInset.js`
+  - `src/style.css`
+  - `src/views/questListView.js`
+  - そのほか各 Phase で更新された `src/core/*`, `src/views/*`, `src/ui/*`, `src/data/*`, `src/services/*`
+
+### local fallback / Supabase 点検方針
+- **Supabase 有効時**: ランキング・検索・フォロー一覧は RPC を優先。
+- **Supabase 無効/障害時**: `localPersistence` フォールバックで同等の基本導線を維持。
+- 確認観点:
+  1. 未ログインでもホーム→ワークアウト→履歴保存が成立する
+  2. ログイン時は Supabase データが優先される
+  3. フォロー/リクエスト操作後にプロフィール・一覧の再取得が走り、リロード不要で反映される
+
+### 最終チェックリスト（統合）
+- [ ] 末尾 UI が全画面で下部ナビに隠れない
+- [ ] `#/workout/:id` 末尾の開始ボタンに到達できる
+- [ ] 下部ナビの active 表示が壊れていない
+- [ ] local fallback / Supabase の両モードで主要導線が成立する
+- [ ] body_metrics は両 null を拒否する
+- [ ] OR ではなく AND で部位フィルタされる

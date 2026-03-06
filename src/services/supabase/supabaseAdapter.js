@@ -103,6 +103,36 @@ const mapTimelineRow = (row) => {
 });
 };
 
+const mapAccountRow = (row = {}) => ({
+  id: row.id,
+  display_name: row.display_name || row.id || 'Unknown',
+  account_visibility: normalizeAccountVisibility(row.account_visibility, 'private'),
+  icon_border: row.icon_border || null,
+  icon_background: row.icon_background || null,
+  icon_center_object: row.icon_center_object || null,
+});
+
+const mapLeaderboardRow = (row = {}, period = 'overall') => {
+  const periodCalories = period === 'daily'
+    ? row.daily_calories
+    : period === 'weekly'
+      ? row.weekly_calories
+      : period === 'monthly'
+        ? row.monthly_calories
+        : row.total_calories;
+
+  return {
+    id: row.user_id,
+    displayName: row.display_name || row.user_id || 'Unknown',
+    calories: Math.max(Number(periodCalories || 0), 0),
+    account_visibility: normalizeAccountVisibility(row.account_visibility, 'private'),
+    icon_border: row.icon_border || null,
+    icon_background: row.icon_background || null,
+    icon_center_object: row.icon_center_object || null,
+    is_self: Boolean(row.is_self),
+  };
+};
+
 export const createSupabaseAdapter = (options = {}) => {
   const local = createLocalPersistence();
   const runtimeConfig = getRuntimeConfig(options.runtimeConfig || {});
@@ -535,7 +565,24 @@ export const createSupabaseAdapter = (options = {}) => {
     return syncPromise;
   };
 
-  const loadLeaderboard = (period = 'overall') => local.loadLeaderboard(period);
+  const loadLeaderboard = (period = 'overall') => {
+    if (!supabaseEnabled || !session?.user?.id) {
+      return local.loadLeaderboard(period);
+    }
+
+    return client
+      .rpc('get_leaderboard', {
+        p_period: period || 'overall',
+        p_limit: 50,
+      })
+      .then(({ data, error }) => {
+        if (error) {
+          authWarn('get_leaderboard failed', error.message || error);
+          throw error;
+        }
+        return (data || []).map((row) => mapLeaderboardRow(row, period));
+      });
+  };
 
   const saveLastPlan = (questId, difficulty, plan) => local.saveLastPlan(questId, difficulty, plan);
   const getLastPlan = (questId, difficulty) => local.getLastPlan(questId, difficulty);
@@ -767,24 +814,18 @@ export const createSupabaseAdapter = (options = {}) => {
     if (!supabaseEnabled || !session?.user?.id) {
       return local.searchAccounts(query, viewerId, limit);
     }
+
     return client
-      .from('profiles')
-      .select('id,display_name,account_visibility,icon_border,icon_background,icon_center_object')
-      .or(`id.ilike.%${String(query || '').replace(/[%]/g, '')}%,display_name.ilike.%${String(query || '').replace(/[%]/g, '')}%`)
-      .limit(Math.max(1, Number(limit) || 20))
+      .rpc('search_accounts', {
+        p_query: String(query || '').trim(),
+        p_limit: Math.max(1, Number(limit) || 20),
+      })
       .then(({ data, error }) => {
         if (error) {
-          authWarn('profiles search failed', error.message || error);
-          return local.searchAccounts(query, viewerId, limit);
+          authWarn('search_accounts failed', error.message || error);
+          throw error;
         }
-        return (data || []).map((row) => ({
-          id: row.id,
-          display_name: row.display_name,
-          account_visibility: normalizeAccountVisibility(row.account_visibility, 'private'),
-          icon_border: row.icon_border,
-          icon_background: row.icon_background,
-          icon_center_object: row.icon_center_object,
-        }));
+        return (data || []).map(mapAccountRow);
       });
   };
 
@@ -794,15 +835,15 @@ export const createSupabaseAdapter = (options = {}) => {
     }
 
     return client
-      .from('follows')
-      .select('followee_id')
-      .eq('follower_id', userId)
+      .rpc('get_following_accounts', {
+        p_user_id: userId || session.user.id,
+      })
       .then(({ data, error }) => {
         if (error) {
-          authWarn('follows following fetch failed', error.message || error);
-          return local.getFollowing(userId);
+          authWarn('get_following_accounts failed', error.message || error);
+          throw error;
         }
-        return (data || []).map((row) => row.followee_id);
+        return (data || []).map(mapAccountRow);
       });
   };
 
@@ -812,15 +853,15 @@ export const createSupabaseAdapter = (options = {}) => {
     }
 
     return client
-      .from('follows')
-      .select('follower_id')
-      .eq('followee_id', userId)
+      .rpc('get_follower_accounts', {
+        p_user_id: userId || session.user.id,
+      })
       .then(({ data, error }) => {
         if (error) {
-          authWarn('follows followers fetch failed', error.message || error);
-          return local.getFollowers(userId);
+          authWarn('get_follower_accounts failed', error.message || error);
+          throw error;
         }
-        return (data || []).map((row) => row.follower_id);
+        return (data || []).map(mapAccountRow);
       });
   };
 
@@ -854,7 +895,7 @@ export const createSupabaseAdapter = (options = {}) => {
         authWarn('visible workouts fetch failed', runsResult.error.message || runsResult.error);
         return local.listVisibleWorkouts(viewerId, targetUserId);
       }
-      const followingSet = new Set(followingIds || []);
+      const followingSet = new Set((followingIds || []).map((entry) => entry?.id).filter(Boolean));
       return (runsResult.data || [])
         .map(mapHistoryRow)
         .filter((entry) => {
@@ -986,6 +1027,9 @@ export const createSupabaseAdapter = (options = {}) => {
 
     const payload = toBodyMetricPayload(metric);
     if (!payload.date) return null;
+    if (payload.weight_kg == null && payload.body_fat_pct == null) {
+      return { ok: false, code: 'BODY_METRIC_EMPTY_NOT_ALLOWED' };
+    }
 
     return client
       .from('body_metrics')

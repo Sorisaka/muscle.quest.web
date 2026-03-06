@@ -44,20 +44,42 @@ const routes = [
   { path: '#/follow-requests', render: (p, c) => renderAccountConnections({ type: 'requests' }, c) },
 ];
 
+const normalizePathForNav = (path) => {
+  const normalized = String(path || '#/').replace(/^#/, '');
+  if (normalized === '/' || normalized === '') return '#/';
+  if (normalized.startsWith('/rank')) return '#/rank';
+  if (normalized.startsWith('/timeline')) return '#/timeline';
+  if (normalized.startsWith('/history')) return '#/history';
+  if (normalized.startsWith('/account') || normalized.startsWith('/follow-requests')) return '#/';
+  return '#/';
+};
+
 const updateActiveNav = (fullPath) => {
+  const activeKey = normalizePathForNav(fullPath);
   navButtons.forEach((button) => {
-    const target = button.dataset.navRoute;
-    const active =
-      (target === '#/' && fullPath === '#/') ||
-      (target !== '#/' && fullPath.startsWith(target.replace('/local', '')));
-    button.classList.toggle('is-active', active);
+    const target = normalizePathForNav(button.dataset.navRoute || '#/');
+    button.classList.toggle('is-active', target === activeKey);
   });
 };
 
+const resolveRequestsReturnPath = (previousPath) => {
+  if (!previousPath) return '#/account';
+  const normalized = String(previousPath || '#/');
+  if (normalized.startsWith('#/follow-requests')) return '#/account';
+  return normalized;
+};
+
 const renderShell = (match) => {
-  const { route, params, fullPath } = match;
+  const { route, params, fullPath, previousPath } = match;
   updateActiveNav(fullPath);
-  const viewResult = route.render(params, { navigate: router.navigate, store, playSfx, accountState });
+  const viewResult = route.render(params, {
+    navigate: router.navigate,
+    store,
+    playSfx,
+    accountState,
+    followRequestsReturnPath: resolveRequestsReturnPath(previousPath),
+  });
+
   Promise.resolve(viewResult).then((view) => {
     outlet.innerHTML = '';
     if (view) outlet.append(view);
@@ -82,7 +104,9 @@ const init = () => {
     overlayEl: drawerOverlay,
     accountState,
     navigate: (path) => router.navigate(path),
+    getCurrentPath: () => router.getCurrentPath(),
     playSfx,
+    store,
   });
   initBottomInsetSync({ navEl: bottomNav });
   initSfx(store);

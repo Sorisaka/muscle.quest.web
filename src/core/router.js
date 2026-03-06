@@ -1,35 +1,30 @@
-const normalizeHash = (hash) => {
-  if (!hash || hash === '#') {
-    return '#/';
-  }
-  if (!hash.startsWith('#')) {
-    return `#${hash}`;
-  }
-  return hash;
+const normalizeHash = (path) => {
+  const cleaned = (path || '#/').trim();
+  if (!cleaned || cleaned === '#') return '#/';
+  if (cleaned.startsWith('#/')) return cleaned;
+  if (cleaned.startsWith('/')) return `#${cleaned}`;
+  if (cleaned.startsWith('#')) return `#/${cleaned.slice(1)}`;
+  return `#/${cleaned}`;
 };
 
-const matchSegments = (current, target) => {
+const splitSegments = (path) => path.replace(/^#\/?/, '').split('/').filter(Boolean);
+
+const matchSegments = (path, pattern) => {
+  const pathSegments = splitSegments(path);
+  const patternSegments = splitSegments(pattern);
+  if (pathSegments.length !== patternSegments.length) return null;
+
   const params = {};
-  const currentParts = current.split('/').filter(Boolean);
-  const targetParts = target.split('/').filter(Boolean);
+  for (let index = 0; index < patternSegments.length; index += 1) {
+    const patternSegment = patternSegments[index];
+    const pathSegment = pathSegments[index];
 
-  if (currentParts.length !== targetParts.length) {
-    return null;
-  }
-
-  for (let index = 0; index < targetParts.length; index += 1) {
-    const targetPart = targetParts[index];
-    const currentPart = currentParts[index];
-
-    if (targetPart.startsWith(':')) {
-      const key = targetPart.slice(1);
-      params[key] = currentPart;
+    if (patternSegment.startsWith(':')) {
+      params[patternSegment.slice(1)] = decodeURIComponent(pathSegment);
       continue;
     }
 
-    if (targetPart !== currentPart) {
-      return null;
-    }
+    if (patternSegment !== pathSegment) return null;
   }
 
   return params;
@@ -40,6 +35,9 @@ export const createRouter = (routes, onRouteChange) => {
     ...route,
     normalizedPath: normalizeHash(route.path).replace(/^#/, ''),
   }));
+
+  let currentPath = normalizeHash(window.location.hash || '#/');
+  let previousPath = '#/';
 
   const findMatch = (hash) => {
     const normalized = normalizeHash(hash).replace(/^#/, '');
@@ -60,13 +58,22 @@ export const createRouter = (routes, onRouteChange) => {
   };
 
   const notify = () => {
-    const match = findMatch(window.location.hash);
-    onRouteChange(match);
+    const match = findMatch(currentPath);
+    onRouteChange({ ...match, currentPath, previousPath });
+  };
+
+  const handleHashChange = () => {
+    const nextPath = normalizeHash(window.location.hash || '#/');
+    if (nextPath !== currentPath) {
+      previousPath = currentPath;
+      currentPath = nextPath;
+    }
+    notify();
   };
 
   const navigate = (path) => {
     const target = normalizeHash(path);
-    if (window.location.hash === target) {
+    if (currentPath === target) {
       notify();
       return;
     }
@@ -74,9 +81,15 @@ export const createRouter = (routes, onRouteChange) => {
   };
 
   const start = () => {
-    window.addEventListener('hashchange', notify);
+    currentPath = normalizeHash(window.location.hash || '#/');
+    window.addEventListener('hashchange', handleHashChange);
     notify();
   };
 
-  return { start, navigate };
+  return {
+    start,
+    navigate,
+    getCurrentPath: () => currentPath,
+    getPreviousPath: () => previousPath,
+  };
 };
