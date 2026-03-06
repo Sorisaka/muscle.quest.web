@@ -2,6 +2,8 @@ export const trainingDefinitions = {
   'squats': {
     id: 'squats',
     label: 'スクワット',
+    category: 'weights',
+    muscles: ['legs', 'glutes'],
     unit: 'weightReps',
     description: '下半身全体を使う自重スクワット。膝とつま先の向きを揃えて実施します。',
     restSeconds: 30,
@@ -47,6 +49,8 @@ export const trainingDefinitions = {
   'push-ups': {
     id: 'push-ups',
     label: 'プッシュアップ',
+    category: 'bodyweight',
+    muscles: ['chest', 'shoulders', 'arms', 'core'],
     unit: 'weightReps',
     description: '胸・肩・上腕三頭筋を使う基本プッシュアップ。手幅と体幹を固定して実施。',
     restSeconds: 40,
@@ -91,6 +95,8 @@ export const trainingDefinitions = {
   'lunges': {
     id: 'lunges',
     label: 'ランジ',
+    category: 'weights',
+    muscles: ['legs', 'glutes'],
     unit: 'weightReps',
     description: '前後に足を入れ替える片脚スクワット。バランスと体幹を鍛えます。',
     restSeconds: 35,
@@ -135,6 +141,8 @@ export const trainingDefinitions = {
   'plank': {
     id: 'plank',
     label: 'プランク',
+    category: 'bodyweight',
+    muscles: ['core'],
     unit: 'time',
     description: '体幹を静的に支える種目。呼吸を止めずに一直線を保つ。',
     restSeconds: 25,
@@ -179,6 +187,8 @@ export const trainingDefinitions = {
   'mountain-climbers': {
     id: 'mountain-climbers',
     label: 'マウンテンクライマー',
+    category: 'cardio',
+    muscles: ['core', 'legs', 'fullbody'],
     unit: 'time',
     description: '心拍を上げつつ体幹を使う全身運動。膝を胸に引き寄せてテンポ良く。',
     restSeconds: 20,

@@ -1,5 +1,6 @@
 import { aggregateCalories } from '../../core/history.js';
 import { normalizeAccountVisibility, normalizePostVisibility, resolvePostVisibility } from '../../core/visibility.js';
+import { decorateResultWithTags } from '../../core/exerciseTaxonomy.js';
 import { toDateKey } from '../../lib/dateKey.js';
 
 const PROFILE_KEY = 'musclequest:profile';
@@ -97,43 +98,47 @@ export const createLocalPersistence = () => {
   };
 
   const recordResult = (result) => {
+    const taggedResult = decorateResultWithTags(result);
     const profile = loadProfile();
     const history = loadHistory();
     const timestamp = Date.now();
-    const calories = Number(result.calories || 0);
+    const calories = Number(taggedResult.calories || 0);
     const nextProfile = {
       ...profile,
       totalCalories: (profile.totalCalories || 0) + calories,
       points: profile.points || 0,
       completedRuns: profile.completedRuns + 1,
-      lastResult: { ...result, recordedAt: timestamp },
+      lastResult: { ...taggedResult, recordedAt: timestamp },
     };
 
-    const effectiveVisibility = resolvePostVisibility(profile.account_visibility || profile.default_visibility, result.visibilityOverride);
+    const effectiveVisibility = resolvePostVisibility(profile.account_visibility || profile.default_visibility, taggedResult.visibilityOverride);
 
     history.unshift({
-      id: result.id || `${timestamp}:${Math.random().toString(36).slice(2, 8)}`,
+      id: taggedResult.id || `${timestamp}:${Math.random().toString(36).slice(2, 8)}`,
       user_id: profile.id || 'local-user',
-      questId: result.questId,
-      exerciseSlug: result.exerciseSlug,
+      questId: taggedResult.questId,
+      exerciseSlug: taggedResult.exerciseSlug,
       calories,
-      points: result.points || 0,
-      mode: result.mode,
-      difficulty: result.difficulty,
-      sets: result.sets,
-      startTime: result.startTime,
-      endTime: result.endTime,
+      points: taggedResult.points || 0,
+      mode: taggedResult.mode,
+      difficulty: taggedResult.difficulty,
+      sets: taggedResult.sets,
+      startTime: taggedResult.startTime,
+      endTime: taggedResult.endTime,
       timestamp,
       visibility: effectiveVisibility,
-      published_at: effectiveVisibility === 'archived' ? null : (result.published_at || new Date(timestamp).toISOString()),
-      note: result.note || null,
-      breakdown: result.breakdown || null,
+      published_at: effectiveVisibility === 'archived' ? null : (taggedResult.published_at || new Date(timestamp).toISOString()),
+      note: taggedResult.note || null,
+      breakdown: taggedResult.breakdown || null,
+      category: taggedResult.category || 'unknown',
+      muscles: Array.isArray(taggedResult.muscles) ? taggedResult.muscles : [],
+      result: { ...taggedResult },
     });
 
     writeJson(PROFILE_KEY, nextProfile);
     writeJson(HISTORY_KEY, history.slice(0, 100));
-    if (result.questId && result.difficulty && result.plan) {
-      saveLastPlan(result.questId, result.difficulty, result.plan);
+    if (taggedResult.questId && taggedResult.difficulty && taggedResult.plan) {
+      saveLastPlan(taggedResult.questId, taggedResult.difficulty, taggedResult.plan);
     }
     return nextProfile;
   };

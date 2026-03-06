@@ -21,6 +21,10 @@
 - `supabase/sql/005_workout_runs_policies.sql`
 - `supabase/sql/006_functions_add_workout_result.sql`
 - `supabase/sql/007_verification.sql`
+- `supabase/sql/008_workout_runs_tags.sql`
+  - `workout_runs` に `category` / `muscles` 列を追加、索引作成、既存 result から可能な範囲で埋め戻し
+- `supabase/sql/009_functions_add_workout_result_tags.sql`
+  - `add_workout_result` をタグ引数対応に更新（default 引数で互換維持）
 
 - `supabase/sql/phase5_body_metrics.sql`
   - Phase5 の `body_metrics` テーブル作成（PK: `(user_id, date)`）と RLS（owner のみ select/insert/update/delete）

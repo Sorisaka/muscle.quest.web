@@ -800,3 +800,20 @@ section.panel {
   outline: 2px solid #60a5fa;
   outline-offset: -2px;
 }
+
+.history-muscle-filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.history-filter-pill {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.history-filter-pill.is-active {
+  border-color: rgba(125, 211, 252, 0.8);
+  background: rgba(14, 116, 144, 0.35);
+}
