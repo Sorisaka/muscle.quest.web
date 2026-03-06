@@ -89,6 +89,8 @@ const createBodyMetricsPanel = async ({ store, playSfx }) => {
       color: '#93c5fd',
       points: (rows || []).map((row) => ({ x: row.date, y: row.weight_kg })),
       visibleDays: activePeriod,
+      height: 190,
+      yUnit: 'kg',
     }));
 
     const fatCard = document.createElement('div');
@@ -100,6 +102,8 @@ const createBodyMetricsPanel = async ({ store, playSfx }) => {
       color: '#fca5a5',
       points: (rows || []).map((row) => ({ x: row.date, y: row.body_fat_pct })),
       visibleDays: activePeriod,
+      height: 190,
+      yUnit: '%',
     }));
 
     chartSlot.append(weightCard, fatCard);

@@ -26,20 +26,31 @@ const getSafeRange = (values = []) => {
   return { min, max };
 };
 
+const appendText = ({ svg, x, y, text, anchor = 'middle' }) => {
+  const node = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  node.setAttribute('x', String(x));
+  node.setAttribute('y', String(y));
+  node.setAttribute('fill', 'rgba(226, 232, 240, 0.9)');
+  node.setAttribute('font-size', '8');
+  node.setAttribute('text-anchor', anchor);
+  node.textContent = text;
+  svg.append(node);
+};
+
 export const createSparkline = ({
   width = 320,
-  height = 120,
+  height = 190,
   visibleDays = 30,
   points = [],
   color = '#93c5fd',
   strokeWidth = 2,
   label = '',
+  yUnit = '',
 } = {}) => {
   const wrapper = document.createElement('div');
   wrapper.className = 'sparkline';
 
   const safePoints = (Array.isArray(points) ? points : []).map((entry) => ({
-    x: entry?.x,
     xTs: toDayTimestamp(entry?.x),
     y: Number(entry?.y),
   })).filter((entry) => Number.isFinite(entry.y) && Number.isFinite(entry.xTs));
@@ -57,9 +68,15 @@ export const createSparkline = ({
   svg.setAttribute('role', 'img');
   svg.setAttribute('aria-label', label || 'sparkline chart');
 
-  const padding = 12;
-  const plotWidth = width - padding * 2;
-  const plotHeight = height - padding * 2;
+  const axis = {
+    top: 12,
+    right: 12,
+    bottom: 24,
+    left: 54,
+  };
+  const plotWidth = width - axis.left - axis.right;
+  const plotHeight = height - axis.top - axis.bottom;
+
   const { min, max } = getSafeRange(safePoints.map((p) => p.y));
   const latestTs = Math.max(...safePoints.map((p) => p.xTs));
   const earliestTs = Math.min(...safePoints.map((p) => p.xTs));
@@ -69,33 +86,54 @@ export const createSparkline = ({
 
   const toX = (timestamp) => {
     const dayAgo = Math.round((latestTs - timestamp) / DAY_MS);
-    return padding + (1 - clamp(dayAgo / totalDays, 0, 1)) * plotWidth;
+    return axis.left + (1 - clamp(dayAgo / totalDays, 0, 1)) * plotWidth;
   };
-  const toY = (value) => padding + (1 - clamp((value - min) / (max - min), 0, 1)) * plotHeight;
+  const toY = (value) => axis.top + (1 - clamp((value - min) / (max - min), 0, 1)) * plotHeight;
 
-  for (let dayAgo = 0; dayAgo <= totalDays; dayAgo += xTickStep) {
-    const x = padding + (1 - dayAgo / totalDays) * plotWidth;
+  const xTicks = [];
+  for (let dayAgo = 0; dayAgo <= totalDays; dayAgo += xTickStep) xTicks.push(dayAgo);
+  if (xTicks[xTicks.length - 1] !== totalDays) xTicks.push(totalDays);
+
+  xTicks.forEach((dayAgo) => {
+    const x = axis.left + (1 - dayAgo / totalDays) * plotWidth;
     const grid = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     grid.setAttribute('x1', String(x));
     grid.setAttribute('x2', String(x));
-    grid.setAttribute('y1', String(padding));
-    grid.setAttribute('y2', String(padding + plotHeight));
+    grid.setAttribute('y1', String(axis.top));
+    grid.setAttribute('y2', String(axis.top + plotHeight));
     grid.setAttribute('stroke', 'rgba(148, 163, 184, 0.25)');
     grid.setAttribute('stroke-width', '0.7');
     svg.append(grid);
-  }
+
+    appendText({
+      svg,
+      x,
+      y: axis.top + plotHeight + 12,
+      text: `${dayAgo}日前`,
+    });
+  });
 
   const yTickCount = 5;
   for (let idx = 0; idx <= yTickCount; idx += 1) {
-    const y = padding + (idx / yTickCount) * plotHeight;
+    const ratio = idx / yTickCount;
+    const y = axis.top + ratio * plotHeight;
+    const value = max - (max - min) * ratio;
     const grid = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    grid.setAttribute('x1', String(padding));
-    grid.setAttribute('x2', String(padding + plotWidth));
+    grid.setAttribute('x1', String(axis.left));
+    grid.setAttribute('x2', String(axis.left + plotWidth));
     grid.setAttribute('y1', String(y));
     grid.setAttribute('y2', String(y));
     grid.setAttribute('stroke', 'rgba(148, 163, 184, 0.25)');
     grid.setAttribute('stroke-width', idx === 0 || idx === yTickCount ? '0.9' : '0.7');
     svg.append(grid);
+
+    appendText({
+      svg,
+      x: axis.left - 4,
+      y: y + 3,
+      text: `${value.toFixed(1)}${yUnit}`,
+      anchor: 'end',
+    });
   }
 
   const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
@@ -121,6 +159,7 @@ export const createSparkline = ({
   scroll.className = 'sparkline__scroll';
   const widthRatio = totalDays / Math.max(1, visibleDays - 1);
   svg.style.width = `max(100%, calc(${widthRatio} * 100%))`;
+  svg.style.height = `${height}px`;
   scroll.append(svg);
   wrapper.append(scroll);
 
