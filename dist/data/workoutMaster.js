@@ -4,719 +4,9 @@ const UNIT_KEYS = ['weightReps', 'time'];
 
 export const workoutMasterEntries = [
   {
-    "id": "squats",
-    "isActive": true,
-    "sortOrder": 10,
-    "label": "スクワット",
-    "category": "bodyweight",
-    "muscles": [
-      "legs",
-      "glutes",
-      "core"
-    ],
-    "unit": "weightReps",
-    "description": "下半身全体を使う自重スクワット。膝とつま先の向きを揃えて実施します。",
-    "restSeconds": 30,
-    "difficulties": {
-      "beginner": {
-        "defaultSets": [
-          {
-            "weight": 0,
-            "reps": 12
-          },
-          {
-            "weight": 0,
-            "reps": 12
-          },
-          {
-            "weight": 0,
-            "reps": 12
-          }
-        ],
-        "maxSets": 6,
-        "limits": {
-          "weight": {
-            "min": 0,
-            "max": 0
-          },
-          "reps": {
-            "min": 5,
-            "max": 25
-          }
-        },
-        "points": {
-          "base": 120,
-          "perWork": 0.09,
-          "setBonus": 8,
-          "completion": 30,
-          "challengeScale": 0.5
-        },
-        "howto": "背筋を伸ばし、かかと重心でしゃがみすぎない。"
-      },
-      "intermediate": {
-        "defaultSets": [
-          {
-            "weight": 0,
-            "reps": 15
-          },
-          {
-            "weight": 0,
-            "reps": 15
-          },
-          {
-            "weight": 0,
-            "reps": 15
-          },
-          {
-            "weight": 0,
-            "reps": 15
-          }
-        ],
-        "maxSets": 7,
-        "limits": {
-          "weight": {
-            "min": 0,
-            "max": 10
-          },
-          "reps": {
-            "min": 6,
-            "max": 30
-          }
-        },
-        "points": {
-          "base": 170,
-          "perWork": 0.11,
-          "setBonus": 10,
-          "completion": 40,
-          "challengeScale": 0.55
-        },
-        "howto": "膝が内側に入らないように深さを揃える。"
-      },
-      "advanced": {
-        "defaultSets": [
-          {
-            "weight": 0,
-            "reps": 18
-          },
-          {
-            "weight": 0,
-            "reps": 18
-          },
-          {
-            "weight": 0,
-            "reps": 18
-          },
-          {
-            "weight": 0,
-            "reps": 18
-          }
-        ],
-        "maxSets": 8,
-        "limits": {
-          "weight": {
-            "min": 0,
-            "max": 20
-          },
-          "reps": {
-            "min": 8,
-            "max": 40
-          }
-        },
-        "points": {
-          "base": 210,
-          "perWork": 0.13,
-          "setBonus": 12,
-          "completion": 55,
-          "challengeScale": 0.6
-        },
-        "howto": "テンポを一定に保ち可動域を保って繰り返す。"
-      }
-    }
-  },
-  {
-    "id": "push-ups",
-    "isActive": true,
-    "sortOrder": 20,
-    "label": "腕立て伏せ",
-    "category": "bodyweight",
-    "muscles": [
-      "chest",
-      "shoulders",
-      "arms",
-      "core"
-    ],
-    "unit": "weightReps",
-    "description": "胸・肩・上腕三頭筋を使う基本の腕立て伏せ。",
-    "restSeconds": 40,
-    "difficulties": {
-      "beginner": {
-        "defaultSets": [
-          {
-            "weight": 0,
-            "reps": 10
-          },
-          {
-            "weight": 0,
-            "reps": 10
-          },
-          {
-            "weight": 0,
-            "reps": 10
-          }
-        ],
-        "maxSets": 6,
-        "limits": {
-          "weight": {
-            "min": 0,
-            "max": 10
-          },
-          "reps": {
-            "min": 5,
-            "max": 20
-          }
-        },
-        "points": {
-          "base": 120,
-          "perWork": 0.09,
-          "setBonus": 8,
-          "completion": 30,
-          "challengeScale": 0.5
-        },
-        "howto": "手幅は肩幅よりやや広め。"
-      },
-      "intermediate": {
-        "defaultSets": [
-          {
-            "weight": 0,
-            "reps": 12
-          },
-          {
-            "weight": 0,
-            "reps": 12
-          },
-          {
-            "weight": 0,
-            "reps": 12
-          },
-          {
-            "weight": 0,
-            "reps": 12
-          }
-        ],
-        "maxSets": 7,
-        "limits": {
-          "weight": {
-            "min": 0,
-            "max": 20
-          },
-          "reps": {
-            "min": 6,
-            "max": 25
-          }
-        },
-        "points": {
-          "base": 170,
-          "perWork": 0.11,
-          "setBonus": 10,
-          "completion": 40,
-          "challengeScale": 0.55
-        },
-        "howto": "体幹を固定して胸を床へ近づける。"
-      },
-      "advanced": {
-        "defaultSets": [
-          {
-            "weight": 0,
-            "reps": 15
-          },
-          {
-            "weight": 0,
-            "reps": 15
-          },
-          {
-            "weight": 0,
-            "reps": 15
-          },
-          {
-            "weight": 0,
-            "reps": 15
-          }
-        ],
-        "maxSets": 8,
-        "limits": {
-          "weight": {
-            "min": 0,
-            "max": 30
-          },
-          "reps": {
-            "min": 8,
-            "max": 30
-          }
-        },
-        "points": {
-          "base": 210,
-          "perWork": 0.13,
-          "setBonus": 12,
-          "completion": 55,
-          "challengeScale": 0.6
-        },
-        "howto": "荷重を加える場合も腰が落ちないように。"
-      }
-    }
-  },
-  {
-    "id": "lunges",
-    "isActive": true,
-    "sortOrder": 30,
-    "label": "ランジ",
-    "category": "weights",
-    "muscles": [
-      "legs",
-      "glutes",
-      "core"
-    ],
-    "unit": "weightReps",
-    "description": "前後に足を入れ替える片脚スクワット。バランスと体幹を鍛えます。",
-    "restSeconds": 35,
-    "difficulties": {
-      "beginner": {
-        "defaultSets": [
-          {
-            "weight": 0,
-            "reps": 8
-          },
-          {
-            "weight": 0,
-            "reps": 8
-          },
-          {
-            "weight": 0,
-            "reps": 8
-          }
-        ],
-        "maxSets": 6,
-        "limits": {
-          "weight": {
-            "min": 0,
-            "max": 30
-          },
-          "reps": {
-            "min": 5,
-            "max": 20
-          }
-        },
-        "points": {
-          "base": 120,
-          "perWork": 0.09,
-          "setBonus": 8,
-          "completion": 30,
-          "challengeScale": 0.5
-        },
-        "howto": "骨盤を正面に向けて上下動する。"
-      },
-      "intermediate": {
-        "defaultSets": [
-          {
-            "weight": 4,
-            "reps": 12
-          },
-          {
-            "weight": 4,
-            "reps": 12
-          },
-          {
-            "weight": 4,
-            "reps": 12
-          },
-          {
-            "weight": 4,
-            "reps": 12
-          }
-        ],
-        "maxSets": 7,
-        "limits": {
-          "weight": {
-            "min": 0,
-            "max": 50
-          },
-          "reps": {
-            "min": 6,
-            "max": 25
-          }
-        },
-        "points": {
-          "base": 170,
-          "perWork": 0.11,
-          "setBonus": 10,
-          "completion": 40,
-          "challengeScale": 0.55
-        },
-        "howto": "前脚でしっかり押し返して左右差をなくす。"
-      },
-      "advanced": {
-        "defaultSets": [
-          {
-            "weight": 8,
-            "reps": 14
-          },
-          {
-            "weight": 8,
-            "reps": 14
-          },
-          {
-            "weight": 8,
-            "reps": 14
-          },
-          {
-            "weight": 8,
-            "reps": 14
-          }
-        ],
-        "maxSets": 8,
-        "limits": {
-          "weight": {
-            "min": 0,
-            "max": 70
-          },
-          "reps": {
-            "min": 8,
-            "max": 30
-          }
-        },
-        "points": {
-          "base": 210,
-          "perWork": 0.13,
-          "setBonus": 12,
-          "completion": 55,
-          "challengeScale": 0.6
-        },
-        "howto": "ダンベル保持でも姿勢を崩さない。"
-      }
-    }
-  },
-  {
-    "id": "plank",
-    "isActive": true,
-    "sortOrder": 40,
-    "label": "プランク",
-    "category": "bodyweight",
-    "muscles": [
-      "core"
-    ],
-    "unit": "time",
-    "description": "体幹を静的に支える種目。呼吸を止めず一直線を保ちます。",
-    "restSeconds": 25,
-    "difficulties": {
-      "beginner": {
-        "defaultSets": [
-          {
-            "timeSeconds": 30
-          },
-          {
-            "timeSeconds": 30
-          },
-          {
-            "timeSeconds": 30
-          }
-        ],
-        "maxSets": 6,
-        "limits": {
-          "timeSeconds": {
-            "min": 20,
-            "max": 300
-          }
-        },
-        "points": {
-          "base": 100,
-          "perWork": 0.45,
-          "setBonus": 6,
-          "completion": 25,
-          "challengeScale": 0.55
-        },
-        "howto": "肩の下に肘を置き一直線を維持する。"
-      },
-      "intermediate": {
-        "defaultSets": [
-          {
-            "timeSeconds": 45
-          },
-          {
-            "timeSeconds": 45
-          },
-          {
-            "timeSeconds": 45
-          },
-          {
-            "timeSeconds": 45
-          }
-        ],
-        "maxSets": 7,
-        "limits": {
-          "timeSeconds": {
-            "min": 30,
-            "max": 600
-          }
-        },
-        "points": {
-          "base": 150,
-          "perWork": 0.5,
-          "setBonus": 8,
-          "completion": 35,
-          "challengeScale": 0.6
-        },
-        "howto": "呼吸を安定させ腰が反らないようにする。"
-      },
-      "advanced": {
-        "defaultSets": [
-          {
-            "timeSeconds": 70
-          },
-          {
-            "timeSeconds": 70
-          },
-          {
-            "timeSeconds": 70
-          },
-          {
-            "timeSeconds": 70
-          }
-        ],
-        "maxSets": 8,
-        "limits": {
-          "timeSeconds": {
-            "min": 40,
-            "max": 900
-          }
-        },
-        "points": {
-          "base": 190,
-          "perWork": 0.55,
-          "setBonus": 10,
-          "completion": 45,
-          "challengeScale": 0.65
-        },
-        "howto": "高負荷でも首肩に力みを入れすぎない。"
-      }
-    }
-  },
-  {
-    "id": "mountain-climbers",
-    "isActive": true,
-    "sortOrder": 50,
-    "label": "マウンテンクライマー",
-    "category": "cardio",
-    "muscles": [
-      "core",
-      "legs",
-      "fullbody"
-    ],
-    "unit": "time",
-    "description": "心拍を上げつつ体幹を使う全身運動。",
-    "restSeconds": 20,
-    "difficulties": {
-      "beginner": {
-        "defaultSets": [
-          {
-            "timeSeconds": 30
-          },
-          {
-            "timeSeconds": 30
-          },
-          {
-            "timeSeconds": 30
-          }
-        ],
-        "maxSets": 6,
-        "limits": {
-          "timeSeconds": {
-            "min": 20,
-            "max": 300
-          }
-        },
-        "points": {
-          "base": 100,
-          "perWork": 0.45,
-          "setBonus": 6,
-          "completion": 25,
-          "challengeScale": 0.55
-        },
-        "howto": "手は肩の真下に置いて行う。"
-      },
-      "intermediate": {
-        "defaultSets": [
-          {
-            "timeSeconds": 45
-          },
-          {
-            "timeSeconds": 45
-          },
-          {
-            "timeSeconds": 45
-          },
-          {
-            "timeSeconds": 45
-          }
-        ],
-        "maxSets": 7,
-        "limits": {
-          "timeSeconds": {
-            "min": 30,
-            "max": 600
-          }
-        },
-        "points": {
-          "base": 150,
-          "perWork": 0.5,
-          "setBonus": 8,
-          "completion": 35,
-          "challengeScale": 0.6
-        },
-        "howto": "腰の高さを一定にしてテンポを維持。"
-      },
-      "advanced": {
-        "defaultSets": [
-          {
-            "timeSeconds": 60
-          },
-          {
-            "timeSeconds": 60
-          },
-          {
-            "timeSeconds": 60
-          },
-          {
-            "timeSeconds": 60
-          }
-        ],
-        "maxSets": 8,
-        "limits": {
-          "timeSeconds": {
-            "min": 40,
-            "max": 900
-          }
-        },
-        "points": {
-          "base": 190,
-          "perWork": 0.55,
-          "setBonus": 10,
-          "completion": 45,
-          "challengeScale": 0.65
-        },
-        "howto": "素早くてもフォームを崩さない。"
-      }
-    }
-  },
-  {
-    "id": "burpees",
-    "isActive": true,
-    "sortOrder": 60,
-    "label": "バーピー",
-    "category": "cardio",
-    "muscles": [
-      "fullbody",
-      "legs",
-      "core"
-    ],
-    "unit": "time",
-    "description": "全身を使って心拍を高める高強度運動。",
-    "restSeconds": 30,
-    "difficulties": {
-      "beginner": {
-        "defaultSets": [
-          {
-            "timeSeconds": 25
-          },
-          {
-            "timeSeconds": 25
-          },
-          {
-            "timeSeconds": 25
-          }
-        ],
-        "maxSets": 6,
-        "limits": {
-          "timeSeconds": {
-            "min": 20,
-            "max": 240
-          }
-        },
-        "points": {
-          "base": 100,
-          "perWork": 0.45,
-          "setBonus": 6,
-          "completion": 25,
-          "challengeScale": 0.55
-        },
-        "howto": "着地を静かにして反復する。"
-      },
-      "intermediate": {
-        "defaultSets": [
-          {
-            "timeSeconds": 35
-          },
-          {
-            "timeSeconds": 35
-          },
-          {
-            "timeSeconds": 35
-          },
-          {
-            "timeSeconds": 35
-          }
-        ],
-        "maxSets": 7,
-        "limits": {
-          "timeSeconds": {
-            "min": 30,
-            "max": 480
-          }
-        },
-        "points": {
-          "base": 150,
-          "perWork": 0.5,
-          "setBonus": 8,
-          "completion": 35,
-          "challengeScale": 0.6
-        },
-        "howto": "キックバック時に腰を落としすぎない。"
-      },
-      "advanced": {
-        "defaultSets": [
-          {
-            "timeSeconds": 45
-          },
-          {
-            "timeSeconds": 45
-          },
-          {
-            "timeSeconds": 45
-          },
-          {
-            "timeSeconds": 45
-          }
-        ],
-        "maxSets": 8,
-        "limits": {
-          "timeSeconds": {
-            "min": 40,
-            "max": 720
-          }
-        },
-        "points": {
-          "base": 190,
-          "perWork": 0.55,
-          "setBonus": 10,
-          "completion": 45,
-          "challengeScale": 0.65
-        },
-        "howto": "呼吸リズムを保って継続する。"
-      }
-    }
-  },
-  {
     "id": "walking",
     "isActive": true,
-    "sortOrder": 70,
+    "sortOrder": 10,
     "label": "ウォーキング",
     "category": "cardio",
     "muscles": [
@@ -753,7 +43,7 @@ export const workoutMasterEntries = [
           "completion": 25,
           "challengeScale": 0.55
         },
-        "howto": "一定ペースで開始し、無理のない強度で行う。"
+        "howto": "一定ペースで呼吸を整えながら実施する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -784,7 +74,7 @@ export const workoutMasterEntries = [
           "completion": 35,
           "challengeScale": 0.6
         },
-        "howto": "呼吸を整えながらフォームを維持する。"
+        "howto": "姿勢とリズムを保って継続する。"
       },
       "advanced": {
         "defaultSets": [
@@ -815,14 +105,14 @@ export const workoutMasterEntries = [
           "completion": 45,
           "challengeScale": 0.65
         },
-        "howto": "長時間でも姿勢とテンポを崩さない。"
+        "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
     }
   },
   {
     "id": "jogging",
     "isActive": true,
-    "sortOrder": 80,
+    "sortOrder": 20,
     "label": "ジョギング",
     "category": "cardio",
     "muscles": [
@@ -859,7 +149,7 @@ export const workoutMasterEntries = [
           "completion": 25,
           "challengeScale": 0.55
         },
-        "howto": "一定ペースで開始し、無理のない強度で行う。"
+        "howto": "一定ペースで呼吸を整えながら実施する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -890,7 +180,7 @@ export const workoutMasterEntries = [
           "completion": 35,
           "challengeScale": 0.6
         },
-        "howto": "呼吸を整えながらフォームを維持する。"
+        "howto": "姿勢とリズムを保って継続する。"
       },
       "advanced": {
         "defaultSets": [
@@ -921,14 +211,14 @@ export const workoutMasterEntries = [
           "completion": 45,
           "challengeScale": 0.65
         },
-        "howto": "長時間でも姿勢とテンポを崩さない。"
+        "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
     }
   },
   {
     "id": "running",
     "isActive": true,
-    "sortOrder": 90,
+    "sortOrder": 30,
     "label": "ランニング",
     "category": "cardio",
     "muscles": [
@@ -965,7 +255,7 @@ export const workoutMasterEntries = [
           "completion": 25,
           "challengeScale": 0.55
         },
-        "howto": "一定ペースで開始し、無理のない強度で行う。"
+        "howto": "一定ペースで呼吸を整えながら実施する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -996,7 +286,7 @@ export const workoutMasterEntries = [
           "completion": 35,
           "challengeScale": 0.6
         },
-        "howto": "呼吸を整えながらフォームを維持する。"
+        "howto": "姿勢とリズムを保って継続する。"
       },
       "advanced": {
         "defaultSets": [
@@ -1027,14 +317,14 @@ export const workoutMasterEntries = [
           "completion": 45,
           "challengeScale": 0.65
         },
-        "howto": "長時間でも姿勢とテンポを崩さない。"
+        "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
     }
   },
   {
     "id": "cycling",
     "isActive": true,
-    "sortOrder": 100,
+    "sortOrder": 40,
     "label": "サイクリング",
     "category": "cardio",
     "muscles": [
@@ -1071,7 +361,7 @@ export const workoutMasterEntries = [
           "completion": 25,
           "challengeScale": 0.55
         },
-        "howto": "一定ペースで開始し、無理のない強度で行う。"
+        "howto": "一定ペースで呼吸を整えながら実施する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -1102,7 +392,7 @@ export const workoutMasterEntries = [
           "completion": 35,
           "challengeScale": 0.6
         },
-        "howto": "呼吸を整えながらフォームを維持する。"
+        "howto": "姿勢とリズムを保って継続する。"
       },
       "advanced": {
         "defaultSets": [
@@ -1133,19 +423,20 @@ export const workoutMasterEntries = [
           "completion": 45,
           "challengeScale": 0.65
         },
-        "howto": "長時間でも姿勢とテンポを崩さない。"
+        "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
     }
   },
   {
     "id": "aerobics",
     "isActive": true,
-    "sortOrder": 110,
+    "sortOrder": 50,
     "label": "エアロビクス",
     "category": "cardio",
     "muscles": [
       "fullbody",
-      "legs"
+      "legs",
+      "core"
     ],
     "unit": "time",
     "description": "エアロビクスで持久力と全身の連動性を高める有酸素運動。",
@@ -1177,7 +468,7 @@ export const workoutMasterEntries = [
           "completion": 25,
           "challengeScale": 0.55
         },
-        "howto": "一定ペースで開始し、無理のない強度で行う。"
+        "howto": "一定ペースで呼吸を整えながら実施する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -1208,7 +499,7 @@ export const workoutMasterEntries = [
           "completion": 35,
           "challengeScale": 0.6
         },
-        "howto": "呼吸を整えながらフォームを維持する。"
+        "howto": "姿勢とリズムを保って継続する。"
       },
       "advanced": {
         "defaultSets": [
@@ -1239,14 +530,14 @@ export const workoutMasterEntries = [
           "completion": 45,
           "challengeScale": 0.65
         },
-        "howto": "長時間でも姿勢とテンポを崩さない。"
+        "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
     }
   },
   {
     "id": "stretching",
     "isActive": true,
-    "sortOrder": 120,
+    "sortOrder": 60,
     "label": "ストレッチ",
     "category": "cardio",
     "muscles": [
@@ -1277,13 +568,13 @@ export const workoutMasterEntries = [
           }
         },
         "points": {
-          "base": 100,
-          "perWork": 0.45,
+          "base": 40,
+          "perWork": 0,
           "setBonus": 6,
           "completion": 25,
           "challengeScale": 0.55
         },
-        "howto": "一定ペースで開始し、無理のない強度で行う。"
+        "howto": "一定ペースで呼吸を整えながら実施する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -1308,13 +599,13 @@ export const workoutMasterEntries = [
           }
         },
         "points": {
-          "base": 150,
-          "perWork": 0.5,
+          "base": 40,
+          "perWork": 0,
           "setBonus": 8,
           "completion": 35,
           "challengeScale": 0.6
         },
-        "howto": "呼吸を整えながらフォームを維持する。"
+        "howto": "姿勢とリズムを保って継続する。"
       },
       "advanced": {
         "defaultSets": [
@@ -1339,24 +630,25 @@ export const workoutMasterEntries = [
           }
         },
         "points": {
-          "base": 190,
-          "perWork": 0.55,
+          "base": 40,
+          "perWork": 0,
           "setBonus": 10,
           "completion": 45,
           "challengeScale": 0.65
         },
-        "howto": "長時間でも姿勢とテンポを崩さない。"
+        "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
     }
   },
   {
     "id": "soccer",
     "isActive": true,
-    "sortOrder": 130,
+    "sortOrder": 70,
     "label": "サッカー",
     "category": "cardio",
     "muscles": [
       "legs",
+      "core",
       "fullbody"
     ],
     "unit": "time",
@@ -1389,7 +681,7 @@ export const workoutMasterEntries = [
           "completion": 25,
           "challengeScale": 0.55
         },
-        "howto": "一定ペースで開始し、無理のない強度で行う。"
+        "howto": "一定ペースで呼吸を整えながら実施する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -1420,7 +712,7 @@ export const workoutMasterEntries = [
           "completion": 35,
           "challengeScale": 0.6
         },
-        "howto": "呼吸を整えながらフォームを維持する。"
+        "howto": "姿勢とリズムを保って継続する。"
       },
       "advanced": {
         "defaultSets": [
@@ -1451,19 +743,20 @@ export const workoutMasterEntries = [
           "completion": 45,
           "challengeScale": 0.65
         },
-        "howto": "長時間でも姿勢とテンポを崩さない。"
+        "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
     }
   },
   {
     "id": "basketball",
     "isActive": true,
-    "sortOrder": 140,
+    "sortOrder": 80,
     "label": "バスケットボール",
     "category": "cardio",
     "muscles": [
       "legs",
       "arms",
+      "core",
       "fullbody"
     ],
     "unit": "time",
@@ -1496,7 +789,7 @@ export const workoutMasterEntries = [
           "completion": 25,
           "challengeScale": 0.55
         },
-        "howto": "一定ペースで開始し、無理のない強度で行う。"
+        "howto": "一定ペースで呼吸を整えながら実施する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -1527,7 +820,7 @@ export const workoutMasterEntries = [
           "completion": 35,
           "challengeScale": 0.6
         },
-        "howto": "呼吸を整えながらフォームを維持する。"
+        "howto": "姿勢とリズムを保って継続する。"
       },
       "advanced": {
         "defaultSets": [
@@ -1558,18 +851,19 @@ export const workoutMasterEntries = [
           "completion": 45,
           "challengeScale": 0.65
         },
-        "howto": "長時間でも姿勢とテンポを崩さない。"
+        "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
     }
   },
   {
     "id": "tennis",
     "isActive": true,
-    "sortOrder": 150,
+    "sortOrder": 90,
     "label": "テニス",
     "category": "cardio",
     "muscles": [
       "arms",
+      "shoulders",
       "legs",
       "core"
     ],
@@ -1603,7 +897,7 @@ export const workoutMasterEntries = [
           "completion": 25,
           "challengeScale": 0.55
         },
-        "howto": "一定ペースで開始し、無理のない強度で行う。"
+        "howto": "一定ペースで呼吸を整えながら実施する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -1634,7 +928,7 @@ export const workoutMasterEntries = [
           "completion": 35,
           "challengeScale": 0.6
         },
-        "howto": "呼吸を整えながらフォームを維持する。"
+        "howto": "姿勢とリズムを保って継続する。"
       },
       "advanced": {
         "defaultSets": [
@@ -1665,19 +959,20 @@ export const workoutMasterEntries = [
           "completion": 45,
           "challengeScale": 0.65
         },
-        "howto": "長時間でも姿勢とテンポを崩さない。"
+        "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
     }
   },
   {
     "id": "swimming",
     "isActive": true,
-    "sortOrder": 160,
+    "sortOrder": 100,
     "label": "水泳",
     "category": "cardio",
     "muscles": [
       "fullbody",
       "shoulders",
+      "back",
       "core"
     ],
     "unit": "time",
@@ -1710,7 +1005,7 @@ export const workoutMasterEntries = [
           "completion": 25,
           "challengeScale": 0.55
         },
-        "howto": "一定ペースで開始し、無理のない強度で行う。"
+        "howto": "一定ペースで呼吸を整えながら実施する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -1741,7 +1036,7 @@ export const workoutMasterEntries = [
           "completion": 35,
           "challengeScale": 0.6
         },
-        "howto": "呼吸を整えながらフォームを維持する。"
+        "howto": "姿勢とリズムを保って継続する。"
       },
       "advanced": {
         "defaultSets": [
@@ -1772,20 +1067,21 @@ export const workoutMasterEntries = [
           "completion": 45,
           "challengeScale": 0.65
         },
-        "howto": "長時間でも姿勢とテンポを崩さない。"
+        "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
     }
   },
   {
     "id": "badminton",
     "isActive": true,
-    "sortOrder": 170,
+    "sortOrder": 110,
     "label": "バドミントン",
     "category": "cardio",
     "muscles": [
       "legs",
       "arms",
-      "shoulders"
+      "shoulders",
+      "core"
     ],
     "unit": "time",
     "description": "バドミントンで持久力と全身の連動性を高める有酸素運動。",
@@ -1817,7 +1113,7 @@ export const workoutMasterEntries = [
           "completion": 25,
           "challengeScale": 0.55
         },
-        "howto": "一定ペースで開始し、無理のない強度で行う。"
+        "howto": "一定ペースで呼吸を整えながら実施する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -1848,7 +1144,7 @@ export const workoutMasterEntries = [
           "completion": 35,
           "challengeScale": 0.6
         },
-        "howto": "呼吸を整えながらフォームを維持する。"
+        "howto": "姿勢とリズムを保って継続する。"
       },
       "advanced": {
         "defaultSets": [
@@ -1879,14 +1175,14 @@ export const workoutMasterEntries = [
           "completion": 45,
           "challengeScale": 0.65
         },
-        "howto": "長時間でも姿勢とテンポを崩さない。"
+        "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
     }
   },
   {
     "id": "table-tennis",
     "isActive": true,
-    "sortOrder": 180,
+    "sortOrder": 120,
     "label": "卓球",
     "category": "cardio",
     "muscles": [
@@ -1924,7 +1220,7 @@ export const workoutMasterEntries = [
           "completion": 25,
           "challengeScale": 0.55
         },
-        "howto": "一定ペースで開始し、無理のない強度で行う。"
+        "howto": "一定ペースで呼吸を整えながら実施する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -1955,7 +1251,7 @@ export const workoutMasterEntries = [
           "completion": 35,
           "challengeScale": 0.6
         },
-        "howto": "呼吸を整えながらフォームを維持する。"
+        "howto": "姿勢とリズムを保って継続する。"
       },
       "advanced": {
         "defaultSets": [
@@ -1986,14 +1282,149 @@ export const workoutMasterEntries = [
           "completion": 45,
           "challengeScale": 0.65
         },
-        "howto": "長時間でも姿勢とテンポを崩さない。"
+        "howto": "長時間でもフォームを崩さず安全第一で行う。"
+      }
+    }
+  },
+  {
+    "id": "push-ups",
+    "isActive": true,
+    "sortOrder": 130,
+    "label": "腕立て伏せ",
+    "category": "bodyweight",
+    "muscles": [
+      "chest",
+      "shoulders",
+      "arms",
+      "core"
+    ],
+    "unit": "weightReps",
+    "description": "胸・肩・腕・体幹を鍛える基本の自重プレス。",
+    "restSeconds": 40,
+    "difficulties": {
+      "beginner": {
+        "defaultSets": [
+          {
+            "weight": 0,
+            "reps": 10
+          },
+          {
+            "weight": 0,
+            "reps": 10
+          },
+          {
+            "weight": 0,
+            "reps": 10
+          }
+        ],
+        "maxSets": 6,
+        "limits": {
+          "weight": {
+            "min": 0,
+            "max": 10
+          },
+          "reps": {
+            "min": 5,
+            "max": 20
+          }
+        },
+        "points": {
+          "base": 120,
+          "perWork": 0.09,
+          "setBonus": 8,
+          "completion": 30,
+          "challengeScale": 0.5
+        },
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
+      },
+      "intermediate": {
+        "defaultSets": [
+          {
+            "weight": 0,
+            "reps": 12
+          },
+          {
+            "weight": 0,
+            "reps": 12
+          },
+          {
+            "weight": 0,
+            "reps": 12
+          },
+          {
+            "weight": 0,
+            "reps": 12
+          }
+        ],
+        "maxSets": 7,
+        "limits": {
+          "weight": {
+            "min": 0,
+            "max": 20
+          },
+          "reps": {
+            "min": 6,
+            "max": 25
+          }
+        },
+        "points": {
+          "base": 170,
+          "perWork": 0.11,
+          "setBonus": 10,
+          "completion": 40,
+          "challengeScale": 0.55
+        },
+        "howto": "反動を使わず対象筋へ効かせる。"
+      },
+      "advanced": {
+        "defaultSets": [
+          {
+            "weight": 0,
+            "reps": 15
+          },
+          {
+            "weight": 0,
+            "reps": 15
+          },
+          {
+            "weight": 0,
+            "reps": 15
+          },
+          {
+            "weight": 0,
+            "reps": 15
+          },
+          {
+            "weight": 0,
+            "reps": 15
+          }
+        ],
+        "maxSets": 8,
+        "limits": {
+          "weight": {
+            "min": 0,
+            "max": 30
+          },
+          "reps": {
+            "min": 8,
+            "max": 30
+          }
+        },
+        "points": {
+          "base": 210,
+          "perWork": 0.13,
+          "setBonus": 12,
+          "completion": 55,
+          "challengeScale": 0.6
+        },
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "knee-push-ups",
     "isActive": true,
-    "sortOrder": 190,
+    "sortOrder": 140,
     "label": "腕立て伏せ（膝付き）",
     "category": "bodyweight",
     "muscles": [
@@ -2003,7 +1434,7 @@ export const workoutMasterEntries = [
       "core"
     ],
     "unit": "weightReps",
-    "description": "腕立て伏せ（膝付き）で自重を使って全身を鍛える種目。",
+    "description": "膝をついて負荷を調整し、押す動作を習得する種目。",
     "restSeconds": 35,
     "difficulties": {
       "beginner": {
@@ -2039,25 +1470,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "反動を使わず丁寧に行う。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 12
+            "reps": 10
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 10
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 10
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 10
           }
         ],
         "maxSets": 7,
@@ -2078,25 +1509,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "可動域を一定に保って反復する。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 15
+            "reps": 12
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 12
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 12
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 12
+          },
+          {
+            "weight": 0,
+            "reps": 12
           }
         ],
         "maxSets": 8,
@@ -2117,36 +1552,36 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "高回数でもフォームを優先する。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "sit-ups",
     "isActive": true,
-    "sortOrder": 200,
+    "sortOrder": 150,
     "label": "腹筋",
     "category": "bodyweight",
     "muscles": [
       "core"
     ],
     "unit": "weightReps",
-    "description": "腹筋で自重を使って全身を鍛える種目。",
-    "restSeconds": 35,
+    "description": "体幹前面を鍛える基本的な腹筋運動。",
+    "restSeconds": 30,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 8
+            "reps": 10
           },
           {
             "weight": 0,
-            "reps": 8
+            "reps": 10
           },
           {
             "weight": 0,
-            "reps": 8
+            "reps": 10
           }
         ],
         "maxSets": 6,
@@ -2167,25 +1602,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "反動を使わず丁寧に行う。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 12
+            "reps": 15
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 15
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 15
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 15
           }
         ],
         "maxSets": 7,
@@ -2206,25 +1641,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "可動域を一定に保って反復する。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 15
+            "reps": 20
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 20
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 20
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 20
+          },
+          {
+            "weight": 0,
+            "reps": 20
           }
         ],
         "maxSets": 8,
@@ -2245,21 +1684,21 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "高回数でもフォームを優先する。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "v-ups",
     "isActive": true,
-    "sortOrder": 210,
+    "sortOrder": 160,
     "label": "V字腹筋",
     "category": "bodyweight",
     "muscles": [
       "core"
     ],
     "unit": "weightReps",
-    "description": "V字腹筋で自重を使って全身を鍛える種目。",
+    "description": "上体と下肢を同時に引き上げて体幹を鍛える種目。",
     "restSeconds": 35,
     "difficulties": {
       "beginner": {
@@ -2295,7 +1734,7 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "反動を使わず丁寧に行う。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -2334,10 +1773,14 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "可動域を一定に保って反復する。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
+          {
+            "weight": 0,
+            "reps": 15
+          },
           {
             "weight": 0,
             "reps": 15
@@ -2373,36 +1816,36 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "高回数でもフォームを優先する。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "abdominal-crunches",
     "isActive": true,
-    "sortOrder": 220,
+    "sortOrder": 170,
     "label": "アブドミナルクランチ",
     "category": "bodyweight",
     "muscles": [
       "core"
     ],
     "unit": "weightReps",
-    "description": "アブドミナルクランチで自重を使って全身を鍛える種目。",
-    "restSeconds": 35,
+    "description": "腹直筋を集中的に鍛えるクランチ。",
+    "restSeconds": 30,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 8
+            "reps": 12
           },
           {
             "weight": 0,
-            "reps": 8
+            "reps": 12
           },
           {
             "weight": 0,
-            "reps": 8
+            "reps": 12
           }
         ],
         "maxSets": 6,
@@ -2423,25 +1866,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "反動を使わず丁寧に行う。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 12
+            "reps": 16
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 16
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 16
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 16
           }
         ],
         "maxSets": 7,
@@ -2462,25 +1905,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "可動域を一定に保って反復する。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 15
+            "reps": 20
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 20
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 20
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 20
+          },
+          {
+            "weight": 0,
+            "reps": 20
           }
         ],
         "maxSets": 8,
@@ -2501,36 +1948,36 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "高回数でもフォームを優先する。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "side-crunches",
     "isActive": true,
-    "sortOrder": 230,
+    "sortOrder": 180,
     "label": "サイドクランチ",
     "category": "bodyweight",
     "muscles": [
       "core"
     ],
     "unit": "weightReps",
-    "description": "サイドクランチで自重を使って全身を鍛える種目。",
-    "restSeconds": 35,
+    "description": "体幹側面を意識して行う腹筋種目。",
+    "restSeconds": 30,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 8
+            "reps": 10
           },
           {
             "weight": 0,
-            "reps": 8
+            "reps": 10
           },
           {
             "weight": 0,
-            "reps": 8
+            "reps": 10
           }
         ],
         "maxSets": 6,
@@ -2551,25 +1998,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "反動を使わず丁寧に行う。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 12
+            "reps": 14
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 14
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 14
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 14
           }
         ],
         "maxSets": 7,
@@ -2590,25 +2037,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "可動域を一定に保って反復する。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 15
+            "reps": 18
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 18
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 18
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 18
+          },
+          {
+            "weight": 0,
+            "reps": 18
           }
         ],
         "maxSets": 8,
@@ -2629,36 +2080,36 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "高回数でもフォームを優先する。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "twist-crunches",
     "isActive": true,
-    "sortOrder": 240,
+    "sortOrder": 190,
     "label": "ツイストクランチ",
     "category": "bodyweight",
     "muscles": [
       "core"
     ],
     "unit": "weightReps",
-    "description": "ツイストクランチで自重を使って全身を鍛える種目。",
-    "restSeconds": 35,
+    "description": "ひねり動作で腹斜筋を鍛えるクランチ。",
+    "restSeconds": 30,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 8
+            "reps": 10
           },
           {
             "weight": 0,
-            "reps": 8
+            "reps": 10
           },
           {
             "weight": 0,
-            "reps": 8
+            "reps": 10
           }
         ],
         "maxSets": 6,
@@ -2679,25 +2130,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "反動を使わず丁寧に行う。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 12
+            "reps": 14
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 14
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 14
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 14
           }
         ],
         "maxSets": 7,
@@ -2718,25 +2169,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "可動域を一定に保って反復する。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 15
+            "reps": 18
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 18
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 18
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 18
+          },
+          {
+            "weight": 0,
+            "reps": 18
           }
         ],
         "maxSets": 8,
@@ -2757,14 +2212,14 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "高回数でもフォームを優先する。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "leg-raises",
     "isActive": true,
-    "sortOrder": 250,
+    "sortOrder": 200,
     "label": "レッグレイズ",
     "category": "bodyweight",
     "muscles": [
@@ -2772,7 +2227,7 @@ export const workoutMasterEntries = [
       "legs"
     ],
     "unit": "weightReps",
-    "description": "レッグレイズで自重を使って全身を鍛える種目。",
+    "description": "下腹部中心に鍛える脚上げ種目。",
     "restSeconds": 35,
     "difficulties": {
       "beginner": {
@@ -2808,7 +2263,7 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "反動を使わず丁寧に行う。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -2847,10 +2302,14 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "可動域を一定に保って反復する。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
+          {
+            "weight": 0,
+            "reps": 15
+          },
           {
             "weight": 0,
             "reps": 15
@@ -2886,37 +2345,38 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "高回数でもフォームを優先する。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "ab-roller",
     "isActive": true,
-    "sortOrder": 260,
+    "sortOrder": 210,
     "label": "アブローラー",
     "category": "bodyweight",
     "muscles": [
       "core",
-      "shoulders"
+      "shoulders",
+      "arms"
     ],
     "unit": "weightReps",
-    "description": "アブローラーで自重を使って全身を鍛える種目。",
-    "restSeconds": 35,
+    "description": "体幹全体を強く使うローラー種目。",
+    "restSeconds": 45,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 8
+            "reps": 6
           },
           {
             "weight": 0,
-            "reps": 8
+            "reps": 6
           },
           {
             "weight": 0,
-            "reps": 8
+            "reps": 6
           }
         ],
         "maxSets": 6,
@@ -2937,25 +2397,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "反動を使わず丁寧に行う。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 12
+            "reps": 10
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 10
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 10
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 10
           }
         ],
         "maxSets": 7,
@@ -2976,25 +2436,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "可動域を一定に保って反復する。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 15
+            "reps": 12
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 12
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 12
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 12
+          },
+          {
+            "weight": 0,
+            "reps": 12
           }
         ],
         "maxSets": 8,
@@ -3015,21 +2479,21 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "高回数でもフォームを優先する。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "decline-sit-ups",
     "isActive": true,
-    "sortOrder": 270,
+    "sortOrder": 220,
     "label": "デクラインシットアップ",
     "category": "bodyweight",
     "muscles": [
       "core"
     ],
     "unit": "weightReps",
-    "description": "デクラインシットアップで自重を使って全身を鍛える種目。",
+    "description": "傾斜を使って負荷を高めた腹筋種目。",
     "restSeconds": 35,
     "difficulties": {
       "beginner": {
@@ -3065,7 +2529,7 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "反動を使わず丁寧に行う。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -3104,10 +2568,14 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "可動域を一定に保って反復する。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
+          {
+            "weight": 0,
+            "reps": 15
+          },
           {
             "weight": 0,
             "reps": 15
@@ -3143,14 +2611,148 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "高回数でもフォームを優先する。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
+      }
+    }
+  },
+  {
+    "id": "squats",
+    "isActive": true,
+    "sortOrder": 230,
+    "label": "スクワット",
+    "category": "bodyweight",
+    "muscles": [
+      "legs",
+      "glutes",
+      "core"
+    ],
+    "unit": "weightReps",
+    "description": "下半身と体幹を鍛える自重スクワット。",
+    "restSeconds": 30,
+    "difficulties": {
+      "beginner": {
+        "defaultSets": [
+          {
+            "weight": 0,
+            "reps": 12
+          },
+          {
+            "weight": 0,
+            "reps": 12
+          },
+          {
+            "weight": 0,
+            "reps": 12
+          }
+        ],
+        "maxSets": 6,
+        "limits": {
+          "weight": {
+            "min": 0,
+            "max": 0
+          },
+          "reps": {
+            "min": 5,
+            "max": 20
+          }
+        },
+        "points": {
+          "base": 120,
+          "perWork": 0.09,
+          "setBonus": 8,
+          "completion": 30,
+          "challengeScale": 0.5
+        },
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
+      },
+      "intermediate": {
+        "defaultSets": [
+          {
+            "weight": 0,
+            "reps": 15
+          },
+          {
+            "weight": 0,
+            "reps": 15
+          },
+          {
+            "weight": 0,
+            "reps": 15
+          },
+          {
+            "weight": 0,
+            "reps": 15
+          }
+        ],
+        "maxSets": 7,
+        "limits": {
+          "weight": {
+            "min": 0,
+            "max": 10
+          },
+          "reps": {
+            "min": 6,
+            "max": 25
+          }
+        },
+        "points": {
+          "base": 170,
+          "perWork": 0.11,
+          "setBonus": 10,
+          "completion": 40,
+          "challengeScale": 0.55
+        },
+        "howto": "反動を使わず対象筋へ効かせる。"
+      },
+      "advanced": {
+        "defaultSets": [
+          {
+            "weight": 0,
+            "reps": 20
+          },
+          {
+            "weight": 0,
+            "reps": 20
+          },
+          {
+            "weight": 0,
+            "reps": 20
+          },
+          {
+            "weight": 0,
+            "reps": 20
+          },
+          {
+            "weight": 0,
+            "reps": 20
+          }
+        ],
+        "maxSets": 8,
+        "limits": {
+          "weight": {
+            "min": 0,
+            "max": 20
+          },
+          "reps": {
+            "min": 8,
+            "max": 30
+          }
+        },
+        "points": {
+          "base": 210,
+          "perWork": 0.13,
+          "setBonus": 12,
+          "completion": 55,
+          "challengeScale": 0.6
+        },
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "jump-squats",
     "isActive": true,
-    "sortOrder": 280,
+    "sortOrder": 240,
     "label": "ジャンプスクワット",
     "category": "bodyweight",
     "muscles": [
@@ -3159,8 +2761,8 @@ export const workoutMasterEntries = [
       "core"
     ],
     "unit": "weightReps",
-    "description": "ジャンプスクワットで自重を使って全身を鍛える種目。",
-    "restSeconds": 35,
+    "description": "爆発的に跳び上がる自重スクワット。",
+    "restSeconds": 45,
     "difficulties": {
       "beginner": {
         "defaultSets": [
@@ -3195,25 +2797,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "反動を使わず丁寧に行う。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 12
+            "reps": 10
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 10
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 10
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 10
           }
         ],
         "maxSets": 7,
@@ -3234,25 +2836,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "可動域を一定に保って反復する。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 15
+            "reps": 12
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 12
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 12
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 12
+          },
+          {
+            "weight": 0,
+            "reps": 12
           }
         ],
         "maxSets": 8,
@@ -3273,38 +2879,39 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "高回数でもフォームを優先する。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "pull-ups",
     "isActive": true,
-    "sortOrder": 290,
+    "sortOrder": 250,
     "label": "懸垂",
     "category": "bodyweight",
     "muscles": [
       "back",
       "arms",
-      "shoulders"
+      "shoulders",
+      "core"
     ],
     "unit": "weightReps",
-    "description": "懸垂で自重を使って全身を鍛える種目。",
-    "restSeconds": 35,
+    "description": "背中と腕を中心に鍛える引く動作の自重種目。",
+    "restSeconds": 60,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 8
+            "reps": 5
           },
           {
             "weight": 0,
-            "reps": 8
+            "reps": 5
           },
           {
             "weight": 0,
-            "reps": 8
+            "reps": 5
           }
         ],
         "maxSets": 6,
@@ -3315,7 +2922,7 @@ export const workoutMasterEntries = [
           },
           "reps": {
             "min": 5,
-            "max": 20
+            "max": 15
           }
         },
         "points": {
@@ -3325,25 +2932,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "反動を使わず丁寧に行う。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 12
+            "reps": 8
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 8
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 8
           },
           {
             "weight": 0,
-            "reps": 12
+            "reps": 8
           }
         ],
         "maxSets": 7,
@@ -3354,7 +2961,7 @@ export const workoutMasterEntries = [
           },
           "reps": {
             "min": 6,
-            "max": 25
+            "max": 20
           }
         },
         "points": {
@@ -3364,25 +2971,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "可動域を一定に保って反復する。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
             "weight": 0,
-            "reps": 15
+            "reps": 10
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 10
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 10
           },
           {
             "weight": 0,
-            "reps": 15
+            "reps": 10
+          },
+          {
+            "weight": 0,
+            "reps": 10
           }
         ],
         "maxSets": 8,
@@ -3393,7 +3004,7 @@ export const workoutMasterEntries = [
           },
           "reps": {
             "min": 8,
-            "max": 30
+            "max": 25
           }
         },
         "points": {
@@ -3403,293 +3014,138 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "高回数でもフォームを優先する。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
+      }
+    }
+  },
+  {
+    "id": "plank",
+    "isActive": true,
+    "sortOrder": 260,
+    "label": "プランク",
+    "category": "bodyweight",
+    "muscles": [
+      "core"
+    ],
+    "unit": "time",
+    "description": "体幹を一直線で保持する静的種目。",
+    "restSeconds": 25,
+    "difficulties": {
+      "beginner": {
+        "defaultSets": [
+          {
+            "timeSeconds": 30
+          },
+          {
+            "timeSeconds": 30
+          },
+          {
+            "timeSeconds": 30
+          }
+        ],
+        "maxSets": 6,
+        "limits": {
+          "timeSeconds": {
+            "min": 20,
+            "max": 300
+          }
+        },
+        "points": {
+          "base": 100,
+          "perWork": 0.45,
+          "setBonus": 6,
+          "completion": 25,
+          "challengeScale": 0.55
+        },
+        "howto": "姿勢を作り、呼吸を止めずに保持する。"
+      },
+      "intermediate": {
+        "defaultSets": [
+          {
+            "timeSeconds": 45
+          },
+          {
+            "timeSeconds": 45
+          },
+          {
+            "timeSeconds": 45
+          },
+          {
+            "timeSeconds": 45
+          }
+        ],
+        "maxSets": 7,
+        "limits": {
+          "timeSeconds": {
+            "min": 30,
+            "max": 600
+          }
+        },
+        "points": {
+          "base": 150,
+          "perWork": 0.5,
+          "setBonus": 8,
+          "completion": 35,
+          "challengeScale": 0.6
+        },
+        "howto": "体幹を締め、ぶれを最小限に保つ。"
+      },
+      "advanced": {
+        "defaultSets": [
+          {
+            "timeSeconds": 70
+          },
+          {
+            "timeSeconds": 70
+          },
+          {
+            "timeSeconds": 70
+          },
+          {
+            "timeSeconds": 70
+          }
+        ],
+        "maxSets": 8,
+        "limits": {
+          "timeSeconds": {
+            "min": 40,
+            "max": 1200
+          }
+        },
+        "points": {
+          "base": 190,
+          "perWork": 0.55,
+          "setBonus": 10,
+          "completion": 45,
+          "challengeScale": 0.65
+        },
+        "howto": "長時間でも肩と腰の位置を崩さない。"
       }
     }
   },
   {
     "id": "side-plank",
     "isActive": true,
-    "sortOrder": 300,
+    "sortOrder": 270,
     "label": "サイドプランク",
     "category": "bodyweight",
     "muscles": [
       "core"
     ],
-    "unit": "weightReps",
-    "description": "サイドプランクで自重を使って全身を鍛える種目。",
-    "restSeconds": 35,
-    "difficulties": {
-      "beginner": {
-        "defaultSets": [
-          {
-            "weight": 0,
-            "reps": 8
-          },
-          {
-            "weight": 0,
-            "reps": 8
-          },
-          {
-            "weight": 0,
-            "reps": 8
-          }
-        ],
-        "maxSets": 6,
-        "limits": {
-          "weight": {
-            "min": 0,
-            "max": 0
-          },
-          "reps": {
-            "min": 5,
-            "max": 20
-          }
-        },
-        "points": {
-          "base": 120,
-          "perWork": 0.09,
-          "setBonus": 8,
-          "completion": 30,
-          "challengeScale": 0.5
-        },
-        "howto": "反動を使わず丁寧に行う。"
-      },
-      "intermediate": {
-        "defaultSets": [
-          {
-            "weight": 0,
-            "reps": 12
-          },
-          {
-            "weight": 0,
-            "reps": 12
-          },
-          {
-            "weight": 0,
-            "reps": 12
-          },
-          {
-            "weight": 0,
-            "reps": 12
-          }
-        ],
-        "maxSets": 7,
-        "limits": {
-          "weight": {
-            "min": 0,
-            "max": 10
-          },
-          "reps": {
-            "min": 6,
-            "max": 25
-          }
-        },
-        "points": {
-          "base": 170,
-          "perWork": 0.11,
-          "setBonus": 10,
-          "completion": 40,
-          "challengeScale": 0.55
-        },
-        "howto": "可動域を一定に保って反復する。"
-      },
-      "advanced": {
-        "defaultSets": [
-          {
-            "weight": 0,
-            "reps": 15
-          },
-          {
-            "weight": 0,
-            "reps": 15
-          },
-          {
-            "weight": 0,
-            "reps": 15
-          },
-          {
-            "weight": 0,
-            "reps": 15
-          }
-        ],
-        "maxSets": 8,
-        "limits": {
-          "weight": {
-            "min": 0,
-            "max": 20
-          },
-          "reps": {
-            "min": 8,
-            "max": 30
-          }
-        },
-        "points": {
-          "base": 210,
-          "perWork": 0.13,
-          "setBonus": 12,
-          "completion": 55,
-          "challengeScale": 0.6
-        },
-        "howto": "高回数でもフォームを優先する。"
-      }
-    }
-  },
-  {
-    "id": "handstand-push-ups",
-    "isActive": true,
-    "sortOrder": 310,
-    "label": "倒立押上",
-    "category": "bodyweight",
-    "muscles": [
-      "shoulders",
-      "arms",
-      "core"
-    ],
-    "unit": "weightReps",
-    "description": "倒立押上で自重を使って全身を鍛える種目。",
-    "restSeconds": 35,
-    "difficulties": {
-      "beginner": {
-        "defaultSets": [
-          {
-            "weight": 0,
-            "reps": 8
-          },
-          {
-            "weight": 0,
-            "reps": 8
-          },
-          {
-            "weight": 0,
-            "reps": 8
-          }
-        ],
-        "maxSets": 6,
-        "limits": {
-          "weight": {
-            "min": 0,
-            "max": 0
-          },
-          "reps": {
-            "min": 5,
-            "max": 20
-          }
-        },
-        "points": {
-          "base": 120,
-          "perWork": 0.09,
-          "setBonus": 8,
-          "completion": 30,
-          "challengeScale": 0.5
-        },
-        "howto": "反動を使わず丁寧に行う。"
-      },
-      "intermediate": {
-        "defaultSets": [
-          {
-            "weight": 0,
-            "reps": 12
-          },
-          {
-            "weight": 0,
-            "reps": 12
-          },
-          {
-            "weight": 0,
-            "reps": 12
-          },
-          {
-            "weight": 0,
-            "reps": 12
-          }
-        ],
-        "maxSets": 7,
-        "limits": {
-          "weight": {
-            "min": 0,
-            "max": 10
-          },
-          "reps": {
-            "min": 6,
-            "max": 25
-          }
-        },
-        "points": {
-          "base": 170,
-          "perWork": 0.11,
-          "setBonus": 10,
-          "completion": 40,
-          "challengeScale": 0.55
-        },
-        "howto": "可動域を一定に保って反復する。"
-      },
-      "advanced": {
-        "defaultSets": [
-          {
-            "weight": 0,
-            "reps": 15
-          },
-          {
-            "weight": 0,
-            "reps": 15
-          },
-          {
-            "weight": 0,
-            "reps": 15
-          },
-          {
-            "weight": 0,
-            "reps": 15
-          }
-        ],
-        "maxSets": 8,
-        "limits": {
-          "weight": {
-            "min": 0,
-            "max": 20
-          },
-          "reps": {
-            "min": 8,
-            "max": 30
-          }
-        },
-        "points": {
-          "base": 210,
-          "perWork": 0.13,
-          "setBonus": 12,
-          "completion": 55,
-          "challengeScale": 0.6
-        },
-        "howto": "高回数でもフォームを優先する。"
-      }
-    }
-  },
-  {
-    "id": "assisted-handstand-hold",
-    "isActive": true,
-    "sortOrder": 320,
-    "label": "倒立維持（補助あり）",
-    "category": "bodyweight",
-    "muscles": [
-      "shoulders",
-      "arms",
-      "core"
-    ],
     "unit": "time",
-    "description": "壁や補助を使って倒立姿勢を保持する種目。",
-    "restSeconds": 40,
+    "description": "体幹側面を安定させる静的種目。",
+    "restSeconds": 25,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "timeSeconds": 20
+            "timeSeconds": 25
           },
           {
-            "timeSeconds": 20
+            "timeSeconds": 25
           },
           {
-            "timeSeconds": 20
+            "timeSeconds": 25
           }
         ],
         "maxSets": 6,
@@ -3706,7 +3162,7 @@ export const workoutMasterEntries = [
           "completion": 25,
           "challengeScale": 0.55
         },
-        "howto": "壁を使って安全に姿勢を作る。"
+        "howto": "姿勢を作り、呼吸を止めずに保持する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -3737,7 +3193,7 @@ export const workoutMasterEntries = [
           "completion": 35,
           "challengeScale": 0.6
         },
-        "howto": "肩をすくめず腹圧を保つ。"
+        "howto": "体幹を締め、ぶれを最小限に保つ。"
       },
       "advanced": {
         "defaultSets": [
@@ -3758,7 +3214,7 @@ export const workoutMasterEntries = [
         "limits": {
           "timeSeconds": {
             "min": 40,
-            "max": 720
+            "max": 960
           }
         },
         "points": {
@@ -3768,15 +3224,15 @@ export const workoutMasterEntries = [
           "completion": 45,
           "challengeScale": 0.65
         },
-        "howto": "長時間でも一直線を維持する。"
+        "howto": "長時間でも肩と腰の位置を崩さない。"
       }
     }
   },
   {
-    "id": "freestanding-handstand-hold",
+    "id": "assisted-handstand-hold",
     "isActive": true,
-    "sortOrder": 330,
-    "label": "倒立維持（補助なし）",
+    "sortOrder": 280,
+    "label": "倒立維持（補助あり）",
     "category": "bodyweight",
     "muscles": [
       "shoulders",
@@ -3784,7 +3240,7 @@ export const workoutMasterEntries = [
       "core"
     ],
     "unit": "time",
-    "description": "補助なしで倒立姿勢の安定を高める種目。",
+    "description": "壁補助を使って倒立姿勢を保持する種目。",
     "restSeconds": 45,
     "difficulties": {
       "beginner": {
@@ -3813,7 +3269,7 @@ export const workoutMasterEntries = [
           "completion": 25,
           "challengeScale": 0.55
         },
-        "howto": "安全な場所で短時間から試す。"
+        "howto": "姿勢を作り、呼吸を止めずに保持する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -3844,7 +3300,7 @@ export const workoutMasterEntries = [
           "completion": 35,
           "challengeScale": 0.6
         },
-        "howto": "指先で重心を調整して保持する。"
+        "howto": "体幹を締め、ぶれを最小限に保つ。"
       },
       "advanced": {
         "defaultSets": [
@@ -3875,14 +3331,255 @@ export const workoutMasterEntries = [
           "completion": 45,
           "challengeScale": 0.65
         },
-        "howto": "疲労時は中断し無理をしない。"
+        "howto": "長時間でも肩と腰の位置を崩さない。"
+      }
+    }
+  },
+  {
+    "id": "freestanding-handstand-hold",
+    "isActive": true,
+    "sortOrder": 290,
+    "label": "倒立維持（補助なし）",
+    "category": "bodyweight",
+    "muscles": [
+      "shoulders",
+      "arms",
+      "core"
+    ],
+    "unit": "time",
+    "description": "補助なしで倒立バランスを維持する種目。",
+    "restSeconds": 50,
+    "difficulties": {
+      "beginner": {
+        "defaultSets": [
+          {
+            "timeSeconds": 15
+          },
+          {
+            "timeSeconds": 15
+          },
+          {
+            "timeSeconds": 15
+          }
+        ],
+        "maxSets": 6,
+        "limits": {
+          "timeSeconds": {
+            "min": 20,
+            "max": 120
+          }
+        },
+        "points": {
+          "base": 100,
+          "perWork": 0.45,
+          "setBonus": 6,
+          "completion": 25,
+          "challengeScale": 0.55
+        },
+        "howto": "姿勢を作り、呼吸を止めずに保持する。"
+      },
+      "intermediate": {
+        "defaultSets": [
+          {
+            "timeSeconds": 30
+          },
+          {
+            "timeSeconds": 30
+          },
+          {
+            "timeSeconds": 30
+          },
+          {
+            "timeSeconds": 30
+          }
+        ],
+        "maxSets": 7,
+        "limits": {
+          "timeSeconds": {
+            "min": 30,
+            "max": 300
+          }
+        },
+        "points": {
+          "base": 150,
+          "perWork": 0.5,
+          "setBonus": 8,
+          "completion": 35,
+          "challengeScale": 0.6
+        },
+        "howto": "体幹を締め、ぶれを最小限に保つ。"
+      },
+      "advanced": {
+        "defaultSets": [
+          {
+            "timeSeconds": 45
+          },
+          {
+            "timeSeconds": 45
+          },
+          {
+            "timeSeconds": 45
+          },
+          {
+            "timeSeconds": 45
+          }
+        ],
+        "maxSets": 8,
+        "limits": {
+          "timeSeconds": {
+            "min": 40,
+            "max": 480
+          }
+        },
+        "points": {
+          "base": 190,
+          "perWork": 0.55,
+          "setBonus": 10,
+          "completion": 45,
+          "challengeScale": 0.65
+        },
+        "howto": "長時間でも肩と腰の位置を崩さない。"
+      }
+    }
+  },
+  {
+    "id": "handstand-push-ups",
+    "isActive": true,
+    "sortOrder": 300,
+    "label": "倒立押上",
+    "category": "bodyweight",
+    "muscles": [
+      "shoulders",
+      "arms",
+      "core"
+    ],
+    "unit": "weightReps",
+    "description": "倒立姿勢で押し上げる高難度の自重プレス。",
+    "restSeconds": 70,
+    "difficulties": {
+      "beginner": {
+        "defaultSets": [
+          {
+            "weight": 0,
+            "reps": 3
+          },
+          {
+            "weight": 0,
+            "reps": 3
+          },
+          {
+            "weight": 0,
+            "reps": 3
+          }
+        ],
+        "maxSets": 6,
+        "limits": {
+          "weight": {
+            "min": 0,
+            "max": 0
+          },
+          "reps": {
+            "min": 5,
+            "max": 10
+          }
+        },
+        "points": {
+          "base": 120,
+          "perWork": 0.09,
+          "setBonus": 8,
+          "completion": 30,
+          "challengeScale": 0.5
+        },
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
+      },
+      "intermediate": {
+        "defaultSets": [
+          {
+            "weight": 0,
+            "reps": 5
+          },
+          {
+            "weight": 0,
+            "reps": 5
+          },
+          {
+            "weight": 0,
+            "reps": 5
+          },
+          {
+            "weight": 0,
+            "reps": 5
+          }
+        ],
+        "maxSets": 7,
+        "limits": {
+          "weight": {
+            "min": 0,
+            "max": 10
+          },
+          "reps": {
+            "min": 6,
+            "max": 15
+          }
+        },
+        "points": {
+          "base": 170,
+          "perWork": 0.11,
+          "setBonus": 10,
+          "completion": 40,
+          "challengeScale": 0.55
+        },
+        "howto": "反動を使わず対象筋へ効かせる。"
+      },
+      "advanced": {
+        "defaultSets": [
+          {
+            "weight": 0,
+            "reps": 8
+          },
+          {
+            "weight": 0,
+            "reps": 8
+          },
+          {
+            "weight": 0,
+            "reps": 8
+          },
+          {
+            "weight": 0,
+            "reps": 8
+          },
+          {
+            "weight": 0,
+            "reps": 8
+          }
+        ],
+        "maxSets": 8,
+        "limits": {
+          "weight": {
+            "min": 0,
+            "max": 20
+          },
+          "reps": {
+            "min": 8,
+            "max": 20
+          }
+        },
+        "points": {
+          "base": 210,
+          "perWork": 0.13,
+          "setBonus": 12,
+          "completion": 55,
+          "challengeScale": 0.6
+        },
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "shrug",
     "isActive": true,
-    "sortOrder": 340,
+    "sortOrder": 310,
     "label": "シュラッグ",
     "category": "weights",
     "muscles": [
@@ -3890,22 +3587,22 @@ export const workoutMasterEntries = [
       "shoulders"
     ],
     "unit": "weightReps",
-    "description": "シュラッグで狙った部位に負荷をかけるウエイト種目。",
+    "description": "僧帽筋を中心に鍛えるすくめ動作の種目。",
     "restSeconds": 40,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           }
         ],
         "maxSets": 6,
@@ -3926,24 +3623,24 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
+            "weight": 12,
             "reps": 12
           },
           {
-            "weight": 8,
+            "weight": 12,
             "reps": 12
           },
           {
-            "weight": 8,
+            "weight": 12,
             "reps": 12
           },
           {
-            "weight": 8,
+            "weight": 12,
             "reps": 12
           }
         ],
@@ -3965,28 +3662,28 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
+            "weight": 16,
             "reps": 10
           },
           {
-            "weight": 12,
+            "weight": 16,
             "reps": 10
           },
           {
-            "weight": 12,
+            "weight": 16,
             "reps": 10
           },
           {
-            "weight": 12,
+            "weight": 16,
             "reps": 10
           },
           {
-            "weight": 12,
+            "weight": 16,
             "reps": 10
           }
         ],
@@ -4008,36 +3705,37 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "bent-over-row",
     "isActive": true,
-    "sortOrder": 350,
+    "sortOrder": 320,
     "label": "ベントオーバーロー",
     "category": "weights",
     "muscles": [
       "back",
-      "arms"
+      "arms",
+      "core"
     ],
     "unit": "weightReps",
-    "description": "ベントオーバーローで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "前傾姿勢で背中を引き込むローイング種目。",
+    "restSeconds": 50,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
+            "weight": 8,
             "reps": 10
           },
           {
-            "weight": 5,
+            "weight": 8,
             "reps": 10
           },
           {
-            "weight": 5,
+            "weight": 8,
             "reps": 10
           }
         ],
@@ -4059,25 +3757,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 12,
+            "reps": 10
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 12,
+            "reps": 10
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 12,
+            "reps": 10
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 12,
+            "reps": 10
           }
         ],
         "maxSets": 7,
@@ -4098,29 +3796,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 18,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 18,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 18,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 18,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 18,
+            "reps": 8
           }
         ],
         "maxSets": 8,
@@ -4141,14 +3839,14 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "weighted-squats",
     "isActive": true,
-    "sortOrder": 360,
+    "sortOrder": 330,
     "label": "スクワット",
     "category": "weights",
     "muscles": [
@@ -4157,21 +3855,21 @@ export const workoutMasterEntries = [
       "core"
     ],
     "unit": "weightReps",
-    "description": "スクワットで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "バーベルやダンベルを使う下半身の基礎種目。",
+    "restSeconds": 50,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
+            "weight": 10,
             "reps": 10
           },
           {
-            "weight": 5,
+            "weight": 10,
             "reps": 10
           },
           {
-            "weight": 5,
+            "weight": 10,
             "reps": 10
           }
         ],
@@ -4193,24 +3891,158 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
+            "weight": 20,
+            "reps": 10
+          },
+          {
+            "weight": 20,
+            "reps": 10
+          },
+          {
+            "weight": 20,
+            "reps": 10
+          },
+          {
+            "weight": 20,
+            "reps": 10
+          }
+        ],
+        "maxSets": 7,
+        "limits": {
+          "weight": {
+            "min": 0,
+            "max": 70
+          },
+          "reps": {
+            "min": 6,
+            "max": 25
+          }
+        },
+        "points": {
+          "base": 170,
+          "perWork": 0.11,
+          "setBonus": 10,
+          "completion": 40,
+          "challengeScale": 0.55
+        },
+        "howto": "反動を使わず対象筋へ効かせる。"
+      },
+      "advanced": {
+        "defaultSets": [
+          {
+            "weight": 30,
+            "reps": 8
+          },
+          {
+            "weight": 30,
+            "reps": 8
+          },
+          {
+            "weight": 30,
+            "reps": 8
+          },
+          {
+            "weight": 30,
+            "reps": 8
+          },
+          {
+            "weight": 30,
+            "reps": 8
+          }
+        ],
+        "maxSets": 8,
+        "limits": {
+          "weight": {
+            "min": 0,
+            "max": 100
+          },
+          "reps": {
+            "min": 8,
+            "max": 30
+          }
+        },
+        "points": {
+          "base": 210,
+          "perWork": 0.13,
+          "setBonus": 12,
+          "completion": 55,
+          "challengeScale": 0.6
+        },
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
+      }
+    }
+  },
+  {
+    "id": "lunges",
+    "isActive": true,
+    "sortOrder": 340,
+    "label": "ランジ",
+    "category": "weights",
+    "muscles": [
+      "legs",
+      "glutes",
+      "core"
+    ],
+    "unit": "weightReps",
+    "description": "前後動作で下半身と体幹を鍛える種目。",
+    "restSeconds": 40,
+    "difficulties": {
+      "beginner": {
+        "defaultSets": [
+          {
+            "weight": 6,
+            "reps": 10
+          },
+          {
+            "weight": 6,
+            "reps": 10
+          },
+          {
+            "weight": 6,
+            "reps": 10
+          }
+        ],
+        "maxSets": 6,
+        "limits": {
+          "weight": {
+            "min": 0,
+            "max": 40
+          },
+          "reps": {
+            "min": 5,
+            "max": 20
+          }
+        },
+        "points": {
+          "base": 120,
+          "perWork": 0.09,
+          "setBonus": 8,
+          "completion": 30,
+          "challengeScale": 0.5
+        },
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
+      },
+      "intermediate": {
+        "defaultSets": [
+          {
+            "weight": 10,
             "reps": 12
           },
           {
-            "weight": 8,
+            "weight": 10,
             "reps": 12
           },
           {
-            "weight": 8,
+            "weight": 10,
             "reps": 12
           },
           {
-            "weight": 8,
+            "weight": 10,
             "reps": 12
           }
         ],
@@ -4232,28 +4064,28 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
+            "weight": 14,
             "reps": 10
           },
           {
-            "weight": 12,
+            "weight": 14,
             "reps": 10
           },
           {
-            "weight": 12,
+            "weight": 14,
             "reps": 10
           },
           {
-            "weight": 12,
+            "weight": 14,
             "reps": 10
           },
           {
-            "weight": 12,
+            "weight": 14,
             "reps": 10
           }
         ],
@@ -4275,49 +4107,50 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "deadlifts",
     "isActive": true,
-    "sortOrder": 370,
+    "sortOrder": 350,
     "label": "デッドリフト",
     "category": "weights",
     "muscles": [
       "back",
       "legs",
-      "glutes"
+      "glutes",
+      "core"
     ],
     "unit": "weightReps",
-    "description": "デッドリフトで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "全身連動で引き上げる高効率ウエイト種目。",
+    "restSeconds": 70,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 20,
+            "reps": 8
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 20,
+            "reps": 8
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 20,
+            "reps": 8
           }
         ],
         "maxSets": 6,
         "limits": {
           "weight": {
             "min": 0,
-            "max": 40
+            "max": 80
           },
           "reps": {
             "min": 5,
-            "max": 20
+            "max": 15
           }
         },
         "points": {
@@ -4327,36 +4160,36 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 35,
+            "reps": 8
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 35,
+            "reps": 8
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 35,
+            "reps": 8
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 35,
+            "reps": 8
           }
         ],
         "maxSets": 7,
         "limits": {
           "weight": {
             "min": 0,
-            "max": 70
+            "max": 140
           },
           "reps": {
             "min": 6,
-            "max": 25
+            "max": 20
           }
         },
         "points": {
@@ -4366,40 +4199,40 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 50,
+            "reps": 6
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 50,
+            "reps": 6
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 50,
+            "reps": 6
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 50,
+            "reps": 6
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 50,
+            "reps": 6
           }
         ],
         "maxSets": 8,
         "limits": {
           "weight": {
             "min": 0,
-            "max": 100
+            "max": 220
           },
           "reps": {
             "min": 8,
-            "max": 30
+            "max": 25
           }
         },
         "points": {
@@ -4409,36 +4242,36 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "calf-raises",
     "isActive": true,
-    "sortOrder": 380,
+    "sortOrder": 360,
     "label": "カーフレイズ",
     "category": "weights",
     "muscles": [
       "legs"
     ],
     "unit": "weightReps",
-    "description": "カーフレイズで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "ふくらはぎを鍛える足関節伸展種目。",
+    "restSeconds": 30,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
             "weight": 5,
-            "reps": 10
+            "reps": 15
           },
           {
             "weight": 5,
-            "reps": 10
+            "reps": 15
           },
           {
             "weight": 5,
-            "reps": 10
+            "reps": 15
           }
         ],
         "maxSets": 6,
@@ -4459,25 +4292,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 10,
+            "reps": 18
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 10,
+            "reps": 18
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 10,
+            "reps": 18
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 10,
+            "reps": 18
           }
         ],
         "maxSets": 7,
@@ -4498,29 +4331,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 15,
+            "reps": 20
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 15,
+            "reps": 20
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 15,
+            "reps": 20
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 15,
+            "reps": 20
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 15,
+            "reps": 20
           }
         ],
         "maxSets": 8,
@@ -4541,14 +4374,14 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "military-press",
     "isActive": true,
-    "sortOrder": 390,
+    "sortOrder": 370,
     "label": "ミリタリープレス",
     "category": "weights",
     "muscles": [
@@ -4557,22 +4390,22 @@ export const workoutMasterEntries = [
       "core"
     ],
     "unit": "weightReps",
-    "description": "ミリタリープレスで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "立位で肩と腕を鍛えるプレス種目。",
+    "restSeconds": 50,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 8,
+            "reps": 8
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 8,
+            "reps": 8
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 8,
+            "reps": 8
           }
         ],
         "maxSets": 6,
@@ -4593,25 +4426,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 12,
+            "reps": 10
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 12,
+            "reps": 10
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 12,
+            "reps": 10
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 12,
+            "reps": 10
           }
         ],
         "maxSets": 7,
@@ -4632,29 +4465,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 8
           }
         ],
         "maxSets": 8,
@@ -4675,14 +4508,14 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "shoulder-press",
     "isActive": true,
-    "sortOrder": 400,
+    "sortOrder": 380,
     "label": "ショルダープレス",
     "category": "weights",
     "muscles": [
@@ -4690,21 +4523,21 @@ export const workoutMasterEntries = [
       "arms"
     ],
     "unit": "weightReps",
-    "description": "ショルダープレスで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "肩を中心に押し上げる基本種目。",
+    "restSeconds": 45,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
+            "weight": 8,
             "reps": 10
           },
           {
-            "weight": 5,
+            "weight": 8,
             "reps": 10
           },
           {
-            "weight": 5,
+            "weight": 8,
             "reps": 10
           }
         ],
@@ -4726,25 +4559,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 12,
+            "reps": 10
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 12,
+            "reps": 10
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 12,
+            "reps": 10
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 12,
+            "reps": 10
           }
         ],
         "maxSets": 7,
@@ -4765,29 +4598,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 8
           }
         ],
         "maxSets": 8,
@@ -4808,36 +4641,36 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "side-raises",
     "isActive": true,
-    "sortOrder": 410,
+    "sortOrder": 390,
     "label": "サイドレイズ",
     "category": "weights",
     "muscles": [
       "shoulders"
     ],
     "unit": "weightReps",
-    "description": "サイドレイズで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "肩の中部を狙う挙上種目。",
+    "restSeconds": 35,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 4,
+            "reps": 12
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 4,
+            "reps": 12
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 4,
+            "reps": 12
           }
         ],
         "maxSets": 6,
@@ -4858,25 +4691,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 6,
+            "reps": 14
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 6,
+            "reps": 14
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 6,
+            "reps": 14
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 6,
+            "reps": 14
           }
         ],
         "maxSets": 7,
@@ -4897,29 +4730,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           }
         ],
         "maxSets": 8,
@@ -4940,36 +4773,36 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "front-raises",
     "isActive": true,
-    "sortOrder": 420,
+    "sortOrder": 400,
     "label": "フロントレイズ",
     "category": "weights",
     "muscles": [
       "shoulders"
     ],
     "unit": "weightReps",
-    "description": "フロントレイズで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "肩前部を狙う挙上種目。",
+    "restSeconds": 35,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 4,
+            "reps": 12
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 4,
+            "reps": 12
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 4,
+            "reps": 12
           }
         ],
         "maxSets": 6,
@@ -4990,25 +4823,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 6,
+            "reps": 14
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 6,
+            "reps": 14
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 6,
+            "reps": 14
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 6,
+            "reps": 14
           }
         ],
         "maxSets": 7,
@@ -5029,29 +4862,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           }
         ],
         "maxSets": 8,
@@ -5072,36 +4905,36 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "lateral-raises",
     "isActive": true,
-    "sortOrder": 430,
+    "sortOrder": 410,
     "label": "ラタラルレイズ",
     "category": "weights",
     "muscles": [
       "shoulders"
     ],
     "unit": "weightReps",
-    "description": "ラタラルレイズで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "肩の中部を安定して刺激する挙上種目。",
+    "restSeconds": 35,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 4,
+            "reps": 12
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 4,
+            "reps": 12
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 4,
+            "reps": 12
           }
         ],
         "maxSets": 6,
@@ -5122,25 +4955,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 6,
+            "reps": 14
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 6,
+            "reps": 14
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 6,
+            "reps": 14
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 6,
+            "reps": 14
           }
         ],
         "maxSets": 7,
@@ -5161,29 +4994,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           }
         ],
         "maxSets": 8,
@@ -5204,22 +5037,22 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "curls",
     "isActive": true,
-    "sortOrder": 440,
+    "sortOrder": 420,
     "label": "カール",
     "category": "weights",
     "muscles": [
       "arms"
     ],
     "unit": "weightReps",
-    "description": "カールで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "上腕二頭筋を鍛える基本カール。",
+    "restSeconds": 35,
     "difficulties": {
       "beginner": {
         "defaultSets": [
@@ -5254,7 +5087,7 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -5293,7 +5126,7 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
@@ -5336,21 +5169,21 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "preacher-curls",
     "isActive": true,
-    "sortOrder": 450,
+    "sortOrder": 430,
     "label": "プリーチャーカール",
     "category": "weights",
     "muscles": [
       "arms"
     ],
     "unit": "weightReps",
-    "description": "プリーチャーカールで狙った部位に負荷をかけるウエイト種目。",
+    "description": "反動を抑えて上腕二頭筋を狙うカール。",
     "restSeconds": 40,
     "difficulties": {
       "beginner": {
@@ -5386,7 +5219,7 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -5425,28 +5258,28 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
+            "weight": 10,
             "reps": 10
           },
           {
-            "weight": 12,
+            "weight": 10,
             "reps": 10
           },
           {
-            "weight": 12,
+            "weight": 10,
             "reps": 10
           },
           {
-            "weight": 12,
+            "weight": 10,
             "reps": 10
           },
           {
-            "weight": 12,
+            "weight": 10,
             "reps": 10
           }
         ],
@@ -5468,36 +5301,36 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "wrist-curls",
     "isActive": true,
-    "sortOrder": 460,
+    "sortOrder": 440,
     "label": "リストカール",
     "category": "weights",
     "muscles": [
       "arms"
     ],
     "unit": "weightReps",
-    "description": "リストカールで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "前腕屈筋群を鍛える手首屈曲種目。",
+    "restSeconds": 30,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 3,
+            "reps": 15
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 3,
+            "reps": 15
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 3,
+            "reps": 15
           }
         ],
         "maxSets": 6,
@@ -5518,25 +5351,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 5,
+            "reps": 18
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 5,
+            "reps": 18
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 5,
+            "reps": 18
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 5,
+            "reps": 18
           }
         ],
         "maxSets": 7,
@@ -5557,29 +5390,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 7,
+            "reps": 20
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 7,
+            "reps": 20
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 7,
+            "reps": 20
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 7,
+            "reps": 20
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 7,
+            "reps": 20
           }
         ],
         "maxSets": 8,
@@ -5600,36 +5433,36 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "reverse-wrist-curls",
     "isActive": true,
-    "sortOrder": 470,
+    "sortOrder": 450,
     "label": "リバースリストカール",
     "category": "weights",
     "muscles": [
       "arms"
     ],
     "unit": "weightReps",
-    "description": "リバースリストカールで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "前腕伸筋群を鍛える手首伸展種目。",
+    "restSeconds": 30,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 2,
+            "reps": 15
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 2,
+            "reps": 15
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 2,
+            "reps": 15
           }
         ],
         "maxSets": 6,
@@ -5650,25 +5483,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 4,
+            "reps": 18
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 4,
+            "reps": 18
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 4,
+            "reps": 18
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 4,
+            "reps": 18
           }
         ],
         "maxSets": 7,
@@ -5689,29 +5522,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 6,
+            "reps": 20
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 6,
+            "reps": 20
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 6,
+            "reps": 20
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 6,
+            "reps": 20
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 6,
+            "reps": 20
           }
         ],
         "maxSets": 8,
@@ -5732,45 +5565,46 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "bench-press",
     "isActive": true,
-    "sortOrder": 480,
+    "sortOrder": 460,
     "label": "ベンチプレス",
     "category": "weights",
     "muscles": [
       "chest",
+      "shoulders",
       "arms",
-      "shoulders"
+      "core"
     ],
     "unit": "weightReps",
-    "description": "ベンチプレスで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "胸・肩・腕を中心に鍛える代表的なプレス種目。",
+    "restSeconds": 60,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 15,
+            "reps": 8
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 15,
+            "reps": 8
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 15,
+            "reps": 8
           }
         ],
         "maxSets": 6,
         "limits": {
           "weight": {
             "min": 0,
-            "max": 40
+            "max": 80
           },
           "reps": {
             "min": 5,
@@ -5784,32 +5618,32 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 25,
+            "reps": 10
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 25,
+            "reps": 10
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 25,
+            "reps": 10
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 25,
+            "reps": 10
           }
         ],
         "maxSets": 7,
         "limits": {
           "weight": {
             "min": 0,
-            "max": 70
+            "max": 130
           },
           "reps": {
             "min": 6,
@@ -5823,36 +5657,36 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 35,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 35,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 35,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 35,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 35,
+            "reps": 8
           }
         ],
         "maxSets": 8,
         "limits": {
           "weight": {
             "min": 0,
-            "max": 100
+            "max": 200
           },
           "reps": {
             "min": 8,
@@ -5866,14 +5700,14 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "incline-bench-press",
     "isActive": true,
-    "sortOrder": 490,
+    "sortOrder": 470,
     "label": "インクラインベンチプレス",
     "category": "weights",
     "muscles": [
@@ -5882,29 +5716,29 @@ export const workoutMasterEntries = [
       "arms"
     ],
     "unit": "weightReps",
-    "description": "インクラインベンチプレスで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "胸上部と肩前部を狙うプレス種目。",
+    "restSeconds": 55,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 12,
+            "reps": 8
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 12,
+            "reps": 8
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 12,
+            "reps": 8
           }
         ],
         "maxSets": 6,
         "limits": {
           "weight": {
             "min": 0,
-            "max": 40
+            "max": 70
           },
           "reps": {
             "min": 5,
@@ -5918,32 +5752,32 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 20,
+            "reps": 10
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 20,
+            "reps": 10
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 20,
+            "reps": 10
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 20,
+            "reps": 10
           }
         ],
         "maxSets": 7,
         "limits": {
           "weight": {
             "min": 0,
-            "max": 70
+            "max": 110
           },
           "reps": {
             "min": 6,
@@ -5957,36 +5791,36 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 28,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 28,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 28,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 28,
+            "reps": 8
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 28,
+            "reps": 8
           }
         ],
         "maxSets": 8,
         "limits": {
           "weight": {
             "min": 0,
-            "max": 100
+            "max": 170
           },
           "reps": {
             "min": 8,
@@ -6000,14 +5834,14 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "fly",
     "isActive": true,
-    "sortOrder": 500,
+    "sortOrder": 480,
     "label": "フライ",
     "category": "weights",
     "muscles": [
@@ -6015,21 +5849,21 @@ export const workoutMasterEntries = [
       "shoulders"
     ],
     "unit": "weightReps",
-    "description": "フライで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "胸を開閉して刺激する種目。",
+    "restSeconds": 45,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
+            "weight": 6,
             "reps": 10
           },
           {
-            "weight": 5,
+            "weight": 6,
             "reps": 10
           },
           {
-            "weight": 5,
+            "weight": 6,
             "reps": 10
           }
         ],
@@ -6051,7 +5885,7 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
@@ -6090,29 +5924,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 10,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 10,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 10,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 10,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 10,
+            "reps": 12
           }
         ],
         "maxSets": 8,
@@ -6133,36 +5967,36 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "weighted-abdominal-crunches",
     "isActive": true,
-    "sortOrder": 510,
+    "sortOrder": 490,
     "label": "アブドミナルクランチ",
     "category": "weights",
     "muscles": [
       "core"
     ],
     "unit": "weightReps",
-    "description": "アブドミナルクランチで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "負荷を加えて腹筋を鍛えるクランチ。",
+    "restSeconds": 35,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
             "weight": 5,
-            "reps": 10
+            "reps": 12
           },
           {
             "weight": 5,
-            "reps": 10
+            "reps": 12
           },
           {
             "weight": 5,
-            "reps": 10
+            "reps": 12
           }
         ],
         "maxSets": 6,
@@ -6183,25 +6017,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
             "weight": 8,
-            "reps": 12
+            "reps": 15
           },
           {
             "weight": 8,
-            "reps": 12
+            "reps": 15
           },
           {
             "weight": 8,
-            "reps": 12
+            "reps": 15
           },
           {
             "weight": 8,
-            "reps": 12
+            "reps": 15
           }
         ],
         "maxSets": 7,
@@ -6222,29 +6056,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
             "weight": 12,
-            "reps": 10
+            "reps": 15
           },
           {
             "weight": 12,
-            "reps": 10
+            "reps": 15
           },
           {
             "weight": 12,
-            "reps": 10
+            "reps": 15
           },
           {
             "weight": 12,
-            "reps": 10
+            "reps": 15
           },
           {
             "weight": 12,
-            "reps": 10
+            "reps": 15
           }
         ],
         "maxSets": 8,
@@ -6265,36 +6099,37 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "cable-woodchops",
     "isActive": true,
-    "sortOrder": 520,
+    "sortOrder": 500,
     "label": "ケーブルウッドチョップ",
     "category": "weights",
     "muscles": [
       "core",
-      "shoulders"
+      "shoulders",
+      "arms"
     ],
     "unit": "weightReps",
-    "description": "ケーブルウッドチョップで狙った部位に負荷をかけるウエイト種目。",
+    "description": "回旋動作で体幹を鍛えるケーブル種目。",
     "restSeconds": 40,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
+            "weight": 8,
             "reps": 10
           },
           {
-            "weight": 5,
+            "weight": 8,
             "reps": 10
           },
           {
-            "weight": 5,
+            "weight": 8,
             "reps": 10
           }
         ],
@@ -6316,24 +6151,24 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
+            "weight": 12,
             "reps": 12
           },
           {
-            "weight": 8,
+            "weight": 12,
             "reps": 12
           },
           {
-            "weight": 8,
+            "weight": 12,
             "reps": 12
           },
           {
-            "weight": 8,
+            "weight": 12,
             "reps": 12
           }
         ],
@@ -6355,29 +6190,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 12
           }
         ],
         "maxSets": 8,
@@ -6398,36 +6233,36 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "cable-crunches",
     "isActive": true,
-    "sortOrder": 530,
+    "sortOrder": 510,
     "label": "ケーブルクランチ",
     "category": "weights",
     "muscles": [
       "core"
     ],
     "unit": "weightReps",
-    "description": "ケーブルクランチで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "ケーブル負荷で腹直筋を鍛える種目。",
+    "restSeconds": 35,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 10,
+            "reps": 12
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 10,
+            "reps": 12
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 10,
+            "reps": 12
           }
         ],
         "maxSets": 6,
@@ -6448,25 +6283,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 15,
+            "reps": 15
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 15,
+            "reps": 15
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 15,
+            "reps": 15
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 15,
+            "reps": 15
           }
         ],
         "maxSets": 7,
@@ -6487,29 +6322,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 20,
+            "reps": 15
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 20,
+            "reps": 15
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 20,
+            "reps": 15
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 20,
+            "reps": 15
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 20,
+            "reps": 15
           }
         ],
         "maxSets": 8,
@@ -6530,36 +6365,36 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "cable-side-bends",
     "isActive": true,
-    "sortOrder": 540,
+    "sortOrder": 520,
     "label": "ケーブルサイドベント",
     "category": "weights",
     "muscles": [
       "core"
     ],
     "unit": "weightReps",
-    "description": "ケーブルサイドベントで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "体幹側面を鍛える側屈種目。",
+    "restSeconds": 35,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 8,
+            "reps": 12
           }
         ],
         "maxSets": 6,
@@ -6580,25 +6415,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 12,
+            "reps": 15
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 12,
+            "reps": 15
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 12,
+            "reps": 15
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 12,
+            "reps": 15
           }
         ],
         "maxSets": 7,
@@ -6619,29 +6454,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 15
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 15
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 15
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 15
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 15
           }
         ],
         "maxSets": 8,
@@ -6662,36 +6497,36 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "rotary-torso",
     "isActive": true,
-    "sortOrder": 550,
+    "sortOrder": 530,
     "label": "ロータリートルソー",
     "category": "weights",
     "muscles": [
       "core"
     ],
     "unit": "weightReps",
-    "description": "ロータリートルソーで狙った部位に負荷をかけるウエイト種目。",
-    "restSeconds": 40,
+    "description": "体幹回旋を強化するマシン/ケーブル種目。",
+    "restSeconds": 35,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 10,
+            "reps": 12
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 10,
+            "reps": 12
           },
           {
-            "weight": 5,
-            "reps": 10
+            "weight": 10,
+            "reps": 12
           }
         ],
         "maxSets": 6,
@@ -6712,25 +6547,25 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 14,
+            "reps": 15
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 14,
+            "reps": 15
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 14,
+            "reps": 15
           },
           {
-            "weight": 8,
-            "reps": 12
+            "weight": 14,
+            "reps": 15
           }
         ],
         "maxSets": 7,
@@ -6751,29 +6586,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 18,
+            "reps": 15
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 18,
+            "reps": 15
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 18,
+            "reps": 15
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 18,
+            "reps": 15
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 18,
+            "reps": 15
           }
         ],
         "maxSets": 8,
@@ -6794,36 +6629,35 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   },
   {
     "id": "triceps-extension",
     "isActive": true,
-    "sortOrder": 560,
+    "sortOrder": 540,
     "label": "トライセップスエクステンション",
     "category": "weights",
     "muscles": [
-      "arms",
-      "shoulders"
+      "arms"
     ],
     "unit": "weightReps",
-    "description": "トライセップスエクステンションで狙った部位に負荷をかけるウエイト種目。",
+    "description": "上腕三頭筋を狙う伸展種目。",
     "restSeconds": 40,
     "difficulties": {
       "beginner": {
         "defaultSets": [
           {
-            "weight": 5,
+            "weight": 8,
             "reps": 10
           },
           {
-            "weight": 5,
+            "weight": 8,
             "reps": 10
           },
           {
-            "weight": 5,
+            "weight": 8,
             "reps": 10
           }
         ],
@@ -6845,24 +6679,24 @@ export const workoutMasterEntries = [
           "completion": 30,
           "challengeScale": 0.5
         },
-        "howto": "軽重量で可動域を確認する。"
+        "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
       "intermediate": {
         "defaultSets": [
           {
-            "weight": 8,
+            "weight": 12,
             "reps": 12
           },
           {
-            "weight": 8,
+            "weight": 12,
             "reps": 12
           },
           {
-            "weight": 8,
+            "weight": 12,
             "reps": 12
           },
           {
-            "weight": 8,
+            "weight": 12,
             "reps": 12
           }
         ],
@@ -6884,29 +6718,29 @@ export const workoutMasterEntries = [
           "completion": 40,
           "challengeScale": 0.55
         },
-        "howto": "呼吸を合わせて反復をそろえる。"
+        "howto": "反動を使わず対象筋へ効かせる。"
       },
       "advanced": {
         "defaultSets": [
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 12
           },
           {
-            "weight": 12,
-            "reps": 10
+            "weight": 16,
+            "reps": 12
           }
         ],
         "maxSets": 8,
@@ -6927,7 +6761,7 @@ export const workoutMasterEntries = [
           "completion": 55,
           "challengeScale": 0.6
         },
-        "howto": "反動を抑えて対象筋に効かせる。"
+        "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   }
