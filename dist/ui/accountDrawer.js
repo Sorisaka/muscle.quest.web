@@ -188,6 +188,7 @@ export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountSta
 
     const settingsBtn = document.createElement('button');
     settingsBtn.type = 'button';
+    settingsBtn.className = 'drawer-action-button';
     settingsBtn.textContent = '設定';
     settingsBtn.addEventListener('click', () => {
       playSfx('ui:navigate');
@@ -197,7 +198,7 @@ export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountSta
 
     const logoutBtn = document.createElement('button');
     logoutBtn.type = 'button';
-    logoutBtn.className = 'ghost';
+    logoutBtn.className = 'ghost drawer-action-button';
     logoutBtn.textContent = status.isGuest ? 'Google でログイン' : 'ログアウト';
     logoutBtn.addEventListener('click', async () => {
       playSfx('ui:navigate');
@@ -208,7 +209,7 @@ export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountSta
 
     const notificationsBtn = document.createElement('button');
     notificationsBtn.type = 'button';
-    notificationsBtn.className = 'ghost drawer-notification-button';
+    notificationsBtn.className = 'ghost drawer-action-button drawer-notification-button';
     notificationsBtn.append(Object.assign(document.createElement('span'), {
       className: 'drawer-notification-label',
       textContent: '通知',
@@ -230,7 +231,7 @@ export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountSta
 
     const requestsBtn = document.createElement('button');
     requestsBtn.type = 'button';
-    requestsBtn.className = 'ghost';
+    requestsBtn.className = 'ghost drawer-action-button';
     requestsBtn.textContent = 'フォローリクエスト一覧';
     requestsBtn.addEventListener('click', () => {
       playSfx('ui:navigate');
