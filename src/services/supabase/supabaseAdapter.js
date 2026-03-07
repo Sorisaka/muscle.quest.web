@@ -928,8 +928,91 @@ export const createSupabaseAdapter = (options = {}) => {
           authWarn('get_timeline failed', error.message || error);
           return local.getTimeline({ scope, limit: safeLimit, before: beforeValue });
         }
-        return (data || []).map(mapTimelineRow);
+        return (data || []).map((row) => ({ ...mapTimelineRow(row), liked: false, likeCount: 0 }));
       });
+  };
+
+  const getTimelineLikeSummaries = (runIds = []) => {
+    const normalizedRunIds = Array.isArray(runIds)
+      ? runIds.map((value) => Number(value)).filter((value) => Number.isFinite(value) && value > 0)
+      : [];
+
+    if (!normalizedRunIds.length) return Promise.resolve([]);
+    if (!supabaseEnabled || !session?.user?.id) {
+      return Promise.resolve(local.getTimelineLikeSummaries(normalizedRunIds));
+    }
+
+    return client
+      .rpc('get_timeline_like_summaries', { p_run_ids: normalizedRunIds })
+      .then(({ data, error }) => {
+        if (error) {
+          authWarn('get_timeline_like_summaries failed', error.message || error);
+          return local.getTimelineLikeSummaries(normalizedRunIds);
+        }
+        return (data || []).map((row) => ({
+          runId: row.run_id,
+          liked: Boolean(row.liked),
+          likeCount: Number(row.like_count ?? 0),
+        }));
+      });
+  };
+
+  const listNotifications = (userId, limit = 30, before = null) => {
+    const safeLimit = Math.max(Number(limit) || 30, 1);
+    const beforeValue = before ? new Date(before).toISOString() : null;
+
+    if (!supabaseEnabled || !session?.user?.id) {
+      return Promise.resolve(local.listNotifications(userId, safeLimit, beforeValue));
+    }
+
+    return client.rpc('get_notifications', { p_limit: safeLimit, p_before: beforeValue }).then(({ data, error }) => {
+      if (error) {
+        authWarn('get_notifications failed', error.message || error);
+        return local.listNotifications(userId, safeLimit, beforeValue);
+      }
+      return (data || []).map((row) => ({
+        id: row.notification_id,
+        type: row.notification_type,
+        created_at: row.created_at,
+        read_at: row.read_at,
+        actor_id: row.actor_id,
+        actor_display_name: row.actor_display_name,
+        run_id: row.run_id,
+        workout_exercise_slug: row.workout_exercise_slug || null,
+        workout_created_at: row.workout_created_at || null,
+        has_pending_request: Boolean(row.has_pending_request),
+        is_following_actor: Boolean(row.is_following_actor),
+        message: row.message,
+      }));
+    });
+  };
+
+  const getUnreadNotificationCount = (userId = null) => {
+    if (!supabaseEnabled || !session?.user?.id) {
+      return Promise.resolve(local.getUnreadNotificationCount(userId));
+    }
+    return client.rpc('get_unread_notification_count').then(({ data, error }) => {
+      if (error) {
+        authWarn('get_unread_notification_count failed', error.message || error);
+        return local.getUnreadNotificationCount(userId);
+      }
+      const row = Array.isArray(data) ? data[0] : data;
+      return Number(row?.unread_count ?? data ?? 0);
+    });
+  };
+
+  const markAllNotificationsRead = (userId = null) => {
+    if (!supabaseEnabled || !session?.user?.id) {
+      return Promise.resolve(local.markAllNotificationsRead(userId));
+    }
+    return client.rpc('mark_all_notifications_read').then(({ data, error }) => {
+      if (error) {
+        authWarn('mark_all_notifications_read failed', error.message || error);
+        return local.markAllNotificationsRead(userId);
+      }
+      const row = Array.isArray(data) ? data[0] : data;
+      return Number(row?.updated_count ?? data ?? 0);
+    });
   };
 
   const toggleLike = (runId) => {
@@ -1225,7 +1308,11 @@ export const createSupabaseAdapter = (options = {}) => {
     listVisibleWorkouts,
     updateWorkoutPost,
     getTimeline,
+    getTimelineLikeSummaries,
     toggleLike,
+    listNotifications,
+    getUnreadNotificationCount,
+    markAllNotificationsRead,
     upsertBodyMetric,
     deleteBodyMetric,
     getBodyMetricsRange,

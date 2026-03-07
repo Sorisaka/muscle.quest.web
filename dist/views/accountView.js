@@ -3,7 +3,7 @@ import { createAccountListRow, withPrivateLock } from '../ui/accountListRow.js';
 import { createFollowActionButton } from '../ui/followActionButton.js';
 import { createIncomingRequestActions, createOutgoingRequestActions } from '../ui/requestActionButtons.js';
 import { createCountsSummaryBlock } from '../ui/accountCountsSummary.js';
-import { resolveWorkoutLabel } from '../core/workoutLabel.js';
+import { resolveWorkoutPresentation } from '../core/workoutResultPresenter.js';
 
 const resolveUiState = ({ currentUserId, account, followState }) => {
   if (!account?.id || account.id === currentUserId) return 'own_account';
@@ -212,19 +212,53 @@ export const renderAccount = (_params, { navigate, accountState, store }) => {
   const list = document.createElement('div');
   list.className = 'stack';
   const entries = (store.getHistory() || []).slice(0, 10);
-  if (!entries.length) list.append(createEmpty('投稿はまだありません。'));
-  else entries.forEach((entry) => {
-    const workoutLabel = resolveWorkoutLabel(
-      entry.exerciseSlug,
-      entry.result?.exerciseSlug,
-      entry.result?.exercise_slug,
-      entry.questId,
-      entry.result?.questId,
-      entry.result?.quest_id,
-    );
-    list.append(Object.assign(document.createElement('div'), { className: 'row', textContent: `${workoutLabel} / ${entry.calories || 0} kcal` }));
-  });
+  let likeSummaryByRunId = new Map();
+
+  const renderOwnPosts = () => {
+    list.innerHTML = '';
+    if (!entries.length) {
+      list.append(createEmpty('投稿はまだありません。'));
+      return;
+    }
+
+    entries.forEach((entry) => {
+      const presentation = resolveWorkoutPresentation(entry);
+      const card = document.createElement('article');
+      card.className = 'card stack';
+
+      const title = document.createElement('strong');
+      title.textContent = presentation.workoutLabel;
+
+      const amount = document.createElement('p');
+      amount.className = 'muted';
+      amount.textContent = presentation.workoutAmountLabel;
+
+      const footer = document.createElement('div');
+      footer.className = 'timeline-card__actions';
+      const like = likeSummaryByRunId.get(String(entry.id));
+      const likeCount = Number(like?.likeCount ?? 0);
+      footer.append(Object.assign(document.createElement('span'), { className: 'muted', textContent: `♡ ${likeCount}` }));
+
+      card.append(title, amount, Object.assign(document.createElement('p'), { className: 'muted', textContent: `${entry.calories || 0} kcal` }), footer);
+      list.append(card);
+    });
+  };
+
+  renderOwnPosts();
   postCard.append(list);
+
+  const ownRunIds = entries.map((entry) => entry?.id).filter(Boolean);
+  if (ownRunIds.length) {
+    Promise.resolve(store.getLikeCountsByWorkoutRunIds(ownRunIds))
+      .then((rows) => {
+        likeSummaryByRunId = new Map((rows || []).map((row) => [String(row.runId || row.run_id), row]));
+        renderOwnPosts();
+      })
+      .catch(() => {
+        likeSummaryByRunId = new Map();
+        renderOwnPosts();
+      });
+  }
 
   container.append(profileCard, activityCard, postCard, feedback, followModalOverlay);
   return container;

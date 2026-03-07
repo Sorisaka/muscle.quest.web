@@ -12,6 +12,7 @@ const SPECIAL_PLAN_KEY = 'musclequest:specialPlans';
 const FOLLOWS_KEY = 'musclequest:follows';
 const FOLLOW_REQUESTS_KEY = 'musclequest:followRequests';
 const LIKES_KEY = 'musclequest:likesByRunId';
+const NOTIFICATIONS_KEY = 'musclequest:notifications';
 const BODY_METRICS_KEY = 'musclequest:bodyMetrics';
 const BODY_METRICS_NS = 'mq:bodyMetrics';
 
@@ -51,6 +52,7 @@ export const createLocalPersistence = () => {
   const loadFollows = () => readJson(FOLLOWS_KEY, []);
   const loadFollowRequests = () => readJson(FOLLOW_REQUESTS_KEY, []);
   const loadLikes = () => readJson(LIKES_KEY, {});
+  const loadNotifications = () => readJson(NOTIFICATIONS_KEY, []);
   const getBodyMetricsStorageKey = (userId) => `${BODY_METRICS_NS}:${userId || loadProfile().id || 'local-user'}`;
   const loadBodyMetricsData = (userId) => {
     const scoped = readJson(getBodyMetricsStorageKey(userId), null);
@@ -92,6 +94,26 @@ export const createLocalPersistence = () => {
     plans[key] = { ...plan };
     writeJson(LAST_PLAN_KEY, plans);
     return plan;
+  };
+
+
+  const appendNotification = ({ user_id, actor_user_id, type, workout_run_id = null, message = null }) => {
+    if (!user_id || !actor_user_id || !type) return null;
+    if (user_id === actor_user_id) return null;
+    const rows = loadNotifications();
+    const next = Array.isArray(rows) ? rows.slice() : [];
+    next.unshift({
+      id: `local:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`,
+      user_id,
+      actor_user_id,
+      type,
+      workout_run_id,
+      message,
+      created_at: new Date().toISOString(),
+      read_at: null,
+    });
+    writeJson(NOTIFICATIONS_KEY, next.slice(0, 300));
+    return next[0];
   };
 
   const getProfile = (_userId) => loadProfile();
@@ -267,6 +289,7 @@ export const createLocalPersistence = () => {
     if (exists) return { ok: true, code: 'ALREADY_FOLLOWING' };
     follows.push({ follower_id: followerId, followee_id: followeeId, created_at: new Date().toISOString() });
     writeJson(FOLLOWS_KEY, follows);
+    appendNotification({ user_id: followeeId, actor_user_id: followerId, type: 'follow' });
     return { ok: true, code: 'FOLLOWED' };
   };
 
@@ -288,6 +311,7 @@ export const createLocalPersistence = () => {
     if (existing) return { ok: true, code: 'REQUEST_PENDING' };
     requests.push({ requester_id: requesterId, target_id: targetId, status: 'pending', created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
     writeJson(FOLLOW_REQUESTS_KEY, requests);
+    appendNotification({ user_id: targetId, actor_user_id: requesterId, type: 'follow_request' });
     return { ok: true, code: 'REQUESTED' };
   };
 
@@ -523,6 +547,78 @@ export const createLocalPersistence = () => {
     updated_at: entry.updated_at || entry.recordedAt,
   });
 
+
+
+  const getTimelineLikeSummaries = (runIds = []) => {
+    const likesByRunId = loadLikes();
+    const ids = Array.isArray(runIds) ? runIds : [];
+    return ids
+      .map((runId) => {
+        if (!runId) return null;
+        const liked = Boolean(likesByRunId[String(runId)]);
+        return { runId, liked, likeCount: liked ? 1 : 0 };
+      })
+      .filter(Boolean);
+  };
+
+
+  const listNotifications = (userId, limit = 30, before = null) => {
+    const currentUserId = userId || loadProfile()?.id;
+    const beforeTime = before ? new Date(before).getTime() : null;
+    const notifications = loadNotifications().filter((row) => row?.user_id === currentUserId);
+    const historyById = new Map(loadHistory().map((row) => [String(row.id), row]));
+    return notifications
+      .filter((row) => {
+        if (!beforeTime) return true;
+        const time = new Date(row.created_at || 0).getTime();
+        return Number.isFinite(time) && time < beforeTime;
+      })
+      .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
+      .slice(0, Math.max(1, Number(limit) || 30))
+      .map((row) => {
+        const actor = ensureLocalProfile(row.actor_user_id);
+        const workout = row.workout_run_id ? historyById.get(String(row.workout_run_id)) : null;
+        const pendingReq = row.type === 'follow_request'
+          ? loadFollowRequests().some((req) => req.requester_id === row.actor_user_id && req.target_id === currentUserId && req.status === 'pending')
+          : false;
+        const isFollowingActor = loadFollows().some((f) => f.follower_id === currentUserId && f.followee_id === row.actor_user_id);
+        return {
+          id: row.id,
+          type: row.type,
+          created_at: row.created_at,
+          read_at: row.read_at || null,
+          actor_id: row.actor_user_id,
+          actor_display_name: actor?.display_name || row.actor_user_id,
+          run_id: row.workout_run_id,
+          workout_exercise_slug: workout?.exerciseSlug || workout?.result?.exerciseSlug || workout?.result?.exercise_slug || workout?.questId || workout?.result?.questId || workout?.result?.quest_id || null,
+          workout_created_at: workout?.published_at || workout?.created_at || null,
+          has_pending_request: pendingReq,
+          is_following_actor: isFollowingActor,
+          message: row.message || null,
+        };
+      });
+  };
+
+  const getUnreadNotificationCount = (userId) => {
+    const currentUserId = userId || loadProfile()?.id;
+    return loadNotifications().filter((row) => row?.user_id === currentUserId && !row?.read_at).length;
+  };
+
+  const markAllNotificationsRead = (userId) => {
+    const currentUserId = userId || loadProfile()?.id;
+    const rows = loadNotifications();
+    const now = new Date().toISOString();
+    let changed = 0;
+    const next = rows.map((row) => {
+      if (row?.user_id === currentUserId && !row?.read_at) {
+        changed += 1;
+        return { ...row, read_at: now };
+      }
+      return row;
+    });
+    writeJson(NOTIFICATIONS_KEY, next);
+    return changed;
+  };
   const toggleLike = (runId) => {
     if (!runId) {
       return { runId, liked: false, likeCount: 0 };
@@ -564,7 +660,11 @@ export const createLocalPersistence = () => {
     listVisibleWorkouts,
     updateWorkoutPost,
     getTimeline,
+    getTimelineLikeSummaries,
     toggleLike,
+    listNotifications,
+    getUnreadNotificationCount,
+    markAllNotificationsRead,
     upsertBodyMetric,
     deleteBodyMetric,
     getBodyMetricsRange,

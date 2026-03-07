@@ -201,3 +201,38 @@ CLI (`supabase db push`) を使う場合はタイムスタンプ順で自動適�
 ### 注意
 - SQL は README 記載だけでなく、必ず `supabase/sql/*.sql` 実ファイルを正とすること。
 - 既存データ保護のため、制約追加時は既存値を確認してから適用すること。
+
+
+## 018_phase6_timeline_notifications.sql
+- migration: `supabase/migrations/20260307_0010_phase6_timeline_notifications.sql`
+- 手動SQL: `supabase/sql/018_phase6_timeline_notifications.sql`
+
+### 目的
+- `get_timeline` の主要取得と、いいね件数/既読状態取得を分離してRLS失敗時の影響を局所化
+- 通知フィード取得用に `get_notifications(p_limit, p_before)` を追加
+
+### 追加関数
+- `get_timeline_like_summaries(p_run_ids bigint[])`
+- `get_notifications(p_limit int, p_before timestamptz)`
+
+### 適用後確認クエリ（例）
+```sql
+select * from public.get_timeline_like_summaries(array[1,2,3]);
+select * from public.get_notifications(30, null);
+```
+
+
+## 019_notifications_table.sql
+- migration: `supabase/migrations/20260307_0011_notifications_table.sql`
+- 手動SQL: `supabase/sql/019_notifications_table.sql`
+
+### 追加内容
+- `notifications` テーブル（受信者本人のみ参照できるRLS）
+- 通知生成トリガー
+  - `workout_run_likes` insert -> like 通知
+  - `follows` insert -> follow 通知
+  - `follow_requests` pending insert/update -> follow_request 通知
+- RPC
+  - `get_unread_notification_count()`
+  - `get_notifications(p_limit, p_before)`
+  - `mark_all_notifications_read()`

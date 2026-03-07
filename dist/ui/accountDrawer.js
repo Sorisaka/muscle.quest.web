@@ -34,6 +34,7 @@ export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountSta
   };
 
   const openDrawer = () => {
+    Promise.resolve(store.fetchNotificationUnreadCount({ force: true })).catch(() => {}).finally(() => renderDrawer());
     renderDrawer();
     drawerEl.classList.add('is-open');
     overlayEl.classList.add('is-active');
@@ -45,6 +46,8 @@ export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountSta
     const today = summarizeHistory(history, 1);
     const weekly = summarizeHistory(history, 7);
     const monthly = summarizeHistory(history, 30);
+
+    const notificationState = store.getNotificationState ? store.getNotificationState() : { unreadCount: 0 };
 
     drawerEl.innerHTML = '';
 
@@ -203,6 +206,19 @@ export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountSta
       closeDrawer();
     });
 
+    const notificationsBtn = document.createElement('button');
+    notificationsBtn.type = 'button';
+    notificationsBtn.className = 'ghost drawer-notification-button';
+    notificationsBtn.append(Object.assign(document.createElement('span'), { textContent: '通知' }));
+    if (notificationState.unreadCount > 0) {
+      notificationsBtn.append(Object.assign(document.createElement('span'), { className: 'drawer-notification-badge', textContent: String(notificationState.unreadCount) }));
+    }
+    notificationsBtn.addEventListener('click', () => {
+      playSfx('ui:navigate');
+      navigate('#/notifications');
+      closeDrawer();
+    });
+
     const requestsBtn = document.createElement('button');
     requestsBtn.type = 'button';
     requestsBtn.className = 'ghost';
@@ -213,7 +229,7 @@ export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountSta
       closeDrawer();
     });
 
-    actions.append(settingsBtn, requestsBtn, logoutBtn);
+    actions.append(settingsBtn, notificationsBtn, requestsBtn, logoutBtn);
     body.append(summary, metrics, actions);
     drawerEl.append(header, body);
   };
