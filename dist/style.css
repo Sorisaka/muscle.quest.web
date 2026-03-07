@@ -1399,13 +1399,21 @@ section.panel::after {
 }
 
 .drawer-notification-button {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 2.5rem;
+}
+
+.drawer-notification-label {
+  pointer-events: none;
 }
 
 .drawer-notification-badge {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
   min-width: 1.5rem;
   height: 1.5rem;
   border-radius: 999px;
