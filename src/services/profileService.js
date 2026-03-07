@@ -1,7 +1,7 @@
 import { authLog } from '../lib/authDebug.js';
 import { getSupabaseClient } from '../lib/supabaseClient.js';
 
-const PROFILES_COLUMNS = 'id,display_name,points,completed_runs,last_result,created_at,updated_at';
+const PROFILES_COLUMNS = 'id,display_name,account_visibility,default_visibility,icon_border,icon_background,icon_center_object,points,total_calories,completed_runs,last_result,height_cm,weight_kg,sex,step_length_m,arm_length_m,leg_length_m,torso_length_m,step_length_m_mode,arm_length_m_mode,leg_length_m_mode,torso_length_m_mode,created_at,updated_at';
 
 function requireClient() {
   const { client, error } = getSupabaseClient();
@@ -82,7 +82,14 @@ export async function upsertProfile(updates) {
   const url = `${client.supabaseUrl}/rest/v1/profiles?on_conflict=id&select=${selectParam(PROFILES_COLUMNS)}`;
   authLog('profiles:upsert url', url.split('?')[0]);
 
-  const body = JSON.stringify({ id: updates.id, display_name: updates.display_name });
+  const body = JSON.stringify({
+    id: updates.id,
+    display_name: updates.display_name,
+    account_visibility: updates.account_visibility,
+    icon_border: updates.icon_border,
+    icon_background: updates.icon_background,
+    icon_center_object: updates.icon_center_object,
+  });
 
   const response = await fetch(url, {
     method: 'POST',

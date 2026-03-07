@@ -1,57 +1,136 @@
 import { trainingDefinitions } from '../data/trainingDefinitions.js';
+import { MET_CALCULATION } from './calorie/constants.js';
+import { applyAutoProfileEstimation } from './calorie/estimateProfile.js';
+import { getBodyweightMet, getCardioMet, getResistanceMet, getSpeedIntensity } from './calorie/metTable.js';
+import { getActualActiveSeconds } from './workoutTiming.js';
 
-const getDefinition = (exerciseSlug, difficulty) => {
-  const definition = trainingDefinitions[exerciseSlug];
-  if (!definition) return null;
-  return { definition, config: definition.difficulties[difficulty] || definition.difficulties.beginner };
+const WEIGHT_DEFAULT_KG = 60;
+
+const toNumber = (value, fallback = 0) => {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : fallback;
 };
 
-const volumeFromSets = (unit, sets) => {
+const getExerciseDefinition = (exerciseSlug) => trainingDefinitions[exerciseSlug] || null;
+
+const resolveDurationSeconds = (result = {}) => getActualActiveSeconds(result);
+
+const inferIntensity = (result, volumeScore) => {
+  const explicit = result.intensity || result.effort;
+  if (['light', 'moderate', 'vigorous'].includes(explicit)) return explicit;
+  if (result.difficulty === 'advanced') return 'vigorous';
+  if (result.difficulty === 'intermediate') return 'moderate';
+  if (volumeScore >= 1800) return 'vigorous';
+  if (volumeScore >= 600) return 'moderate';
+  return 'light';
+};
+
+const deriveMovementType = (exerciseSlug, mode) => {
+  const slug = String(exerciseSlug || '').toLowerCase();
+  if (slug.includes('run') || slug.includes('jog')) return 'cardio-run';
+  if (slug.includes('cycl')) return 'cardio-cycle';
+  if (slug.includes('walk')) return 'cardio-walk';
+  if (mode === 'interval' || slug.includes('climber') || slug.includes('burpee')) return 'bodyweight';
+  return 'resistance';
+};
+
+const computeVolumeScore = (inputMode, sets = []) => {
   if (!Array.isArray(sets)) return 0;
-  return sets.reduce((total, set) => {
-    if (unit === 'time') {
-      const seconds = Number(set.timeSeconds || 0);
-      return total + Math.max(seconds, 0);
-    }
-    const weight = Number(set.weight || 0);
-    const reps = Number(set.reps || 0);
-    return total + Math.max(weight * reps, 0);
-  }, 0);
+  if (inputMode === 'time') {
+    return sets.reduce((sum, set) => sum + Math.max(toNumber(set.timeSeconds, 0), 0), 0);
+  }
+  if (inputMode === 'reps') {
+    return sets.reduce((sum, set) => sum + Math.max(toNumber(set.reps, 0), 0), 0);
+  }
+  if (inputMode === 'weightReps') {
+    return sets.reduce((sum, set) => {
+      const weight = Math.max(toNumber(set.weight, 0), 0);
+      const reps = Math.max(toNumber(set.reps, 0), 0);
+      return sum + weight * reps;
+    }, 0);
+  }
+  return 0;
 };
 
-export const calculatePoints = (result) => {
-  const lookup = getDefinition(result.exerciseSlug, result.difficulty);
-  if (!lookup) {
-    return { total: 0, breakdown: { note: 'ポイント計算の対象設定が見つかりませんでした。' } };
+const computeSpeedKmh = ({ seconds, result, profile }) => {
+  if (!seconds) return null;
+  const distanceMeters = toNumber(result.distanceMeters, 0);
+  if (distanceMeters > 0) {
+    const speedKmh = (distanceMeters / 1000) / (seconds / 3600);
+    return Number.isFinite(speedKmh) ? speedKmh : null;
+  }
+  const steps = toNumber(result.steps, 0);
+  const stepLengthM = toNumber(profile.step_length_m, 0);
+  if (!steps || !stepLengthM) return null;
+  const speedKmh = (stepLengthM * steps / seconds) * 3.6;
+  return Number.isFinite(speedKmh) ? speedKmh : null;
+};
+
+const resolveMet = ({ movementType, intensity, speedKmh }) => {
+  if (movementType === 'cardio-run') {
+    const derived = getSpeedIntensity(speedKmh || 0, 'run');
+    return { met: getCardioMet('run', speedKmh ? derived : intensity), intensity: speedKmh ? derived : intensity };
   }
 
-  const { definition, config } = lookup;
-  const unit = definition.unit;
-  const baseVolume = volumeFromSets(unit, config.defaultSets);
-  const actualVolume = volumeFromSets(unit, result.sets || config.defaultSets);
-  const completedSets = Array.isArray(result.sets) ? result.sets.length : config.defaultSets.length;
-  const baseSets = config.defaultSets.length;
+  if (movementType === 'cardio-walk') {
+    const derived = getSpeedIntensity(speedKmh || 0, 'walk');
+    return { met: getCardioMet('walk', speedKmh ? derived : intensity), intensity: speedKmh ? derived : intensity };
+  }
 
-  const base = config.points.base;
-  const challengeVolume = Math.max(actualVolume - baseVolume, 0);
-  const challengePoints = challengeVolume * (config.points.perWork || 0);
-  const setBonus = Math.max(completedSets - baseSets, 0) * (config.points.setBonus || 0);
-  const completionBonus = (result.finished ? config.points.completion : 0) || 0;
+  if (movementType === 'cardio-cycle') {
+    const derived = getSpeedIntensity(speedKmh || 0, 'cycle');
+    return { met: getCardioMet('cycle', speedKmh ? derived : intensity), intensity: speedKmh ? derived : intensity };
+  }
 
-  const advancedBoost = result.difficulty === 'advanced' ? actualVolume * (config.points.challengeScale || 0) : 0;
-  const total = Math.max(Math.round(base + challengePoints + setBonus + completionBonus + advancedBoost), 0);
+  if (movementType === 'bodyweight') {
+    return { met: getBodyweightMet(intensity), intensity };
+  }
+
+  return { met: getResistanceMet(intensity), intensity };
+};
+
+export const calculateCalories = (result = {}, userProfile = {}) => {
+  const definition = getExerciseDefinition(result.exerciseSlug);
+  const inputMode = definition?.inputMode || (definition?.unit === 'time' ? 'time' : 'weightReps');
+  const normalizedProfile = applyAutoProfileEstimation(userProfile, userProfile);
+  const weightKg = Math.max(toNumber(normalizedProfile.weight_kg, WEIGHT_DEFAULT_KG), 1);
+  const seconds = resolveDurationSeconds(result);
+  const minutes = seconds / 60;
+  const volumeScore = computeVolumeScore(inputMode, result.sets || []);
+  const movementType = deriveMovementType(result.exerciseSlug, result.mode);
+  const intensity = inferIntensity(result, volumeScore);
+  const speedKmh = computeSpeedKmh({ seconds, result, profile: normalizedProfile });
+  const { met, intensity: resolvedIntensity } = resolveMet({ movementType, intensity, speedKmh });
+  const caloriesRaw = met * MET_CALCULATION.oxygenFactor * weightKg / MET_CALCULATION.bodyMassDivisor * minutes;
+  const total = Math.max(Number(caloriesRaw.toFixed(2)), 0);
 
   return {
     total,
     breakdown: {
-      unit,
-      base,
-      challengePoints,
-      setBonus,
-      completionBonus,
-      advancedBoost,
-      baseVolume,
-      actualVolume,
+      formula: 'kcal = MET * 3.5 * weight_kg / 200 * minutes',
+      met,
+      movementType,
+      intensity: resolvedIntensity,
+      weightKg,
+      seconds,
+      minutes: Number(minutes.toFixed(2)),
+      speedKmh,
+      stepLengthM: normalizedProfile.step_length_m || null,
+      steps: result.steps || null,
+      volumeScore,
+      estimated: true,
+    },
+  };
+};
+
+export const calculatePoints = (result = {}, profile = {}) => {
+  const calories = calculateCalories(result, profile);
+  return {
+    total: Math.max(Math.round(calories.total), 0),
+    breakdown: {
+      legacy: true,
+      basedOnCalories: calories.total,
+      ...calories.breakdown,
     },
   };
 };

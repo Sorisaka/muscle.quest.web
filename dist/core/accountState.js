@@ -20,10 +20,22 @@ const persistLocalSession = (session) => {
   return session;
 };
 
+
+const toProfilePatch = (profile = {}) => ({
+  ...(profile || {}),
+  display_name: profile.display_name ?? profile.displayName,
+  displayName: profile.displayName ?? profile.display_name,
+  account_visibility: profile.account_visibility ?? profile.accountVisibility,
+  default_visibility: profile.default_visibility ?? profile.defaultVisibility,
+  icon_border: profile.icon_border ?? profile.iconBorder,
+  icon_background: profile.icon_background ?? profile.iconBackground,
+  icon_center_object: profile.icon_center_object ?? profile.iconCenterObject,
+});
+
 const missingConfigMessage = [
-  'Supabase settings are missing.',
-  'Create dist/config.js from dist/config.example.js with SUPABASE_URL and SUPABASE_ANON_KEY.',
-  'Then retry OAuth sign-in to enable cloud sync.',
+  'Supabase の設定が不足しています。',
+  'dist/config.example.js をもとに dist/config.js を作成し、SUPABASE_URL と SUPABASE_ANON_KEY を設定してください。',
+  'その後、OAuth ログインを再実行するとクラウド同期を利用できます。',
 ].join(' ');
 
 export const createAccountState = (store) => {
@@ -49,18 +61,22 @@ export const createAccountState = (store) => {
     subscribers.forEach((callback) => callback(snapshot));
   };
 
+  const getEffectiveProfile = () => ({
+    ...toProfilePatch(state.profile || {}),
+    ...toProfilePatch(store.getProfile() || {}),
+  });
+
   const deriveDisplayName = () => {
-    const profile = store.getProfile();
-    const supaName = state.profile?.display_name;
+    const profile = getEffectiveProfile();
+    const supaName = profile.display_name || profile.displayName;
     if (supaName) return supaName;
-    if (profile?.displayName) return profile.displayName;
     if (state.session?.user?.email) return state.session.user.email;
-    return 'Guest';
+    return 'ゲスト';
   };
 
   const getStatus = () => {
-    const profile = store.getProfile();
-    const pointSummary = store.getPointSummary();
+    const profile = getEffectiveProfile();
+    const calorieSummary = store.getCalorieSummary ? store.getCalorieSummary() : store.getPointSummary();
     const loggedIn = Boolean(state.session && state.supabaseReady && !state.supabaseError);
 
     return {
@@ -68,16 +84,17 @@ export const createAccountState = (store) => {
       supabaseReady: state.supabaseReady,
       supabaseError: state.supabaseError,
       session: state.session,
-      profile: state.profile,
+      profile,
       loggedIn,
       isGuest: !loggedIn,
       id: loggedIn ? state.session?.user?.id || state.profile?.id : profile?.id || 'local-user',
       email: state.session?.user?.email || null,
       displayName: deriveDisplayName(),
+      calories: profile?.totalCalories || profile?.total_calories || 0,
       points: profile?.points || 0,
       completedRuns: profile?.completedRuns || 0,
-      streak: pointSummary.streak || 0,
-      totals: pointSummary.totals || { daily: 0, weekly: 0, monthly: 0 },
+      streak: calorieSummary.streak || 0,
+      totals: calorieSummary.totals || { daily: 0, weekly: 0, monthly: 0 },
     };
   };
 
@@ -144,7 +161,7 @@ export const createAccountState = (store) => {
   const login = async () => {
     if (loginInFlight) {
       authWarn('oauth sign-in already in progress');
-      return { data: null, error: new Error('OAuth sign-in already in progress.') };
+      return { data: null, error: new Error('OAuth ログインはすでに進行中です。') };
     }
 
     loginInFlight = true;
@@ -161,6 +178,18 @@ export const createAccountState = (store) => {
     await signOut();
     setState({ session: null, profile: null, supabaseReady: true, supabaseError: null });
     persistLocalSession({ ...state.localSession, loggedIn: false });
+  };
+
+
+  const saveProfileSettings = async (partialProfile = {}) => {
+    const result = await Promise.resolve(store.saveProfileSettings(partialProfile));
+    const mergedProfile = {
+      ...toProfilePatch(state.profile || {}),
+      ...toProfilePatch(result || {}),
+      ...toProfilePatch(partialProfile || {}),
+    };
+    setState({ profile: mergedProfile, supabaseError: null });
+    return mergedProfile;
   };
 
   const setDisplayName = async (name) => {
@@ -209,6 +238,7 @@ export const createAccountState = (store) => {
     login,
     logout,
     setDisplayName,
+    saveProfileSettings,
     refreshSession,
     destroy: () => authUnsubscribe && authUnsubscribe(),
   };

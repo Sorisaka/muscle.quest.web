@@ -1,98 +1,1730 @@
 [
   {
-    "id": "b-01",
+    "id": "w-001",
     "tier": "beginner",
-    "title": "フォーム固めスクワット",
-    "description": "ウォームアップしながら下半身をほぐす基本セット。",
+    "category": "cardio",
+    "title": "ウォーキング",
+    "description": "ウォーキングの実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 1,
-    "exercises": ["squats"],
-    "estimatedMinutes": 8,
-    "link": "./content/exercises/squats.html",
-    "steps": [
-      { "heading": "ウォームアップ", "body": "足を肩幅に開き、つま先はやや外向きにセット。" },
-      { "heading": "深さを揃える", "body": "膝を外に開きながら椅子に座るイメージで腰を落とす。" },
-      { "heading": "押し上げ", "body": "かかとで床を押し、太もも前側を意識して立ち上がる。" }
+    "exercises": [
+      "walking"
     ],
-    "tips": ["足裏全体で床を踏む", "背筋を伸ばして猫背を防ぐ", "呼吸は下で吸って上で吐く"]
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/walking.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "ウォーキングを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
   },
   {
-    "id": "b-02",
+    "id": "w-002",
     "tier": "beginner",
-    "title": "リズムプッシュアップ",
-    "description": "胸と腕を目覚めさせるテンポ重視の軽めセット。",
-    "stars": 2,
-    "exercises": ["push-ups"],
-    "estimatedMinutes": 10,
+    "category": "cardio",
+    "title": "ジョギング",
+    "description": "ジョギングの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "jogging"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/jogging.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "ジョギングを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-003",
+    "tier": "advanced",
+    "category": "cardio",
+    "title": "ランニング",
+    "description": "ランニングの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 4,
+    "exercises": [
+      "running"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/running.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "ランニングを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-004",
+    "tier": "beginner",
+    "category": "cardio",
+    "title": "サイクリング",
+    "description": "サイクリングの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "cycling"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/cycling.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "サイクリングを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-005",
+    "tier": "beginner",
+    "category": "cardio",
+    "title": "エアロビクス",
+    "description": "エアロビクスの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "aerobics"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/aerobics.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "エアロビクスを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-006",
+    "tier": "beginner",
+    "category": "cardio",
+    "title": "ストレッチ",
+    "description": "ストレッチの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "stretching"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/stretching.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "ストレッチを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-007",
+    "tier": "beginner",
+    "category": "cardio",
+    "title": "サッカー",
+    "description": "サッカーの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "soccer"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/soccer.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "サッカーを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-008",
+    "tier": "beginner",
+    "category": "cardio",
+    "title": "バスケットボール",
+    "description": "バスケットボールの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "basketball"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/basketball.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "バスケットボールを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-009",
+    "tier": "beginner",
+    "category": "cardio",
+    "title": "テニス",
+    "description": "テニスの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "tennis"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/tennis.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "テニスを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-010",
+    "tier": "beginner",
+    "category": "cardio",
+    "title": "水泳",
+    "description": "水泳の実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "swimming"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/swimming.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "水泳を設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-011",
+    "tier": "beginner",
+    "category": "cardio",
+    "title": "バドミントン",
+    "description": "バドミントンの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "badminton"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/badminton.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "バドミントンを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-012",
+    "tier": "beginner",
+    "category": "cardio",
+    "title": "卓球",
+    "description": "卓球の実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "table-tennis"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/table-tennis.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "卓球を設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-013",
+    "tier": "beginner",
+    "category": "bodyweight",
+    "title": "腕立て伏せ",
+    "description": "腕立て伏せの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "push-ups"
+    ],
+    "estimatedMinutes": 12,
     "link": "./content/exercises/push-ups.html",
     "steps": [
-      { "heading": "姿勢を作る", "body": "手は肩幅よりやや広く、体を一直線に保つ。" },
-      { "heading": "胸を近づける", "body": "肘を後ろにたたむ意識で胸を床に近づける。" },
-      { "heading": "押し返す", "body": "手のひら全体で床を押して元の姿勢へ戻る。" }
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "腕立て伏せを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
     ],
-    "tips": ["お腹を締めて腰が落ちないように", "肩がすくまない高さでキープ", "テンポは一定に"]
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
   },
   {
-    "id": "i-01",
-    "tier": "intermediate",
-    "title": "ランジコンボ",
-    "description": "体幹を使いながら下半身の左右バランスを整えるコンボ。",
-    "stars": 3,
-    "exercises": ["lunges"],
-    "estimatedMinutes": 15,
-    "link": "./content/exercises/lunges.html",
+    "id": "w-014",
+    "tier": "beginner",
+    "category": "bodyweight",
+    "title": "腕立て伏せ（膝付き）",
+    "description": "腕立て伏せ（膝付き）の実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "knee-push-ups"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/knee-push-ups.html",
     "steps": [
-      { "heading": "前足に荷重", "body": "一歩踏み出し、膝がつま先を越えない位置で静止。" },
-      { "heading": "垂直に沈む", "body": "後ろ脚の膝を床に近づけ、上体をまっすぐに保つ。" },
-      { "heading": "交互に入れ替え", "body": "前脚で押し返して元の位置へ、反対側も同様に行う。" }
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "腕立て伏せ（膝付き）を設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
     ],
-    "tips": ["骨盤を正面に向ける", "膝が内側に入らないよう注意", "足幅は腰幅より少し広めに"]
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
   },
   {
-    "id": "i-02",
-    "tier": "intermediate",
-    "title": "プランク耐久",
-    "description": "姿勢を崩さずキープする体幹集中モード。",
-    "stars": 4,
-    "exercises": ["plank"],
-    "estimatedMinutes": 18,
+    "id": "w-015",
+    "tier": "beginner",
+    "category": "bodyweight",
+    "title": "腹筋",
+    "description": "腹筋の実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "sit-ups"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/sit-ups.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "腹筋を設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-016",
+    "tier": "beginner",
+    "category": "bodyweight",
+    "title": "V字腹筋",
+    "description": "V字腹筋の実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "v-ups"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/v-ups.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "V字腹筋を設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-017",
+    "tier": "beginner",
+    "category": "bodyweight",
+    "title": "クランチ",
+    "description": "クランチの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "abdominal-crunches"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/abdominal-crunches.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "クランチを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-018",
+    "tier": "beginner",
+    "category": "bodyweight",
+    "title": "サイドクランチ",
+    "description": "サイドクランチの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "side-crunches"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/side-crunches.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "サイドクランチを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-019",
+    "tier": "beginner",
+    "category": "bodyweight",
+    "title": "ツイストクランチ",
+    "description": "ツイストクランチの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "twist-crunches"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/twist-crunches.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "ツイストクランチを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-020",
+    "tier": "beginner",
+    "category": "bodyweight",
+    "title": "レッグレイズ",
+    "description": "レッグレイズの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "leg-raises"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/leg-raises.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "レッグレイズを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-021",
+    "tier": "beginner",
+    "category": "bodyweight",
+    "title": "アブローラー",
+    "description": "アブローラーの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "ab-roller"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/ab-roller.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "アブローラーを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-022",
+    "tier": "beginner",
+    "category": "bodyweight",
+    "title": "デクラインシットアップ",
+    "description": "デクラインシットアップの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "decline-sit-ups"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/decline-sit-ups.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "デクラインシットアップを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-023",
+    "tier": "beginner",
+    "category": "bodyweight",
+    "title": "スクワット",
+    "description": "スクワットの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "squats"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/squats.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "スクワットを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-024",
+    "tier": "beginner",
+    "category": "bodyweight",
+    "title": "ジャンプスクワット",
+    "description": "ジャンプスクワットの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "jump-squats"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/jump-squats.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "ジャンプスクワットを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-025",
+    "tier": "beginner",
+    "category": "bodyweight",
+    "title": "懸垂",
+    "description": "懸垂の実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "pull-ups"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/pull-ups.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "懸垂を設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-026",
+    "tier": "beginner",
+    "category": "bodyweight",
+    "title": "プランク",
+    "description": "プランクの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "plank"
+    ],
+    "estimatedMinutes": 15,
     "link": "./content/exercises/plank.html",
     "steps": [
-      { "heading": "肘の位置", "body": "肘は肩の真下に置き、手は軽く握る。" },
-      { "heading": "体を一直線に", "body": "頭からかかとまで一直線をイメージしてキープ。" },
-      { "heading": "呼吸を忘れない", "body": "浅い呼吸を続け、力みすぎないよう注意。" }
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "プランクを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
     ],
-    "tips": ["腰が反らないよう腹圧をかける", "肩甲骨を寄せすぎない", "足幅をやや広めにすると安定"]
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
   },
   {
-    "id": "a-01",
+    "id": "w-027",
+    "tier": "beginner",
+    "category": "bodyweight",
+    "title": "サイドプランク",
+    "description": "サイドプランクの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "side-plank"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/side-plank.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "サイドプランクを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-028",
+    "tier": "beginner",
+    "category": "bodyweight",
+    "title": "倒立維持（補助あり）",
+    "description": "倒立維持（補助あり）の実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 1,
+    "exercises": [
+      "assisted-handstand-hold"
+    ],
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/assisted-handstand-hold.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "倒立維持（補助あり）を設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-029",
     "tier": "advanced",
-    "title": "バーピースプリント",
-    "description": "全身を一気に動かすハイテンポチャレンジ。",
+    "category": "bodyweight",
+    "title": "倒立維持（補助なし）",
+    "description": "倒立維持（補助なし）の実施内容を記録してフォームと継続を共有するワークアウト。",
     "stars": 4,
-    "exercises": ["burpees"],
-    "estimatedMinutes": 22,
-    "link": "./content/exercises/burpees.html",
-    "steps": [
-      { "heading": "しゃがみ込み", "body": "足幅は肩幅、腰を落として両手を床につける。" },
-      { "heading": "キックバック", "body": "両足を後ろへ跳ねてハイプランク姿勢を取る。" },
-      { "heading": "立ち上がりジャンプ", "body": "足を元に戻し、真上に軽くジャンプして繰り返す。" }
+    "exercises": [
+      "freestanding-handstand-hold"
     ],
-    "tips": ["動作間の移行をスムーズに", "着地は静かに行う", "呼吸が浅くならないようリズムを意識"]
+    "estimatedMinutes": 15,
+    "link": "./content/exercises/freestanding-handstand-hold.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "倒立維持（補助なし）を設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
   },
   {
-    "id": "a-02",
+    "id": "w-030",
     "tier": "advanced",
-    "title": "マウンテンクライマー耐久",
-    "description": "心拍数を上げ続ける全身コンディショニング。",
-    "stars": 5,
-    "exercises": ["mountain-climbers"],
-    "estimatedMinutes": 25,
-    "link": "./content/exercises/mountain-climbers.html",
-    "steps": [
-      { "heading": "手を固定", "body": "肩の真下に手を置き、体を一直線に。" },
-      { "heading": "膝を素早く引き寄せ", "body": "片膝ずつ胸に引き寄せるように交互に動かす。" },
-      { "heading": "リズムを保つ", "body": "腰の高さを変えず、一定のテンポで継続。" }
+    "category": "bodyweight",
+    "title": "倒立押上",
+    "description": "倒立押上の実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 4,
+    "exercises": [
+      "handstand-push-ups"
     ],
-    "tips": ["肩をすくめずリラックス", "膝を真ん中ラインに沿わせる", "スピードよりフォーム優先"]
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/handstand-push-ups.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "倒立押上を設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-031",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "シュラッグ",
+    "description": "シュラッグの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "shrug"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/shrug.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "シュラッグを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-032",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "ベントオーバーロー",
+    "description": "ベントオーバーローの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "bent-over-row"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/bent-over-row.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "ベントオーバーローを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-033",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "スクワット（加重）",
+    "description": "スクワット（加重）の実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "weighted-squats"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/weighted-squats.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "スクワット（加重）を設定したセットで行い、回数を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-034",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "ランジ",
+    "description": "ランジの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "lunges"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/lunges.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "ランジを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-035",
+    "tier": "advanced",
+    "category": "weights",
+    "title": "デッドリフト",
+    "description": "デッドリフトの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 4,
+    "exercises": [
+      "deadlifts"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/deadlifts.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "デッドリフトを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-036",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "カーフレイズ",
+    "description": "カーフレイズの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "calf-raises"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/calf-raises.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "カーフレイズを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-037",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "ミリタリープレス",
+    "description": "ミリタリープレスの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "military-press"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/military-press.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "ミリタリープレスを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-038",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "ショルダープレス",
+    "description": "ショルダープレスの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "shoulder-press"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/shoulder-press.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "ショルダープレスを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-039",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "サイドレイズ",
+    "description": "サイドレイズの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "side-raises"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/side-raises.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "サイドレイズを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-040",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "フロントレイズ",
+    "description": "フロントレイズの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "front-raises"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/front-raises.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "フロントレイズを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-041",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "ラタラルレイズ",
+    "description": "ラタラルレイズの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "lateral-raises"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/lateral-raises.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "ラタラルレイズを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-042",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "カール",
+    "description": "カールの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "curls"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/curls.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "カールを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-043",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "プリーチャーカール",
+    "description": "プリーチャーカールの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "preacher-curls"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/preacher-curls.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "プリーチャーカールを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-044",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "リストカール",
+    "description": "リストカールの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "wrist-curls"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/wrist-curls.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "リストカールを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-045",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "リバースリストカール",
+    "description": "リバースリストカールの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "reverse-wrist-curls"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/reverse-wrist-curls.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "リバースリストカールを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-046",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "ベンチプレス",
+    "description": "ベンチプレスの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "bench-press"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/bench-press.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "ベンチプレスを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-047",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "インクラインベンチプレス",
+    "description": "インクラインベンチプレスの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "incline-bench-press"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/incline-bench-press.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "インクラインベンチプレスを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-048",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "フライ",
+    "description": "フライの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "fly"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/fly.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "フライを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-049",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "クランチ（加重）",
+    "description": "クランチ（加重）の実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "weighted-abdominal-crunches"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/weighted-abdominal-crunches.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "クランチ（加重）を設定したセットで行い、回数を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-050",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "ケーブルウッドチョップ",
+    "description": "ケーブルウッドチョップの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "cable-woodchops"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/cable-woodchops.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "ケーブルウッドチョップを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-051",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "ケーブルクランチ",
+    "description": "ケーブルクランチの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "cable-crunches"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/cable-crunches.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "ケーブルクランチを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-052",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "ケーブルサイドベント",
+    "description": "ケーブルサイドベントの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "cable-side-bends"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/cable-side-bends.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "ケーブルサイドベントを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-053",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "ロータリートルソー",
+    "description": "ロータリートルソーの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "rotary-torso"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/rotary-torso.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "ロータリートルソーを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
+  },
+  {
+    "id": "w-054",
+    "tier": "intermediate",
+    "category": "weights",
+    "title": "トライセップスエクステンション",
+    "description": "トライセップスエクステンションの実施内容を記録してフォームと継続を共有するワークアウト。",
+    "stars": 3,
+    "exercises": [
+      "triceps-extension"
+    ],
+    "estimatedMinutes": 12,
+    "link": "./content/exercises/triceps-extension.html",
+    "steps": [
+      {
+        "heading": "準備",
+        "body": "その日の体調を確認し、可動域を軽くチェックします。"
+      },
+      {
+        "heading": "実施",
+        "body": "トライセップスエクステンションを設定したセットで行い、回数または時間を記録します。"
+      },
+      {
+        "heading": "共有",
+        "body": "終了後に感覚やフォームの気づきをメモして次回に活かします。"
+      }
+    ],
+    "tips": [
+      "痛みが出たら中断する",
+      "回数よりフォームを優先する",
+      "記録は同じ単位で残す"
+    ]
   }
 ]
