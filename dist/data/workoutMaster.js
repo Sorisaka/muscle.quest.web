@@ -6605,7 +6605,7 @@ const workoutMasterEntriesBase = [
   }
 ];
 
-const INPUT_MODE_KEYS = ['weightReps', 'reps', 'hold', 'time'];
+const INPUT_MODE_KEYS = ['weightReps', 'reps', 'time'];
 const TIMER_MODE_KEYS = ['interval', 'setRest', 'time'];
 const TRACKING_METRIC_KEYS = ['distance'];
 
@@ -6620,14 +6620,14 @@ const applyExerciseOverrides = (entry) => {
     : repsIds.has(entry.id)
       ? 'reps'
       : holdIds.has(entry.id)
-        ? 'hold'
+        ? 'time'
         : weightRepsIds.has(entry.id)
           ? 'weightReps'
           : null;
 
   const baselineSet = (mode) => {
     if (mode === 'reps') return { reps: 10 };
-    if (mode === 'hold') return { timeSeconds: 60 };
+    if (mode === 'time') return { timeSeconds: 60 };
     if (mode === 'weightReps') {
       const defaultWeightMap = {
         shrug: 20, 'bent-over-row': 30, 'weighted-squats': 30, lunges: 20, deadlifts: 40, 'calf-raises': 20,
@@ -6654,8 +6654,8 @@ const applyExerciseOverrides = (entry) => {
 
   const next = {
     ...entry,
-    inputMode: forceMode || (entry.unit === 'time' ? 'hold' : 'weightReps'),
-    defaultTimerMode: forceMode === 'hold' ? 'interval' : forceMode === 'time' ? 'time' : 'setRest',
+    inputMode: forceMode || (entry.unit === 'time' ? 'time' : 'weightReps'),
+    defaultTimerMode: forceMode === 'time' ? 'time' : 'setRest',
     trackingMetrics: ['running', 'cycling'].includes(entry.id) ? ['distance'] : [],
     goalConfig: entry.id === 'running'
       ? { type: 'distance', defaultValue: 1500, min: 100, max: 100000, step: 100, unitLabel: 'm' }
@@ -6668,10 +6668,10 @@ const applyExerciseOverrides = (entry) => {
   };
 
   if (next.inputMode === 'reps') next.unit = 'weightReps';
-  if (next.inputMode === 'hold' || next.inputMode === 'time') next.unit = 'time';
+  if (next.inputMode === 'time') next.unit = 'time';
   if (next.inputMode === 'time') {
     next.restSeconds = 0;
-    next.defaultTimeMode = 'stopwatch';
+    next.defaultTimeMode = holdIds.has(entry.id) ? 'intervalTimer' : 'stopwatch';
   }
   if (next.id === 'abdominal-crunches') next.label = 'クランチ';
   if (next.id === 'weighted-abdominal-crunches') next.label = 'クランチ（加重）';

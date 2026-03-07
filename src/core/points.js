@@ -49,7 +49,7 @@ const deriveMovementType = (exerciseSlug, mode) => {
 
 const computeVolumeScore = (inputMode, sets = []) => {
   if (!Array.isArray(sets)) return 0;
-  if (inputMode === 'hold') {
+  if (inputMode === 'time') {
     return sets.reduce((sum, set) => sum + Math.max(toNumber(set.timeSeconds, 0), 0), 0);
   }
   if (inputMode === 'reps') {
@@ -104,7 +104,7 @@ const resolveMet = ({ movementType, intensity, speedKmh }) => {
 
 export const calculateCalories = (result = {}, userProfile = {}) => {
   const definition = getExerciseDefinition(result.exerciseSlug);
-  const inputMode = definition?.inputMode || (definition?.unit === 'time' ? 'hold' : 'weightReps');
+  const inputMode = definition?.inputMode || (definition?.unit === 'time' ? 'time' : 'weightReps');
   const normalizedProfile = applyAutoProfileEstimation(userProfile, userProfile);
   const weightKg = Math.max(toNumber(normalizedProfile.weight_kg, WEIGHT_DEFAULT_KG), 1);
   const seconds = resolveDurationSeconds(result);
