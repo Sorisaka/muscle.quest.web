@@ -407,10 +407,15 @@ export const createStore = (driver = 'supabase') => {
 
   const loadWeeklyPlan = (userId) => {
     const result = persistence.getWeeklyPlan(userId);
-    return resolveMaybeAsync(result, (next) => {
+    const sync = resolveMaybeAsync(result, (next) => {
       weeklyPlan = next || {};
       notifyProfile();
-    }) || weeklyPlan;
+    });
+    if (sync) {
+      weeklyPlan = sync || {};
+      notifyProfile();
+    }
+    return sync || weeklyPlan;
   };
 
   const saveWeeklyPlan = (userId, weekday, items) => {
@@ -428,10 +433,15 @@ export const createStore = (driver = 'supabase') => {
 
   const loadSpecialPlan = (userId, date) => {
     const result = persistence.getSpecialPlan(userId, date);
-    return resolveMaybeAsync(result, (items) => {
+    const sync = resolveMaybeAsync(result, (items) => {
       specialPlans = { ...specialPlans, [date]: items || [] };
       notifyProfile();
-    }) || specialPlans[date] || null;
+    });
+    if (typeof sync !== 'undefined') {
+      specialPlans = { ...specialPlans, [date]: sync || [] };
+      notifyProfile();
+    }
+    return typeof sync !== 'undefined' ? sync : (specialPlans[date] || null);
   };
 
   const saveSpecialPlan = (userId, date, items) => {
