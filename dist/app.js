@@ -24,6 +24,8 @@ const navButtons = Array.from(document.querySelectorAll('[data-nav-route]'));
 const store = createStore();
 const accountState = createAccountState(store);
 let router;
+let disposeCurrentView = null;
+let renderVersion = 0;
 
 const routes = [
   { path: '#/', render: renderHome },
@@ -65,6 +67,13 @@ const resolveRequestsReturnPath = (previousPath) => {
 };
 
 const renderShell = (match) => {
+  renderVersion += 1;
+  const currentRenderVersion = renderVersion;
+  if (typeof disposeCurrentView === 'function') {
+    disposeCurrentView();
+    disposeCurrentView = null;
+  }
+
   const { route, params, fullPath, previousPath } = match;
   updateActiveNav(fullPath);
   const viewResult = route.render(params, {
@@ -76,8 +85,21 @@ const renderShell = (match) => {
   });
 
   Promise.resolve(viewResult).then((view) => {
+    if (currentRenderVersion !== renderVersion) {
+      if (typeof view?.dispose === 'function') view.dispose();
+      return;
+    }
+
     outlet.innerHTML = '';
-    if (view) outlet.append(view);
+
+    const viewNode = view?.element || view;
+    disposeCurrentView = typeof view?.dispose === 'function'
+      ? view.dispose
+      : typeof viewNode?.dispose === 'function'
+        ? viewNode.dispose
+        : null;
+
+    if (viewNode) outlet.append(viewNode);
   });
 };
 
