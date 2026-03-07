@@ -158,16 +158,19 @@ export const renderQuestList = (params, { navigate, playSfx }) => {
     if (!MUSCLE_GROUPS.includes(muscle)) return;
     const chip = document.createElement('button');
     chip.type = 'button';
-    chip.className = 'tab';
+    chip.className = 'tab quest-muscle-filter-chip';
     chip.textContent = MUSCLE_LABELS[muscle] || muscle;
     chip.classList.toggle('is-active', selectedMuscles.includes(muscle));
+    chip.setAttribute('aria-pressed', String(selectedMuscles.includes(muscle)));
     chip.addEventListener('click', () => {
       if (selectedMuscles.includes(muscle)) {
         selectedMuscles = selectedMuscles.filter((entry) => entry !== muscle);
       } else {
         selectedMuscles = [...selectedMuscles, muscle];
       }
-      chip.classList.toggle('is-active', selectedMuscles.includes(muscle));
+      const isSelected = selectedMuscles.includes(muscle);
+      chip.classList.toggle('is-active', isSelected);
+      chip.setAttribute('aria-pressed', String(isSelected));
       persist();
       renderList();
     });
@@ -176,7 +179,10 @@ export const renderQuestList = (params, { navigate, playSfx }) => {
 
   clearFilter.addEventListener('click', () => {
     selectedMuscles = [];
-    filterRow.querySelectorAll('.tab').forEach((tab) => tab.classList.remove('is-active'));
+    filterRow.querySelectorAll('.quest-muscle-filter-chip').forEach((tab) => {
+      tab.classList.remove('is-active');
+      tab.setAttribute('aria-pressed', 'false');
+    });
     persist();
     renderList();
   });

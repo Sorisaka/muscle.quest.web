@@ -63,6 +63,7 @@ export const createHistoryFilterControls = ({ state, onChange, title = '絞り�
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `pill history-filter-pill ${selected ? 'is-active' : ''}`.trim();
+    button.setAttribute('aria-pressed', String(selected));
     button.textContent = toMuscleLabel(muscle);
     button.addEventListener('click', () => {
       const next = selected
