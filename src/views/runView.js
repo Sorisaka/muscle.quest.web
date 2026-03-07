@@ -4,6 +4,7 @@ import { createTimerEngine } from '../core/timerEngine.js';
 import { buildWorkoutTimingSummary } from '../core/workoutTiming.js';
 import { createPlanFromDefinition } from '../core/trainingPlan.js';
 import { trainingConfig } from '../data/trainingConfig.js';
+import { trainingDefinitions } from '../data/trainingDefinitions.js';
 
 const DIFFICULTY_LABELS = { beginner: '初級', intermediate: '中級', advanced: '上級' };
 
@@ -232,6 +233,12 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
 
   const timeDisplay = document.createElement('div');
   timeDisplay.className = 'run-timer__display';
+
+  const workoutLabel = trainingDefinitions[runPlan.exerciseSlug]?.label || quest?.label || quest?.title || 'ワークアウト';
+  const workoutLabelDisplay = Object.assign(document.createElement('h2'), {
+    className: 'run-workout-label',
+    textContent: workoutLabel,
+  });
 
   const subMeta = Object.assign(document.createElement('p'), { className: 'muted run-timer__meta' });
   const timerNotice = Object.assign(document.createElement('p'), { className: 'muted' });
@@ -719,7 +726,7 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   if (hasDistanceMetric) timerControls.append(distanceField);
   timerControls.append(noteField);
 
-  timerBox.append(metaBox, statusRow, timeDisplay, subMeta, timerNotice, pointsBanner, controls, timerControls);
+  timerBox.append(metaBox, statusRow, workoutLabelDisplay, timeDisplay, subMeta, timerNotice, pointsBanner, controls, timerControls);
 
   engine.onTick((snapshot) => {
     planLead.textContent = `${timerConfig.sets || 1} セット / 休憩 ${timerConfig.restSeconds} 秒`;

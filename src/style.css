@@ -413,6 +413,17 @@ section.panel {
   letter-spacing: 0.08em;
 }
 
+.run-workout-label {
+  margin: 0.45rem 0 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #e2e8f0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .run-timer__status {
   display: flex;
   justify-content: space-between;
