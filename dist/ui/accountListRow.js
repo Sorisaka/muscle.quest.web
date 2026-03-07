@@ -39,11 +39,7 @@ export const createAccountListRow = ({ account = {}, actionEl = null } = {}) => 
   idText.className = 'muted';
   idText.textContent = `ID: ${account.id || '不明'}`;
 
-  const vis = document.createElement('span');
-  vis.className = 'pill';
-  vis.textContent = visibility === 'private' ? '非公開 🔒' : '公開';
-
-  textWrap.append(name, idText, vis);
+  textWrap.append(name, idText);
   top.append(avatar, textWrap);
 
   row.append(top);
