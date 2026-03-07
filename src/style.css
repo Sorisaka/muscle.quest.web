@@ -1292,6 +1292,11 @@ section.panel::after {
   display: none;
 }
 
+
+.like-count-button {
+  padding: 0.2rem 0.4rem;
+}
+
 @media (max-width: 720px) {
   .run-timer__controls {
     grid-template-columns: 1fr;

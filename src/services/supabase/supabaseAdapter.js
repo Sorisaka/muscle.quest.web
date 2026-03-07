@@ -112,6 +112,22 @@ const mapAccountRow = (row = {}) => ({
   icon_center_object: row.icon_center_object || null,
 });
 
+
+const mapLikeUserRow = (row = {}) => ({
+  id: row.liked_user_id || row.user_id || row.account_id || null,
+  user_id: row.liked_user_id || row.user_id || null,
+  display_name: row.display_name || row.account_id || 'Unknown',
+  account_id: row.account_id || row.user_id || null,
+  account_visibility: normalizeAccountVisibility(
+    row.account_visibility || row.visibility || row.profile_visibility,
+    'private',
+  ),
+  icon_border: row.icon_border || null,
+  icon_background: row.icon_background || null,
+  icon_center_object: row.icon_center_object || null,
+  liked_at: row.liked_at || null,
+});
+
 const mapLeaderboardRow = (row = {}, period = 'overall') => {
   const periodCalories = period === 'daily'
     ? row.daily_calories
@@ -1052,6 +1068,27 @@ export const createSupabaseAdapter = (options = {}) => {
       });
   };
 
+
+  const getWorkoutRunLikeUsers = (runId, limit = 100) => {
+    const normalizedRunId = Number(runId);
+    const safeLimit = Math.max(Number(limit) || 100, 1);
+    if (!Number.isFinite(normalizedRunId) || normalizedRunId <= 0) return Promise.resolve([]);
+
+    if (!supabaseEnabled || !session?.user?.id) {
+      return Promise.resolve(local.getWorkoutRunLikeUsers(normalizedRunId, safeLimit));
+    }
+
+    return client
+      .rpc('get_workout_run_like_users', { p_run_id: normalizedRunId, p_limit: safeLimit })
+      .then(({ data, error }) => {
+        if (error) {
+          authWarn('get_workout_run_like_users failed', error.message || error);
+          return local.getWorkoutRunLikeUsers(normalizedRunId, safeLimit);
+        }
+        return (data || []).map(mapLikeUserRow);
+      });
+  };
+
   const updateWorkoutPost = (runId, updates = {}) => {
     if (!runId) return null;
     const nextVisibility = normalizePostVisibility(updates.visibility || 'private', 'private');
@@ -1324,6 +1361,7 @@ export const createSupabaseAdapter = (options = {}) => {
     getTimeline,
     getTimelineLikeSummaries,
     toggleLike,
+    getWorkoutRunLikeUsers,
     listNotifications,
     getUnreadNotificationCount,
     markAllNotificationsRead,

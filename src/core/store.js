@@ -717,6 +717,8 @@ export const createStore = (driver = 'supabase') => {
 
   const getLikeCountsByWorkoutRunIds = (runIds = []) => Promise.resolve(persistence.getTimelineLikeSummaries(runIds || []));
 
+  const getWorkoutRunLikeUsers = (runId, limit = 100) => Promise.resolve(persistence.getWorkoutRunLikeUsers(runId, limit));
+
   const fetchTimeline = ({ scope = 'following', limit = 30, before = null, force = false } = {}) => {
     const normalizedScope = scope || 'following';
     const isHeadLoad = before == null;
@@ -880,6 +882,7 @@ export const createStore = (driver = 'supabase') => {
     toggleLike,
     getTimelineState,
     getLikeCountsByWorkoutRunIds,
+    getWorkoutRunLikeUsers,
     fetchNotificationUnreadCount,
     fetchNotifications,
     getNotificationState,

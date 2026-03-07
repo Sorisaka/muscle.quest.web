@@ -32,6 +32,7 @@ const REQUIRED_METHODS = [
   'getTimeline',
   'getTimelineLikeSummaries',
   'toggleLike',
+  'getWorkoutRunLikeUsers',
   'listNotifications',
   'getUnreadNotificationCount',
   'markAllNotificationsRead',
