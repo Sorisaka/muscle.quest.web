@@ -1022,11 +1022,13 @@ export const createSupabaseAdapter = (options = {}) => {
     }
 
     return client
-      .rpc('toggle_like', { p_run_id: runId })
+      .rpc('toggle_like', { p_run_id: Number(runId) })
       .then(({ data, error }) => {
         if (error) {
           authWarn('toggle_like failed', error.message || error);
-          return local.toggleLike(runId);
+          const detail = error?.details ? ` (${error.details})` : '';
+          const hint = error?.hint ? ` [hint: ${error.hint}]` : '';
+          throw new Error(`toggle_like failed: ${error.message || 'unknown error'}${detail}${hint}`);
         }
         const row = Array.isArray(data) ? data[0] : data;
         if (!row) return { runId, liked: false, likeCount: 0 };

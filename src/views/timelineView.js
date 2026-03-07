@@ -163,6 +163,7 @@ export const renderTimeline = (_params, { playSfx, store }) => {
         render();
         try {
           await Promise.resolve(store.toggleLike(item.runId));
+          await Promise.resolve(store.fetchNotificationUnreadCount({ force: true })).catch(() => {});
           syncFromStore();
         } catch (likeError) {
           error = 'Like の更新に失敗しました。時間をおいて再試行してください。';

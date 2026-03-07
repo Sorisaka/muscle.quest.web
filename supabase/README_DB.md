@@ -236,3 +236,56 @@ select * from public.get_notifications(30, null);
   - `get_unread_notification_count()`
   - `get_notifications(p_limit, p_before)`
   - `mark_all_notifications_read()`
+
+## 020_fix_follow_search_and_like_toggle.sql
+- migration: `supabase/migrations/20260307_0012_fix_follow_search_and_like_toggle.sql`
+- 手動SQL: `supabase/sql/020_fix_follow_search_and_like_toggle.sql`
+
+### 前提
+- `018_phase6_timeline_notifications.sql` と `019_notifications_table.sql` 適用済みであること。
+- 本SQLはそれらの上に積む idempotent 修正。
+
+### 含まれる変更
+- `search_accounts(text, int)` を再定義
+  - exact UUID 一致を最優先
+  - display_name 完全一致 / 前方一致 / 部分一致
+  - `auth.uid() is not null` 条件
+  - 自分自身除外
+  - `security definer`, `set search_path = public`, `grant execute`
+- `toggle_like(bigint)` を再定義
+  - 引数名 `p_run_id`
+  - archived / unreadable run 拒否
+  - return: `run_id`, `liked`, `like_count`
+  - `security invoker`, `set search_path = public`, `grant execute`
+- `workout_run_likes` の select/insert/delete policy を再定義
+- `notify_like_insert` 関数と `trg_notify_like_insert` を idempotent 再作成
+
+### 適用順
+1. migration方式: `supabase db push`
+2. 手動方式:
+   1. `supabase/sql/018_phase6_timeline_notifications.sql`
+   2. `supabase/sql/019_notifications_table.sql`
+   3. `supabase/sql/020_fix_follow_search_and_like_toggle.sql`
+
+### 確認クエリ
+```sql
+-- search_accounts
+select proname, oidvectortypes(proargtypes) from pg_proc where proname = 'search_accounts';
+select * from public.search_accounts('<UUID>', 20);
+select * from public.search_accounts('display_name_keyword', 20);
+
+-- toggle_like
+select proname, oidvectortypes(proargtypes) from pg_proc where proname = 'toggle_like';
+select * from public.toggle_like(<run_id_bigint>);
+
+-- workout_run_likes policies
+select policyname, permissive, roles, cmd
+from pg_policies
+where schemaname='public' and tablename='workout_run_likes'
+order by policyname;
+
+-- like通知トリガー
+select tgname
+from pg_trigger
+where tgrelid='public.workout_run_likes'::regclass and not tgisinternal;
+```

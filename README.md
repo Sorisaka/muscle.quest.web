@@ -390,3 +390,48 @@ Phase B では Supabase テーブル化ではなく、**コード管理（Gitレ
 ### 通知機能のSQL適用順
 1. `supabase/sql/018_phase6_timeline_notifications.sql`
 2. `supabase/sql/019_notifications_table.sql`
+
+## Phase H: フォロー検索 / いいね永続化 / 通知導線UIの修正
+
+### 追加ファイル
+- migration: `supabase/migrations/20260307_0012_fix_follow_search_and_like_toggle.sql`
+- 手動SQL: `supabase/sql/020_fix_follow_search_and_like_toggle.sql`
+
+### 目的
+- 新規フォロー検索で exact UUID が 0 件になりやすい環境差分を吸収するため、`search_accounts` を再定義
+- `toggle_like` の DB 正更新を前提に、フロントのローカルフォールバックによる見かけだけ更新を廃止
+- 左ドロワー通知ボタンのラベル中央固定 + バッジ右端固定
+
+### SQL 適用順（018/019 前提）
+1. `supabase/sql/018_phase6_timeline_notifications.sql`
+2. `supabase/sql/019_notifications_table.sql`
+3. `supabase/sql/020_fix_follow_search_and_like_toggle.sql`
+
+### ローカル確認手順
+1. `npm run dev`
+2. 新規フォロー検索
+   - UUID 完全一致で検索結果が出る
+   - display_name 部分一致で検索結果が出る
+   - 自分自身は結果に出ない
+   - RPC失敗時は「検索に失敗しました。時間をおいて再試行してください。」
+3. タイムラインいいね
+   - いいね操作時に 400 が出ない
+   - リロード後も like 状態が維持される
+4. 通知
+   - A の投稿を B が like すると A に like 通知が作成される
+   - 左ドロワー未読件数が再取得で整合する
+5. 左ドロワー
+   - 通知ラベルが中央固定で、バッジが右端表示（1 / 9 / 12 / 99+）
+
+### 手順化（確認ケース）
+- ケースA（public投稿）
+  1. A が public 投稿
+  2. B が like
+  3. A 側で通知追加と未読増加を確認
+- ケースB（private投稿 + follow済み）
+  1. B が A を follow
+  2. A の private 投稿に B が like
+  3. リロード後も like 維持 + A 側通知を確認
+- ケースC（archived投稿）
+  1. archived 投稿への like を試行
+  2. DB 側で拒否され UI が破綻しないことを確認

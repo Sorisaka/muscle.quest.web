@@ -780,50 +780,48 @@ export const createStore = (driver = 'supabase') => {
       });
   };
 
-  const toggleLike = (runId) => {
-    if (!runId) return { runId, liked: false, likeCount: 0 };
+  const applyLikeResultToTimeline = (runId, likeResult = {}) => {
+    const normalizedRunId = Number(runId);
+    if (!Number.isFinite(normalizedRunId) || normalizedRunId <= 0) return;
 
-    const previous = timeline.items.slice();
-    const idx = previous.findIndex((item) => item.runId === runId);
+    const nextLiked = Boolean(likeResult.liked);
+    const nextLikeCount = Math.max(0, Number(likeResult.likeCount ?? 0));
 
-    if (idx >= 0) {
-      const target = previous[idx];
-      const optimisticLiked = !target.liked;
-      const optimisticCount = Math.max(0, Number(target.likeCount || 0) + (optimisticLiked ? 1 : -1));
-      const optimisticItems = previous.slice();
-      optimisticItems[idx] = { ...target, liked: optimisticLiked, likeCount: optimisticCount };
-      applyTimeline(timeline.scope, optimisticItems);
-    }
-
-    const result = persistence.toggleLike(runId);
-    const sync = resolveMaybeAsync(result, (next) => {
-      if (!next) return;
-      const targetIndex = timeline.items.findIndex((item) => item.runId === runId);
-      if (targetIndex < 0) return;
-      const items = timeline.items.slice();
-      items[targetIndex] = {
-        ...items[targetIndex],
-        liked: Boolean(next.liked),
-        likeCount: Number(next.likeCount ?? items[targetIndex].likeCount ?? 0),
-      };
-      applyTimeline(timeline.scope, items);
-    });
-
-    if (sync) {
-      const targetIndex = timeline.items.findIndex((item) => item.runId === runId);
-      if (targetIndex >= 0) {
-        const items = timeline.items.slice();
-        items[targetIndex] = {
-          ...items[targetIndex],
-          liked: Boolean(sync.liked),
-          likeCount: Number(sync.likeCount ?? items[targetIndex].likeCount ?? 0),
+    const patchItems = (items = []) => {
+      if (!Array.isArray(items)) return [];
+      return items.map((item) => {
+        if (Number(item?.runId) !== normalizedRunId) return item;
+        return {
+          ...item,
+          liked: nextLiked,
+          likeCount: nextLikeCount,
         };
-        applyTimeline(timeline.scope, items);
-      }
-      return sync;
-    }
+      });
+    };
 
-    return { runId, liked: idx >= 0 ? !previous[idx].liked : false, likeCount: idx >= 0 ? Math.max(0, Number(previous[idx].likeCount || 0) + (!previous[idx].liked ? 1 : -1)) : 0 };
+    const nextItemsByScope = {
+      following: patchItems(timeline.itemsByScope?.following || []),
+      global: patchItems(timeline.itemsByScope?.global || []),
+    };
+
+    const activeScope = timeline.scope || 'following';
+    timeline = {
+      ...timeline,
+      itemsByScope: nextItemsByScope,
+      items: patchItems(nextItemsByScope[activeScope] || []),
+    };
+
+    notifyProfile();
+  };
+
+  const toggleLike = (runId) => {
+    if (!runId) return Promise.resolve({ runId, liked: false, likeCount: 0 });
+
+    return Promise.resolve(persistence.toggleLike(runId)).then((next) => {
+      if (!next) return { runId, liked: false, likeCount: 0 };
+      applyLikeResultToTimeline(runId, next);
+      return next;
+    });
   };
 
   const getTimelineState = () => timeline;

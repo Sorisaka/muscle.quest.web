@@ -209,9 +209,18 @@ export const createAccountDrawer = ({ triggerEl, drawerEl, overlayEl, accountSta
     const notificationsBtn = document.createElement('button');
     notificationsBtn.type = 'button';
     notificationsBtn.className = 'ghost drawer-notification-button';
-    notificationsBtn.append(Object.assign(document.createElement('span'), { textContent: '通知' }));
+    notificationsBtn.append(Object.assign(document.createElement('span'), {
+      className: 'drawer-notification-label',
+      textContent: '通知',
+    }));
     if (notificationState.unreadCount > 0) {
-      notificationsBtn.append(Object.assign(document.createElement('span'), { className: 'drawer-notification-badge', textContent: String(notificationState.unreadCount) }));
+      const unread = Math.max(Number(notificationState.unreadCount) || 0, 0);
+      const badge = Object.assign(document.createElement('span'), {
+        className: 'drawer-notification-badge',
+        textContent: unread > 99 ? '99+' : String(unread),
+      });
+      badge.setAttribute('aria-label', `未読通知 ${unread} 件`);
+      notificationsBtn.append(badge);
     }
     notificationsBtn.addEventListener('click', () => {
       playSfx('ui:navigate');
