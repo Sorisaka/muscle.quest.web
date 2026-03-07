@@ -1,4 +1,5 @@
 import { createAccountAvatar, getAvatarLabel } from './accountAvatar.js';
+import { normalizeAccountVisibility } from '../core/privacy/visibility.js';
 
 export const withPrivateLock = (displayName, visibility) => {
   const safeName = displayName || '不明';
@@ -13,7 +14,10 @@ export const createAccountListRow = ({ account = {}, actionEl = null } = {}) => 
   top.className = 'list-account-row';
 
   const displayName = account.display_name || account.displayName || account.id || '不明';
-  const visibility = account.account_visibility || account.accountVisibility || 'public';
+  const visibility = normalizeAccountVisibility(
+    account.account_visibility || account.accountVisibility || account.visibility,
+    'private',
+  );
 
   const avatar = createAccountAvatar({
     label: getAvatarLabel(displayName, 'U'),
@@ -35,11 +39,7 @@ export const createAccountListRow = ({ account = {}, actionEl = null } = {}) => 
   idText.className = 'muted';
   idText.textContent = `ID: ${account.id || '不明'}`;
 
-  const vis = document.createElement('span');
-  vis.className = 'pill';
-  vis.textContent = visibility === 'private' ? '非公開 🔒' : '公開';
-
-  textWrap.append(name, idText, vis);
+  textWrap.append(name, idText);
   top.append(avatar, textWrap);
 
   row.append(top);

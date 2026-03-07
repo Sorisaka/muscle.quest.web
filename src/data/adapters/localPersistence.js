@@ -643,6 +643,7 @@ export const createLocalPersistence = () => {
       user_id: ownerId,
       display_name: profile?.display_name || ownerId,
       account_id: ownerId,
+      account_visibility: normalizeAccountVisibility(profile?.account_visibility || profile?.default_visibility, 'private'),
       icon_border: profile?.icon_border || null,
       icon_background: profile?.icon_background || null,
       icon_center_object: profile?.icon_center_object || null,

@@ -118,6 +118,10 @@ const mapLikeUserRow = (row = {}) => ({
   user_id: row.liked_user_id || row.user_id || null,
   display_name: row.display_name || row.account_id || 'Unknown',
   account_id: row.account_id || row.user_id || null,
+  account_visibility: normalizeAccountVisibility(
+    row.account_visibility || row.visibility || row.profile_visibility,
+    'private',
+  ),
   icon_border: row.icon_border || null,
   icon_background: row.icon_background || null,
   icon_center_object: row.icon_center_object || null,
