@@ -16,6 +16,7 @@ import {
 } from '../core/menuWorkoutCatalog.js';
 import {
   buildMenuWorkoutDefaultConfig,
+  getMenuConfigShape,
   normalizeMenuItemConfig,
   normalizeMenuPlanItem,
   sanitizeMenuPlanItems,
@@ -830,7 +831,12 @@ const createMenuSettings = async ({ store, playSfx }) => {
   const updateWorkoutConfig = (index, patch = {}) => {
     draftItems = draftItems.map((item, itemIndex) => {
       if (itemIndex !== index) return item;
-      const nextConfig = normalizeMenuItemConfig({ ...(item.config || item.workoutConfig || {}), ...patch }, item.config || item.workoutConfig || {});
+      const workoutEntry = workoutMap.get(item.exerciseSlug);
+      const nextConfig = normalizeMenuItemConfig(
+        { ...(item.config || item.workoutConfig || {}), ...patch },
+        item.config || item.workoutConfig || {},
+        { definition: workoutEntry?.definition, lockInputModeToDefinition: false },
+      );
       return {
         ...item,
         config: nextConfig,
@@ -965,14 +971,23 @@ const createMenuSettings = async ({ store, playSfx }) => {
       noteField.append(noteInput);
 
       const config = item.config || item.workoutConfig || {};
+      const configShape = getMenuConfigShape(config);
       const configGrid = document.createElement('div');
       configGrid.className = 'workout-config-grid';
 
-      const timerModeField = createSelect('タイマー種別', config.timerType || 'setRest', [
-        { value: 'setRest', label: 'セット+休憩' },
-        { value: 'interval', label: 'インターバル' },
-        { value: 'time', label: 'タイム' },
+      const inputModeField = createSelect('種別', configShape.inputMode, [
+        { value: 'weightReps', label: 'weightReps（重量×回数）' },
+        { value: 'reps', label: 'reps（回数）' },
+        { value: 'time', label: 'time（時間）' },
       ], (opt) => opt);
+
+      const timeModeField = createSelect('モード', configShape.timeMode, [
+        { value: 'stopwatch', label: 'ストップウォッチ' },
+        { value: 'timer', label: 'タイマー' },
+        { value: 'intervalTimer', label: 'インターバルタイマー' },
+        { value: 'intervalStopwatch', label: 'インターバルストップウォッチ' },
+      ], (opt) => opt);
+      timeModeField.wrap.style.display = configShape.inputMode === 'time' ? '' : 'none';
 
       const createNumberField = (labelText, value, step = '1') => {
         const wrapper = document.createElement('label');
@@ -994,24 +1009,20 @@ const createMenuSettings = async ({ store, playSfx }) => {
       const restSecondsField = createNumberField('休憩(秒)', config.restSeconds);
       const distanceField = createNumberField('距離(m)', config.distanceMeters);
 
-      configGrid.append(
-        timerModeField.wrap,
-        setsField.wrapper,
-        repsField.wrapper,
-        weightField.wrapper,
-        workSecondsField.wrapper,
-        restSecondsField.wrapper,
-        distanceField.wrapper,
-      );
+      const toggleVisibility = (field, key) => {
+        field.style.display = configShape.fields.includes(key) ? '' : 'none';
+      };
+      toggleVisibility(setsField.wrapper, 'sets');
+      toggleVisibility(repsField.wrapper, 'reps');
+      toggleVisibility(weightField.wrapper, 'weight');
+      toggleVisibility(workSecondsField.wrapper, 'workSeconds');
+      toggleVisibility(restSecondsField.wrapper, 'restSeconds');
+      toggleVisibility(distanceField.wrapper, 'distanceMeters');
+
+      configGrid.append(inputModeField.wrap, timeModeField.wrap, setsField.wrapper, repsField.wrapper, weightField.wrapper, workSecondsField.wrapper, restSecondsField.wrapper, distanceField.wrapper);
 
       const controls = document.createElement('div');
       controls.className = 'hero__actions';
-
-      const reselect = document.createElement('button');
-      reselect.type = 'button';
-      reselect.className = 'ghost';
-      reselect.textContent = 'ワークアウト選択';
-      reselect.addEventListener('click', openModal);
 
       const up = document.createElement('button');
       up.type = 'button';
@@ -1037,7 +1048,7 @@ const createMenuSettings = async ({ store, playSfx }) => {
         renderList();
       });
 
-      controls.append(reselect, up, down, remove);
+      controls.append(up, down, remove);
 
       nameInput.addEventListener('input', () => {
         updateItem(index, { displayName: nameInput.value, title: nameInput.value });
@@ -1046,7 +1057,17 @@ const createMenuSettings = async ({ store, playSfx }) => {
 
       noteInput.addEventListener('input', () => updateItem(index, { note: noteInput.value }));
 
-      timerModeField.select.addEventListener('change', () => updateWorkoutConfig(index, { timerType: timerModeField.select.value }));
+      inputModeField.select.addEventListener('change', () => {
+        const nextMode = inputModeField.select.value;
+        const nextTimerType = nextMode === 'time' ? 'time' : 'setRest';
+        const nextTimeMode = nextMode === 'time' ? 'stopwatch' : 'stopwatch';
+        updateWorkoutConfig(index, { inputMode: nextMode, timerType: nextTimerType, mode: nextTimerType, timeMode: nextTimeMode });
+        renderList();
+      });
+      timeModeField.select.addEventListener('change', () => {
+        updateWorkoutConfig(index, { timeMode: timeModeField.select.value, timerType: 'time', mode: 'time' });
+        renderList();
+      });
       setsField.input.addEventListener('input', () => updateWorkoutConfig(index, { sets: parseInputNumber(setsField.input.value) || 1 }));
       repsField.input.addEventListener('input', () => updateWorkoutConfig(index, { reps: parseInputNumber(repsField.input.value) }));
       weightField.input.addEventListener('input', () => updateWorkoutConfig(index, { weight: parseInputNumber(weightField.input.value) }));

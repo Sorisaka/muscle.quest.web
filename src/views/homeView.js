@@ -1,4 +1,5 @@
 import { quests } from '../core/content.js';
+import { createPlanFromDefinition } from '../core/trainingPlan.js';
 
 const createCategoryCard = (category, label, summary, navigate, playSfx) => {
   const card = document.createElement('article');
@@ -26,6 +27,22 @@ const createCategoryCard = (category, label, summary, navigate, playSfx) => {
 const findWorkoutIdByExercise = (exerciseSlug) => {
   const match = (quests || []).find((quest) => (quest.exercises || []).includes(exerciseSlug));
   return match?.id || null;
+};
+
+const createSetsFromMenuConfig = (inputMode, config = {}) => {
+  const setCount = Math.max(Number(config.sets) || 1, 1);
+  if (inputMode === 'weightReps') {
+    return Array.from({ length: setCount }, () => ({
+      weight: Number.isFinite(Number(config.weight)) ? Number(config.weight) : 0,
+      reps: Number.isFinite(Number(config.reps)) ? Number(config.reps) : 10,
+    }));
+  }
+  if (inputMode === 'reps') {
+    return Array.from({ length: setCount }, () => ({
+      reps: Number.isFinite(Number(config.reps)) ? Number(config.reps) : 10,
+    }));
+  }
+  return [];
 };
 
 export const renderHome = (_params, { navigate, playSfx, store }) => {
@@ -93,9 +110,31 @@ export const renderHome = (_params, { navigate, playSfx, store }) => {
     startButton.onclick = () => {
       const first = nextToday.items[0];
       const workoutId = findWorkoutIdByExercise(first.exerciseSlug);
+      const settings = store.getSettings?.() || {};
+      const difficulty = settings.difficulty || 'beginner';
       playSfx('ui:navigate');
-      if (workoutId) navigate(`#/run/${workoutId}`);
-      else navigate(`#/workouts/${first?.category || 'cardio'}`);
+      if (workoutId) {
+        const quest = (quests || []).find((entry) => entry.id === workoutId);
+        const plan = createPlanFromDefinition(quest, difficulty, store.getLastPlan?.(workoutId, difficulty));
+        const config = first.config || first.workoutConfig || {};
+        const menuInputMode = config.inputMode || plan.inputMode;
+        const nextPlan = {
+          ...plan,
+          inputMode: menuInputMode,
+          mode: menuInputMode === 'time' ? 'time' : 'setRest',
+          defaultTimerMode: menuInputMode === 'time' ? 'time' : 'setRest',
+          timeMode: menuInputMode === 'time' ? (config.timeMode || plan.timeMode || 'stopwatch') : 'stopwatch',
+          defaultTimeMode: menuInputMode === 'time' ? (config.timeMode || plan.defaultTimeMode || 'stopwatch') : 'stopwatch',
+          restSeconds: config.restSeconds ?? plan.restSeconds,
+          trainingSeconds: config.workSeconds ?? plan.trainingSeconds,
+          sets: createSetsFromMenuConfig(menuInputMode, config),
+          metricGoals: plan.goalConfig?.type === 'distance'
+            ? { distanceMeters: config.distanceMeters ?? plan.metricGoals?.distanceMeters ?? plan.goalConfig.defaultValue }
+            : plan.metricGoals,
+        };
+        store.rememberPlan(workoutId, difficulty, nextPlan);
+        navigate(`#/run/${workoutId}`);
+      } else navigate(`#/workouts/${first?.category || 'cardio'}`);
     };
   };
 
