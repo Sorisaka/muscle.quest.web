@@ -624,6 +624,32 @@ export const createLocalPersistence = () => {
     writeJson(NOTIFICATIONS_KEY, next);
     return changed;
   };
+
+  const getWorkoutRunLikeUsers = (runId, limit = 100) => {
+    const safeLimit = Math.max(Number(limit) || 100, 1);
+    const historyById = new Map(loadHistory().map((row) => [String(row.id), row]));
+    const run = historyById.get(String(runId));
+    if (!run) return [];
+
+    const likesByRunId = loadLikes();
+    if (!likesByRunId[String(runId)]) return [];
+
+    const ownerId = run.user_id || loadProfile()?.id;
+    if (!ownerId) return [];
+
+    const profile = ensureLocalProfile(ownerId);
+    return [{
+      liked_user_id: ownerId,
+      user_id: ownerId,
+      display_name: profile?.display_name || ownerId,
+      account_id: ownerId,
+      icon_border: profile?.icon_border || null,
+      icon_background: profile?.icon_background || null,
+      icon_center_object: profile?.icon_center_object || null,
+      liked_at: run.published_at || run.created_at || new Date().toISOString(),
+    }].slice(0, safeLimit);
+  };
+
   const toggleLike = (runId) => {
     if (!runId) {
       return { runId, liked: false, likeCount: 0 };
@@ -667,6 +693,7 @@ export const createLocalPersistence = () => {
     getTimeline,
     getTimelineLikeSummaries,
     toggleLike,
+    getWorkoutRunLikeUsers,
     listNotifications,
     getUnreadNotificationCount,
     markAllNotificationsRead,

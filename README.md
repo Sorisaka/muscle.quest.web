@@ -14,6 +14,31 @@ GitHub Pages 向けの Vanilla JS / HTML / CSS アプリです。表示言語は
 
 ---
 
+
+## Phase G: 投稿いいねユーザー一覧モーダル（RLS対応）
+
+### 追加したSQL
+- Migration:
+  - `supabase/migrations/20260307_0013_add_like_users_rpc.sql`
+  - `supabase/migrations/20260307_0014_refine_like_users_rpc.sql`
+- 手動適用用SQL:
+  - `supabase/sql/023_add_like_users_rpc.sql`
+  - `supabase/sql/024_refine_like_users_rpc.sql`
+
+### 追加したRPC/関数
+- `public.get_workout_run_like_users(p_run_id bigint, p_limit int default 100)`
+  - 用途: 投稿にいいねしたユーザー一覧（表示名・識別子・アイコン情報・liked_at）を返す。
+  - 注意: 閲覧者が投稿を閲覧可能な場合のみ結果を返し、不可視投稿は空集合を返す。
+- `public.can_view_workout_run(p_run_id bigint, p_viewer_id uuid default auth.uid())`
+  - 用途: 投稿可視性判定（owner/public/private+follow/archived）を共通化する補助関数。
+
+### ローカル/手動適用
+- 手動で適用する場合は次を順に実行:
+  1. `supabase/sql/023_add_like_users_rpc.sql`
+  2. `supabase/sql/024_refine_like_users_rpc.sql`
+
+---
+
 ## Phase B: トレーニング種目マスタ管理
 
 ### 1. 概要

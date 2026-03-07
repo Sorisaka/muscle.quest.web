@@ -127,9 +127,6 @@ export const renderAccount = (_params, { navigate, accountState, store }) => {
     if (event.target === followModalOverlay) closeModal();
   });
   closeBtn.addEventListener('click', closeModal);
-  container.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !followModalOverlay.hidden) closeModal();
-  });
 
   const performSearch = async () => {
     results.innerHTML = '';
@@ -214,6 +211,53 @@ export const renderAccount = (_params, { navigate, accountState, store }) => {
   const entries = (store.getHistory() || []).slice(0, 10);
   let likeSummaryByRunId = new Map();
 
+  const likeUsersModalOverlay = document.createElement('div');
+  likeUsersModalOverlay.className = 'follow-modal-overlay';
+  likeUsersModalOverlay.hidden = true;
+
+  const likeUsersModal = document.createElement('div');
+  likeUsersModal.className = 'follow-modal card stack';
+  likeUsersModal.setAttribute('role', 'dialog');
+  likeUsersModal.setAttribute('aria-modal', 'true');
+  likeUsersModal.setAttribute('aria-labelledby', 'like-users-modal-title');
+
+  const likeUsersHeader = document.createElement('div');
+  likeUsersHeader.className = 'list-header';
+
+  const likeUsersTitle = document.createElement('h3');
+  likeUsersTitle.id = 'like-users-modal-title';
+  likeUsersTitle.textContent = 'いいねしたユーザー';
+
+  const likeUsersCloseBtn = document.createElement('button');
+  likeUsersCloseBtn.type = 'button';
+  likeUsersCloseBtn.className = 'ghost';
+  likeUsersCloseBtn.textContent = '閉じる';
+
+  const likeUsersList = document.createElement('div');
+  likeUsersList.className = 'stack';
+
+  likeUsersHeader.append(likeUsersTitle, likeUsersCloseBtn);
+  likeUsersModal.append(likeUsersHeader, likeUsersList);
+  likeUsersModalOverlay.append(likeUsersModal);
+
+  const closeLikeUsersModal = () => {
+    likeUsersModalOverlay.hidden = true;
+  };
+
+  const openLikeUsersModal = () => {
+    likeUsersModalOverlay.hidden = false;
+  };
+
+  likeUsersModalOverlay.addEventListener('click', (event) => {
+    if (event.target === likeUsersModalOverlay) closeLikeUsersModal();
+  });
+  likeUsersCloseBtn.addEventListener('click', closeLikeUsersModal);
+
+  container.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !followModalOverlay.hidden) closeModal();
+    if (event.key === 'Escape' && !likeUsersModalOverlay.hidden) closeLikeUsersModal();
+  });
+
   const renderOwnPosts = () => {
     list.innerHTML = '';
     if (!entries.length) {
@@ -237,7 +281,31 @@ export const renderAccount = (_params, { navigate, accountState, store }) => {
       footer.className = 'timeline-card__actions';
       const like = likeSummaryByRunId.get(String(entry.id));
       const likeCount = Number(like?.likeCount ?? 0);
-      footer.append(Object.assign(document.createElement('span'), { className: 'muted', textContent: `♡ ${likeCount}` }));
+      const likeButton = document.createElement('button');
+      likeButton.type = 'button';
+      likeButton.className = 'ghost like-count-button';
+      likeButton.textContent = `♡ ${likeCount}`;
+      likeButton.disabled = !entry?.id;
+      likeButton.addEventListener('click', async () => {
+        likeUsersList.innerHTML = '';
+        likeUsersList.append(createLoading('いいねユーザーを読み込み中...'));
+        openLikeUsersModal();
+        try {
+          const users = await Promise.resolve(store.getWorkoutRunLikeUsers(entry.id, 100));
+          likeUsersList.innerHTML = '';
+          if (!users?.length) {
+            likeUsersList.append(createEmpty('この投稿へのいいねはまだありません。'));
+            return;
+          }
+          users.forEach((account) => {
+            likeUsersList.append(createAccountListRow({ account }));
+          });
+        } catch (_error) {
+          likeUsersList.innerHTML = '';
+          likeUsersList.append(createEmpty('いいねユーザー一覧の取得に失敗しました。'));
+        }
+      });
+      footer.append(likeButton);
 
       card.append(title, amount, Object.assign(document.createElement('p'), { className: 'muted', textContent: `${entry.calories || 0} kcal` }), footer);
       list.append(card);
@@ -245,7 +313,7 @@ export const renderAccount = (_params, { navigate, accountState, store }) => {
   };
 
   renderOwnPosts();
-  postCard.append(list);
+  postCard.append(list, likeUsersModalOverlay);
 
   const ownRunIds = entries.map((entry) => entry?.id).filter(Boolean);
   if (ownRunIds.length) {
