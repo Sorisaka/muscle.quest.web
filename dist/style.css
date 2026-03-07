@@ -625,19 +625,39 @@ section.panel {
 }
 
 .leaderboard-row {
-  align-items: flex-start;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: minmax(0, 6.5rem) 1fr minmax(0, 6.5rem);
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
 }
 
-.leaderboard-row__user {
-  display: grid;
-  gap: 0.1rem;
+.leaderboard-row__rank {
+  justify-self: start;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+.leaderboard-row__name {
+  justify-self: center;
+  text-align: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboard-row__calories {
+  justify-self: end;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .leaderboard-row.is-self {
   border: 1px solid #2ea043;
   border-radius: 10px;
-  padding: 0.5rem;
+  box-shadow: inset 0 0 0 1px rgba(46, 160, 67, 0.15);
 }
 
 .drawer-overlay {
