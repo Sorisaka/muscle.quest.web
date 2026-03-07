@@ -468,6 +468,55 @@ section.panel {
   padding-left: 1.25rem;
 }
 
+
+.split-button {
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+
+.split-button__main {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  flex: 1;
+}
+
+.split-button__toggle {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  min-width: 2.2rem;
+  padding-inline: 0.65rem;
+}
+
+.split-button__menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.25rem);
+  background: #0c121d;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  padding: 0.3rem;
+  display: none;
+  flex-direction: column;
+  gap: 0.2rem;
+  z-index: 5;
+  min-width: 180px;
+}
+
+.split-button__menu.is-open {
+  display: flex;
+}
+
+.split-button__menu button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+}
+
+.split-button__menu button.is-selected {
+  background: #1f2937;
+}
+
 .run-controls {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));

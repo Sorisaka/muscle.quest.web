@@ -201,3 +201,14 @@ Phase B では Supabase テーブル化ではなく、**コード管理（Gitレ
 ### SQL / Supabase
 - 今回は結果JSON (`result`) に `distanceMeters` を保持するため、**追加SQLは不要**です。
 - 既存スキーマ互換を維持し、保存フォーマットを拡張しています。
+
+---
+
+## Phase D: タイマー設計と投稿UIの再整理（time / setRest）
+
+- `inputMode: stopwatch` は廃止し、`inputMode: time` へ統一。
+- `time` は `timeMode` で `stopwatch` / `timer` を切り替え可能。
+- `weightReps` / `reps` は `setRest`（セット進行 + 手動休憩開始）を使用。
+- `hold` は `interval`（保持→休憩を自動反復）を継続。
+- 投稿UIは分離ボタンを廃止し、公開範囲を選べる split button へ変更。
+- 旧 `stopwatch` 設定は `store` / `trainingPlan` で `time` へ移行するフォールバックを実装。

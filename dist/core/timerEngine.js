@@ -1,5 +1,6 @@
 const defaultConfig = {
-  mode: 'timer', // timer | interval | stopwatch
+  mode: 'setRest', // setRest | interval | time
+  timeMode: 'stopwatch', // stopwatch | timer (mode==='time' only)
   workSeconds: 60,
   restSeconds: 30,
   sets: 1,
@@ -13,6 +14,7 @@ export const createTimerEngine = (initialConfig = {}) => {
   let currentSet = 1;
   let remainingSeconds = config.workSeconds;
   let elapsedSeconds = 0;
+  let workflowState = config.mode === 'setRest' ? 'idle' : 'idle';
   let timerId = null;
   let lastTimestamp = null;
 
@@ -35,28 +37,37 @@ export const createTimerEngine = (initialConfig = {}) => {
     return config.workSeconds;
   };
 
-  const nextPhase = () => {
-    if (config.mode === 'stopwatch') return '計測中';
-    if (config.mode === 'timer') return '完了';
+  const isTimeStopwatch = () => config.mode === 'time' && config.timeMode === 'stopwatch';
 
+  const nextPhase = () => {
+    if (config.mode === 'time') return config.timeMode === 'timer' ? '完了' : '計測中';
+    if (config.mode === 'setRest') {
+      if (workflowState === 'completed' || state === 'finished') return '完了';
+      if (workflowState === 'in_set') return 'セット完了';
+      if (workflowState === 'rest_ready') return '休憩開始';
+      if (workflowState === 'resting') return '次セット';
+      return 'セット開始';
+    }
     if (phase === 'work') {
       if (currentSet >= config.sets) return '完了';
       return '休憩';
     }
     if (phase === 'rest') {
       if (currentSet >= config.sets) return '完了';
-      return 'トレーニング';
+      return '保持';
     }
     return '完了';
   };
 
   const getSnapshot = () => ({
     mode: config.mode,
+    timeMode: config.timeMode,
     state,
     phase,
+    workflowState,
     currentSet,
-    totalSets: config.mode === 'interval' ? config.sets : 1,
-    remainingSeconds: config.mode === 'stopwatch' ? 0 : Math.max(remainingSeconds, 0),
+    totalSets: ['interval', 'setRest'].includes(config.mode) ? config.sets : 1,
+    remainingSeconds: isTimeStopwatch() ? 0 : Math.max(remainingSeconds, 0),
     elapsedSeconds,
     next: nextPhase(),
   });
@@ -74,6 +85,7 @@ export const createTimerEngine = (initialConfig = {}) => {
   const finish = () => {
     clearTimer();
     state = 'finished';
+    workflowState = 'completed';
     notifyState();
     notifyTick();
   };
@@ -89,11 +101,25 @@ export const createTimerEngine = (initialConfig = {}) => {
       lastTimestamp += diffSeconds * 1000;
       elapsedSeconds += diffSeconds;
 
-      if (config.mode === 'stopwatch') {
+      if (config.mode === 'time' && config.timeMode === 'stopwatch') {
         notifyTick();
-      } else if (config.mode === 'timer') {
+      } else if ((config.mode === 'time' && config.timeMode === 'timer') || (config.mode === 'setRest' && workflowState === 'resting')) {
         remainingSeconds -= diffSeconds;
         if (remainingSeconds <= 0) {
+          if (config.mode === 'setRest') {
+            currentSet += 1;
+            if (currentSet > config.sets) {
+              finish();
+              return;
+            }
+            state = 'paused';
+            phase = 'work';
+            workflowState = 'idle';
+            remainingSeconds = getWorkDuration(currentSet);
+            notifyState();
+            notifyTick();
+            return;
+          }
           finish();
           return;
         }
@@ -135,20 +161,75 @@ export const createTimerEngine = (initialConfig = {}) => {
   };
 
   const start = (override = {}) => {
-    clearTimer();
-
     config = { ...config, ...override };
+
+    if (state === 'paused') {
+      state = 'running';
+      lastTimestamp = Date.now();
+      notifyState();
+      notifyTick();
+      timerId = setTimeout(scheduleTick, 1000);
+      return;
+    }
+
+    clearTimer();
     state = 'running';
-    phase = config.mode === 'interval' ? 'work' : 'work';
+    phase = 'work';
     currentSet = 1;
-    remainingSeconds = config.mode === 'interval' ? getWorkDuration(1) : config.workSeconds;
     elapsedSeconds = 0;
+    workflowState = config.mode === 'setRest' ? 'in_set' : 'idle';
+    remainingSeconds = config.mode === 'interval' ? getWorkDuration(1) : config.workSeconds;
     lastTimestamp = Date.now();
 
     notifyState();
     notifyTick();
 
     timerId = setTimeout(scheduleTick, 1000);
+  };
+
+  const advanceSetRest = () => {
+    if (config.mode !== 'setRest' || state === 'finished') return;
+
+    if (workflowState === 'idle') {
+      state = 'running';
+      phase = 'work';
+      workflowState = 'in_set';
+      if (!lastTimestamp) lastTimestamp = Date.now();
+      notifyState();
+      notifyTick();
+      timerId = setTimeout(scheduleTick, 1000);
+      return;
+    }
+
+    if (workflowState === 'in_set') {
+      clearTimer();
+      if (currentSet >= config.sets) {
+        finish();
+        return;
+      }
+      state = 'paused';
+      phase = 'rest';
+      workflowState = config.restSeconds > 0 ? 'rest_ready' : 'idle';
+      if (config.restSeconds <= 0) {
+        currentSet += 1;
+        phase = 'work';
+      }
+      remainingSeconds = config.restSeconds;
+      notifyState();
+      notifyTick();
+      return;
+    }
+
+    if (workflowState === 'rest_ready') {
+      state = 'running';
+      workflowState = 'resting';
+      phase = 'rest';
+      remainingSeconds = config.restSeconds;
+      lastTimestamp = Date.now();
+      notifyState();
+      notifyTick();
+      timerId = setTimeout(scheduleTick, 1000);
+    }
   };
 
   const pause = () => {
@@ -161,15 +242,21 @@ export const createTimerEngine = (initialConfig = {}) => {
 
   const resume = () => {
     if (state !== 'paused') return;
+    if (config.mode === 'setRest' && workflowState === 'rest_ready') {
+      advanceSetRest();
+      return;
+    }
     state = 'running';
     lastTimestamp = Date.now();
     notifyState();
+    notifyTick();
     timerId = setTimeout(scheduleTick, 1000);
   };
 
   const stop = () => {
     clearTimer();
     state = 'finished';
+    workflowState = 'completed';
     notifyState();
     notifyTick();
   };
@@ -180,6 +267,7 @@ export const createTimerEngine = (initialConfig = {}) => {
     state = 'idle';
     phase = 'work';
     currentSet = 1;
+    workflowState = 'idle';
     remainingSeconds = config.mode === 'interval' ? getWorkDuration(1) : config.workSeconds;
     elapsedSeconds = 0;
     lastTimestamp = null;
@@ -203,6 +291,7 @@ export const createTimerEngine = (initialConfig = {}) => {
     resume,
     stop,
     reset,
+    advanceSetRest,
     onTick,
     onStateChange,
     getSnapshot,

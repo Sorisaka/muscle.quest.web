@@ -1,60 +1,22 @@
 import { getQuestById } from '../core/content.js';
+import { normalizePostVisibility } from '../core/privacy/visibility.js';
 import { createTimerEngine } from '../core/timerEngine.js';
 import { createPlanFromDefinition } from '../core/trainingPlan.js';
 import { trainingConfig } from '../data/trainingConfig.js';
 
+const DIFFICULTY_LABELS = { beginner: '初級', intermediate: '中級', advanced: '上級' };
+
+const VISIBILITY_OPTIONS = [
+  { value: 'public', label: '公開で投稿' },
+  { value: 'private', label: 'フォロワーのみで投稿' },
+  { value: 'archived', label: 'アーカイブ' },
+];
+
 const formatTime = (seconds) => {
   const safeSeconds = Math.max(seconds, 0);
-  const mins = Math.floor(safeSeconds / 60)
-    .toString()
-    .padStart(2, '0');
-  const secs = Math.floor(safeSeconds % 60)
-    .toString()
-    .padStart(2, '0');
+  const mins = Math.floor(safeSeconds / 60).toString().padStart(2, '0');
+  const secs = Math.floor(safeSeconds % 60).toString().padStart(2, '0');
   return `${mins}:${secs}`;
-};
-
-const createControls = (navigate, questId, playSfx, onReset, onToggle, onComplete) => {
-  const controls = document.createElement('div');
-  controls.className = 'run-controls';
-
-  const stopButton = document.createElement('button');
-  stopButton.type = 'button';
-  stopButton.className = 'ghost';
-  stopButton.textContent = 'ワークアウト詳細へ';
-  stopButton.addEventListener('click', () => {
-    const confirmed = window.confirm('中断してワークアウト詳細に戻りますか？');
-    if (confirmed) {
-      playSfx('timer:stop');
-      navigate(`#/workout/${questId}`);
-    }
-  });
-
-  const resetButton = document.createElement('button');
-  resetButton.type = 'button';
-  resetButton.className = 'ghost';
-  resetButton.textContent = 'リセット';
-  resetButton.addEventListener('click', onReset);
-
-  const toggleButton = document.createElement('button');
-  toggleButton.type = 'button';
-  toggleButton.textContent = '開始';
-  toggleButton.addEventListener('click', onToggle);
-
-  const completeButton = document.createElement('button');
-  completeButton.type = 'button';
-  completeButton.textContent = '投稿';
-  completeButton.addEventListener('click', onComplete);
-
-  controls.append(stopButton, resetButton, toggleButton, completeButton);
-  return { controls, toggleButton, completeButton };
-};
-
-const computeCompletedSets = (snapshot, setsLength) => {
-  if (snapshot.mode !== 'interval') return Math.max(setsLength || 1, 1);
-  if (snapshot.state === 'finished') return snapshot.totalSets;
-  const finishedSets = snapshot.phase === 'work' ? snapshot.currentSet - 1 : snapshot.currentSet;
-  return Math.max(Math.min(finishedSets, snapshot.totalSets), 0);
 };
 
 const clampNumber = (value, min, max) => {
@@ -64,6 +26,25 @@ const clampNumber = (value, min, max) => {
   if (min == null) return Math.min(max, numeric);
   if (max == null) return Math.max(min, numeric);
   return Math.max(min, Math.min(max, numeric));
+};
+
+const computeCompletedSets = (snapshot, setsLength) => {
+  if (snapshot.mode === 'interval') return snapshot.state === 'finished' ? snapshot.totalSets : Math.max(snapshot.currentSet - (snapshot.phase === 'work' ? 1 : 0), 0);
+  if (snapshot.mode === 'setRest') {
+    if (snapshot.state === 'finished') return snapshot.totalSets;
+    if (snapshot.workflowState === 'in_set') return Math.max(snapshot.currentSet - 1, 0);
+    return Math.min(snapshot.currentSet, snapshot.totalSets);
+  }
+  return Math.max(setsLength || 1, 1);
+};
+
+const notifyCompletion = (message) => {
+  if (typeof Notification === 'undefined') return;
+  if (Notification.permission === 'granted') {
+    new Notification('タイマー完了', { body: message });
+  } else if (Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
 };
 
 const buildSetInputs = (inputMode, limits, planSets, onChange) => {
@@ -119,16 +100,9 @@ const buildSetInputs = (inputMode, limits, planSets, onChange) => {
       });
 
       row.append(weight);
-      const weightLabel = document.createElement('span');
-      weightLabel.className = 'muted';
-      weightLabel.textContent = 'kg';
-      row.append(weightLabel);
-
+      row.append(Object.assign(document.createElement('span'), { className: 'muted', textContent: 'kg' }));
       row.append(reps);
-      const repLabel = document.createElement('span');
-      repLabel.className = 'muted';
-      repLabel.textContent = '回';
-      row.append(repLabel);
+      row.append(Object.assign(document.createElement('span'), { className: 'muted', textContent: '回' }));
     } else if (inputMode === 'reps') {
       const reps = document.createElement('input');
       reps.type = 'number';
@@ -141,10 +115,7 @@ const buildSetInputs = (inputMode, limits, planSets, onChange) => {
         onChange(index, { reps: next });
       });
       row.append(reps);
-      const repLabel = document.createElement('span');
-      repLabel.className = 'muted';
-      repLabel.textContent = '回';
-      row.append(repLabel);
+      row.append(Object.assign(document.createElement('span'), { className: 'muted', textContent: '回' }));
     }
 
     wrapper.append(row);
@@ -153,492 +124,435 @@ const buildSetInputs = (inputMode, limits, planSets, onChange) => {
   return wrapper;
 };
 
-const DIFFICULTY_LABELS = { beginner: '初級', intermediate: '中級', advanced: '上級' };
-
-const notifyCompletion = (message) => {
-  if (typeof Notification === 'undefined') return;
-  if (Notification.permission === 'granted') {
-    new Notification('タイマー完了', { body: message });
-  } else if (Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
-};
-
 export const renderRun = (params, { navigate, store, playSfx }) => {
   const quest = getQuestById(params.id);
   const settings = store.getSettings();
   const previousPlan = store.getLastPlan(params.id, settings.difficulty);
   let runPlan = createPlanFromDefinition(quest, settings.difficulty, previousPlan);
 
+  if (!quest) {
+    const container = document.createElement('section');
+    container.className = 'run-shell';
+    const missing = document.createElement('p');
+    missing.textContent = 'ワークアウトが見つかりませんでした。ホームに戻ります。';
+    container.append(missing);
+    return container;
+  }
+
+  const timerPrefs = store.getTimerPreferences();
+  let timerConfig = {
+    mode: runPlan.defaultTimerMode || timerPrefs.mode || 'setRest',
+    timeMode: runPlan.defaultTimeMode || timerPrefs.timeMode || 'stopwatch',
+    workSeconds: runPlan.inputMode === 'hold' ? runPlan.sets[0]?.timeSeconds || runPlan.trainingSeconds : (timerPrefs.workSeconds || runPlan.trainingSeconds),
+    restSeconds: runPlan.restSeconds ?? timerPrefs.restSeconds,
+    sets: runPlan.inputMode === 'time' ? 1 : (runPlan.sets.length || timerPrefs.sets),
+  };
+
   const hasDistanceMetric = Array.isArray(runPlan.trackingMetrics) && runPlan.trackingMetrics.includes('distance');
-  const distanceGoalConfig = runPlan.goalConfig?.type === 'distance'
-    ? runPlan.goalConfig
-    : { type: 'distance', min: 100, max: 100000, step: 100, unitLabel: 'm' };
+  const distanceGoalConfig = runPlan.goalConfig?.type === 'distance' ? runPlan.goalConfig : { type: 'distance', min: 100, max: 100000, step: 100, unitLabel: 'm' };
   let distanceMeters = hasDistanceMetric
     ? (runPlan.metricGoals?.distanceMeters ?? distanceGoalConfig.defaultValue ?? distanceGoalConfig.min)
     : null;
 
-  const timerPrefs = store.getTimerPreferences();
-  let timerConfig = {
-    mode: runPlan.defaultTimerMode || runPlan.mode || timerPrefs.mode,
-    workSeconds: runPlan.inputMode === 'hold' ? runPlan.sets[0]?.timeSeconds || runPlan.trainingSeconds : (timerPrefs.workSeconds || runPlan.trainingSeconds),
-    restSeconds: runPlan.restSeconds ?? timerPrefs.restSeconds,
-    sets: runPlan.inputMode === 'stopwatch' ? 1 : (runPlan.sets.length || timerPrefs.sets),
-  };
-  timerConfig.sets = Math.max(timerConfig.sets || 1, 1);
-  timerConfig.mode = runPlan.defaultTimerMode || timerConfig.mode || 'interval';
-
   const buildEngineConfig = () => ({
     mode: timerConfig.mode,
+    timeMode: timerConfig.timeMode,
     workSeconds: timerConfig.workSeconds,
     restSeconds: timerConfig.restSeconds,
-    sets: timerConfig.mode === 'interval' ? timerConfig.sets : 1,
+    sets: ['interval', 'setRest'].includes(timerConfig.mode) ? timerConfig.sets : 1,
     workSets: timerConfig.mode === 'interval' ? runPlan.sets : [],
   });
+
+  const engine = createTimerEngine(buildEngineConfig());
 
   const container = document.createElement('section');
   container.className = 'run-shell';
 
-  if (!quest) {
-    const missing = document.createElement('p');
-    missing.textContent = 'ワークアウトが見つかりませんでした。ホームに戻ります。';
-    const back = document.createElement('button');
-    back.type = 'button';
-    back.addEventListener('click', () => {
-      playSfx('ui:navigate');
-      navigate('#/');
-    });
-    container.append(missing, back);
-    return container;
-  }
-
-  const engine = createTimerEngine(buildEngineConfig());
+  const timerBox = document.createElement('div');
+  timerBox.className = 'run-timer';
 
   const metaBox = document.createElement('p');
   metaBox.className = 'muted';
   metaBox.textContent = `${DIFFICULTY_LABELS[settings.difficulty] || '初級'} / 音: ${settings.sfxEnabled ? 'オン' : 'オフ'} / 音量: ${(settings.sfxVolume * 100).toFixed(0)}%`;
 
-  const timerBox = document.createElement('div');
-  timerBox.className = 'run-timer';
-
   const statusRow = document.createElement('div');
   statusRow.className = 'row run-timer__status';
-  const phaseBadge = document.createElement('span');
-  phaseBadge.className = 'pill pill--info';
-  const setProgress = document.createElement('span');
-  setProgress.className = 'muted';
-  const nextInfo = document.createElement('span');
-  nextInfo.className = 'muted';
+  const phaseBadge = Object.assign(document.createElement('span'), { className: 'pill pill--info' });
+  const setProgress = Object.assign(document.createElement('span'), { className: 'muted' });
+  const nextInfo = Object.assign(document.createElement('span'), { className: 'muted' });
   statusRow.append(phaseBadge, setProgress, nextInfo);
 
   const timeDisplay = document.createElement('div');
   timeDisplay.className = 'run-timer__display';
 
-  const subMeta = document.createElement('p');
-  subMeta.className = 'muted run-timer__meta';
-  const updateMeta = () => {
-    const description =
-      timerConfig.mode === 'interval'
-        ? trainingConfig.descriptions.interval
-        : timerConfig.mode === 'timer'
-          ? trainingConfig.descriptions.timer
-          : trainingConfig.descriptions.stopwatch;
-    subMeta.textContent = `${description} / 運動 ${formatTime(timerConfig.workSeconds)}${
-      (timerConfig.mode === 'interval' && timerConfig.sets > 1) ? ` / 休憩 ${formatTime(timerConfig.restSeconds)} / ${timerConfig.sets} セット` : (timerConfig.mode === 'interval' ? ` / ${timerConfig.sets} セット` : '')
-    }`;
-  };
-  updateMeta();
-
-  const pointsBanner = document.createElement('p');
-  pointsBanner.className = 'muted run-points';
-  pointsBanner.textContent = `消費カロリー基準: 規定セット ${runPlan.baseSets}、上限 ${runPlan.maxSets}。チャレンジで消費カロリー増。`;
+  const subMeta = Object.assign(document.createElement('p'), { className: 'muted run-timer__meta' });
+  const timerNotice = Object.assign(document.createElement('p'), { className: 'muted' });
+  const pointsBanner = Object.assign(document.createElement('p'), { className: 'muted run-points' });
 
   const timerControls = document.createElement('div');
   timerControls.className = 'run-timer__controls';
 
-  const modeField = document.createElement('label');
-  modeField.className = 'field';
-  const modeLabel = document.createElement('span');
-  modeLabel.textContent = 'タイマー種別';
+  const modeField = Object.assign(document.createElement('label'), { className: 'field' });
+  modeField.append(Object.assign(document.createElement('span'), { textContent: 'タイマー種別' }));
   const modeSelect = document.createElement('select');
-  [{ value: runPlan.defaultTimerMode || 'stopwatch', label: (runPlan.defaultTimerMode || 'stopwatch') === 'interval' ? 'インターバル' : 'ストップウォッチ' }].forEach((option) => {
+  const modeOptionsByInput = {
+    hold: [{ value: 'interval', label: 'インターバルタイマー' }],
+    reps: [{ value: 'setRest', label: 'セット + 休憩タイマー' }],
+    weightReps: [{ value: 'setRest', label: 'セット + 休憩タイマー' }],
+    time: [{ value: 'time', label: 'time（ストップウォッチ/タイマー）' }],
+  };
+  (modeOptionsByInput[runPlan.inputMode] || [{ value: 'setRest', label: 'セット + 休憩タイマー' }]).forEach((option) => {
     const el = document.createElement('option');
     el.value = option.value;
     el.textContent = option.label;
-    if (option.value === timerConfig.mode) el.selected = true;
+    el.selected = option.value === timerConfig.mode;
     modeSelect.append(el);
   });
-  modeSelect.addEventListener('change', (event) => {
-    timerConfig.mode = event.target.value;
-    store.rememberTimerConfig(timerConfig);
-    engine.reset(buildEngineConfig());
-    completionRecorded = false;
-    toggleButton.textContent = '開始';
-    updateMeta();
-    updateDisplay(engine.getSnapshot());
-  });
-  modeField.append(modeLabel, modeSelect);
+  modeSelect.disabled = modeSelect.options.length <= 1;
+  modeField.append(modeSelect);
 
-  const workField = document.createElement('label');
-  workField.className = 'field';
-  const workLabel = document.createElement('span');
-  workLabel.textContent = 'トレーニング時間（秒）';
+  const timeModeField = Object.assign(document.createElement('label'), { className: 'field' });
+  timeModeField.append(Object.assign(document.createElement('span'), { textContent: 'timeモード' }));
+  const timeModeSelect = document.createElement('select');
+  [{ value: 'stopwatch', label: 'ストップウォッチ' }, { value: 'timer', label: 'タイマー' }].forEach((option) => {
+    const el = document.createElement('option');
+    el.value = option.value;
+    el.textContent = option.label;
+    el.selected = option.value === timerConfig.timeMode;
+    timeModeSelect.append(el);
+  });
+  timeModeField.append(timeModeSelect);
+
+  const workField = Object.assign(document.createElement('label'), { className: 'field' });
+  workField.append(Object.assign(document.createElement('span'), { textContent: '時間（秒）' }));
   const workInput = document.createElement('input');
   workInput.type = 'number';
   workInput.min = trainingConfig.limits.trainingSeconds.min;
   workInput.max = trainingConfig.limits.trainingSeconds.max;
   workInput.value = timerConfig.workSeconds;
-  workInput.addEventListener('change', (event) => {
-    const next = clampNumber(event.target.value, trainingConfig.limits.trainingSeconds.min, trainingConfig.limits.trainingSeconds.max);
-    timerConfig.workSeconds = next;
-    if (runPlan.inputMode === 'hold') {
-      runPlan.sets = runPlan.sets.map(() => ({ timeSeconds: next }));
-      runPlan.trainingSeconds = next;
-      refreshSetEditor();
-    }
-    store.rememberTimerConfig(timerConfig);
-    engine.reset(buildEngineConfig());
-    updateMeta();
-    updateDisplay(engine.getSnapshot());
-  });
-  workField.append(workLabel, workInput);
+  workField.append(workInput);
 
-  const restField = document.createElement('label');
-  restField.className = 'field';
-  const restLabel = document.createElement('span');
-  restLabel.textContent = '休憩時間（秒）';
+  const restField = Object.assign(document.createElement('label'), { className: 'field' });
+  restField.append(Object.assign(document.createElement('span'), { textContent: '休憩時間（秒）' }));
   const restInput = document.createElement('input');
   restInput.type = 'number';
   restInput.min = trainingConfig.limits.restSeconds.min;
   restInput.max = trainingConfig.limits.restSeconds.max;
   restInput.value = timerConfig.restSeconds;
-  restInput.addEventListener('change', (event) => {
-    const next = clampNumber(event.target.value, trainingConfig.limits.restSeconds.min, trainingConfig.limits.restSeconds.max);
-    timerConfig.restSeconds = next;
-    runPlan.restSeconds = next;
-    store.rememberTimerConfig(timerConfig);
-    engine.reset(buildEngineConfig());
-    updateMeta();
-    updateDisplay(engine.getSnapshot());
-  });
-  restField.append(restLabel, restInput);
+  restField.append(restInput);
 
-
-  const distanceField = document.createElement('label');
-  distanceField.className = 'field';
-  const distanceLabel = document.createElement('span');
-  distanceLabel.textContent = '距離（m）';
+  const distanceField = Object.assign(document.createElement('label'), { className: 'field' });
+  distanceField.append(Object.assign(document.createElement('span'), { textContent: '距離（m）' }));
   const distanceInput = document.createElement('input');
   distanceInput.type = 'number';
-  distanceInput.min = distanceGoalConfig.min ?? 0;
-  distanceInput.max = distanceGoalConfig.max ?? 100000;
-  distanceInput.step = distanceGoalConfig.step ?? 100;
+  distanceInput.min = distanceGoalConfig.min;
+  distanceInput.max = distanceGoalConfig.max;
+  distanceInput.step = distanceGoalConfig.step;
   distanceInput.value = distanceMeters ?? '';
-  distanceInput.placeholder = hasDistanceMetric ? `例: ${distanceGoalConfig.defaultValue || 1500}` : '';
-  distanceInput.addEventListener('change', (event) => {
-    if (!hasDistanceMetric) return;
-    const next = clampNumber(event.target.value, distanceGoalConfig.min, distanceGoalConfig.max);
-    distanceMeters = next;
-    runPlan.metricGoals = { ...(runPlan.metricGoals || {}), distanceMeters: next };
-    store.rememberPlan(runPlan.questId, runPlan.difficulty, runPlan);
-  });
-  distanceField.append(distanceLabel, distanceInput);
+  distanceField.append(distanceInput);
 
-  let postNote = '';
-
-  const noteField = document.createElement('label');
-  noteField.className = 'field';
-  const noteLabel = document.createElement('span');
-  noteLabel.textContent = 'メモ';
+  const noteField = Object.assign(document.createElement('label'), { className: 'field' });
+  noteField.append(Object.assign(document.createElement('span'), { textContent: 'メモ' }));
   const noteInput = document.createElement('input');
   noteInput.type = 'text';
   noteInput.placeholder = '任意メモ';
-  noteInput.addEventListener('input', (event) => {
-    postNote = event.target.value;
-  });
-  noteField.append(noteLabel, noteInput);
+  noteField.append(noteInput);
 
-  const postActions = document.createElement('div');
-  postActions.className = 'hero__actions';
-
-  const publishPublic = document.createElement('button');
-  publishPublic.type = 'button';
-  publishPublic.className = 'ghost';
-  publishPublic.textContent = '公開で投稿';
-
-  const publishPrivate = document.createElement('button');
-  publishPrivate.type = 'button';
-  publishPrivate.className = 'ghost';
-  publishPrivate.textContent = 'フォロワーのみで投稿';
-
-  const publishArchived = document.createElement('button');
-  publishArchived.type = 'button';
-  publishArchived.className = 'ghost';
-  publishArchived.textContent = 'アーカイブ（自分のみ）';
-
-  postActions.append(publishPublic, publishPrivate, publishArchived);
-
-  const syncRestFieldVisibility = () => {
-    restField.style.display = runPlan.inputMode !== 'stopwatch' && runPlan.sets.length > 1 ? '' : 'none';
-  };
-  timerControls.append(modeField);
-  if (runPlan.inputMode === 'hold') timerControls.append(workField);
-  timerControls.append(restField);
-  syncRestFieldVisibility();
-  if (hasDistanceMetric) timerControls.append(distanceField);
-  timerControls.append(noteField, postActions);
-
-  const timerNotice = document.createElement('p');
-  timerNotice.className = 'muted';
-
-  timerBox.append(metaBox, statusRow, timeDisplay, subMeta, timerNotice, pointsBanner, timerControls);
-
-  const planBox = document.createElement('div');
-  planBox.className = 'stack run-plan__box';
-  const planHeading = document.createElement('h3');
-  planHeading.textContent = '消費カロリーアップチャレンジ';
-
-  const planLead = document.createElement('p');
-  planLead.className = 'muted';
-  planLead.textContent = `ベース: ${runPlan.baseSets} セット。上限 ${runPlan.maxSets} セットまで増量できます。`;
-
-  const setSliderField = document.createElement('label');
-  setSliderField.className = 'field';
-  const setSliderLabel = document.createElement('span');
-  setSliderLabel.textContent = 'セット数';
-  const setSlider = document.createElement('input');
-  setSlider.type = 'range';
-  setSlider.min = 1;
-  setSlider.max = runPlan.maxSets;
-  setSlider.value = runPlan.sets.length;
-  const setSliderValue = document.createElement('span');
-  setSliderValue.className = 'pill';
-  setSliderValue.textContent = `${runPlan.sets.length} セット`;
-
-  const setEditorContainer = document.createElement('div');
-
-  const refreshSetEditor = () => {
-    setEditorContainer.innerHTML = '';
-    setEditorContainer.append(
-      buildSetInputs(runPlan.inputMode, runPlan.limits, runPlan.sets, (index, updated) => {
-        runPlan.sets[index] = { ...runPlan.sets[index], ...updated };
-        if (runPlan.inputMode === 'hold') {
-          timerConfig.workSeconds = runPlan.sets[0].timeSeconds;
-          store.rememberTimerConfig({ ...timerConfig, sets: runPlan.sets.length });
-          engine.reset(buildEngineConfig());
-        }
-        store.rememberPlan(runPlan.questId, runPlan.difficulty, runPlan);
-        updateMeta();
-      }),
-    );
-  };
-
-  setSlider.addEventListener('input', (event) => {
-    const count = Number(event.target.value);
-    setSliderValue.textContent = `${count} セット`;
-  });
-
-  setSlider.addEventListener('change', (event) => {
-    const count = Number(event.target.value);
-    const baseSource = runPlan.baseDefinition;
-    while (runPlan.sets.length < count && runPlan.sets.length < runPlan.maxSets) {
-      const template = baseSource[runPlan.sets.length] || runPlan.sets[runPlan.sets.length - 1] || baseSource[0];
-      runPlan.sets.push({ ...template });
-    }
-    if (runPlan.sets.length > count) {
-      runPlan.sets = runPlan.sets.slice(0, count);
-    }
-    setSliderValue.textContent = `${runPlan.sets.length} セット`;
-    timerConfig.sets = runPlan.sets.length;
-    store.rememberTimerConfig(timerConfig);
-    engine.reset(buildEngineConfig());
-    completionRecorded = false;
-    refreshSetEditor();
-    store.rememberPlan(runPlan.questId, runPlan.difficulty, runPlan);
-    updateMeta();
-    syncRestFieldVisibility();
-  });
-
-  if (runPlan.maxSets > 1 && runPlan.inputMode !== 'stopwatch') {
-    setSliderField.append(setSliderLabel, setSlider, setSliderValue);
-  }
-  refreshSetEditor();
-
-  const howto = document.createElement('p');
-  howto.className = 'muted';
-  howto.textContent = runPlan.description;
-
-  planBox.append(planHeading, planLead);
-  if (runPlan.maxSets > 1 && runPlan.inputMode !== 'stopwatch') planBox.append(setSliderField);
-  if (runPlan.inputMode !== 'stopwatch') planBox.append(setEditorContainer);
-  planBox.append(howto);
-
-  const { sectionOne, sectionTwo } = ((questInfo) => {
-    const sectionOneEl = document.createElement('div');
-    sectionOneEl.className = 'run-howto__panel';
-    const headingOne = document.createElement('h3');
-    headingOne.textContent = '手順';
-    const steps = document.createElement('ol');
-    steps.className = 'steps';
-    questInfo.steps.forEach((step) => {
-      const li = document.createElement('li');
-      li.innerHTML = `<strong>${step.heading}</strong><p class="muted">${step.body}</p>`;
-      steps.append(li);
-    });
-    sectionOneEl.append(headingOne, steps);
-
-    const sectionTwoEl = document.createElement('div');
-    sectionTwoEl.className = 'run-howto__panel';
-    const headingTwo = document.createElement('h3');
-    headingTwo.textContent = 'フォームのコツ';
-    const tips = document.createElement('ul');
-    tips.className = 'muted';
-    questInfo.tips.forEach((tip) => {
-      const li = document.createElement('li');
-      li.textContent = tip;
-      tips.append(li);
-    });
-    sectionTwoEl.append(headingTwo, tips);
-
-    return { sectionOne: sectionOneEl, sectionTwo: sectionTwoEl };
-  })(quest);
-
+  let postNote = '';
   let completionRecorded = false;
   let startTimestamp = null;
+  const initialVisibility = normalizePostVisibility(store.getProfile?.()?.default_visibility || store.getProfile?.()?.account_visibility || 'private');
+  let selectedVisibility = initialVisibility;
+  let visibilityMenuOpen = false;
 
-  const { controls, toggleButton, completeButton } = createControls(
-    navigate,
-    quest.id,
-    playSfx,
-    () => {
-      engine.reset(buildEngineConfig());
-      completionRecorded = false;
-      toggleButton.textContent = '開始';
-      completeButton.disabled = false;
-      pointsBanner.textContent = '消費カロリー: 設定を調整して消費カロリーを伸ばしましょう。';
-      timerNotice.textContent = '';
-      startTimestamp = null;
-      updateDisplay(engine.getSnapshot());
-    },
-    () => {
-      const snapshot = engine.getSnapshot();
-      if (snapshot.state === 'running') {
-        engine.pause();
-        playSfx('timer:stop');
-        toggleButton.textContent = '再開';
-        return;
-      }
-      startTimestamp = startTimestamp || Date.now();
-      engine.start(buildEngineConfig());
-      completionRecorded = false;
-      toggleButton.textContent = '一時停止';
-      playSfx('timer:start');
-    },
-    () => {
-      const snapshot = engine.getSnapshot();
-      engine.stop();
-      postWorkout({ ...snapshot, finished: true }, null);
-      playSfx('timer:complete');
-    },
-  );
+  const controls = document.createElement('div');
+  controls.className = 'run-controls';
+  const stopButton = Object.assign(document.createElement('button'), { type: 'button', className: 'ghost', textContent: 'ワークアウト詳細へ' });
+  const resetButton = Object.assign(document.createElement('button'), { type: 'button', className: 'ghost', textContent: 'リセット' });
+  const toggleButton = Object.assign(document.createElement('button'), { type: 'button', textContent: '開始' });
 
-  const postWorkout = (snapshot, visibilityOverride = null) => {
+  const postSplit = document.createElement('div');
+  postSplit.className = 'split-button';
+  const submitButton = Object.assign(document.createElement('button'), { type: 'button', textContent: '投稿' });
+  submitButton.className = 'split-button__main';
+  const menuToggle = Object.assign(document.createElement('button'), { type: 'button', className: 'split-button__toggle ghost', textContent: '▾' });
+  menuToggle.setAttribute('aria-label', '投稿公開範囲を選択');
+  menuToggle.setAttribute('aria-haspopup', 'menu');
+  const menu = document.createElement('div');
+  menu.className = 'split-button__menu';
+  menu.setAttribute('role', 'menu');
+
+  const renderVisibilityMenu = () => {
+    menu.innerHTML = '';
+    VISIBILITY_OPTIONS.forEach((option) => {
+      const btn = Object.assign(document.createElement('button'), { type: 'button', textContent: option.label });
+      btn.className = option.value === selectedVisibility ? 'is-selected' : '';
+      btn.setAttribute('role', 'menuitemradio');
+      btn.setAttribute('aria-checked', option.value === selectedVisibility ? 'true' : 'false');
+      btn.addEventListener('click', () => {
+        selectedVisibility = option.value;
+        submitButton.textContent = `投稿（${option.label}）`;
+        visibilityMenuOpen = false;
+        menu.classList.remove('is-open');
+        renderVisibilityMenu();
+      });
+      menu.append(btn);
+    });
+  };
+
+  const postWorkout = (snapshot) => {
     if (completionRecorded) return;
     const completedSets = computeCompletedSets(snapshot, runPlan.sets.length);
     const result = store.recordResult({
       questId: quest.id,
       difficulty: settings.difficulty,
       mode: snapshot.mode,
+      timeMode: snapshot.timeMode || timerConfig.timeMode,
       trainingSeconds: timerConfig.workSeconds,
       restSeconds: timerConfig.restSeconds,
       sets: runPlan.sets,
       completedSets,
       elapsedSeconds: snapshot.elapsedSeconds,
-      finished: snapshot.state === 'finished' || snapshot.finished,
+      finished: snapshot.state === 'finished',
       exerciseSlug: runPlan.exerciseSlug,
       startTime: startTimestamp,
       endTime: Date.now(),
       plan: runPlan,
-      visibilityOverride,
-      published_at: visibilityOverride ? new Date().toISOString() : null,
+      visibilityOverride: selectedVisibility,
+      published_at: selectedVisibility === 'archived' ? null : new Date().toISOString(),
       note: postNote,
       distanceMeters: hasDistanceMetric ? distanceMeters : null,
     });
     completionRecorded = true;
-    completeButton.disabled = true;
-    store.rememberPlan(runPlan.questId, runPlan.difficulty, runPlan);
-    store.rememberTimerConfig(timerConfig);
+    submitButton.disabled = true;
     pointsBanner.textContent = `獲得消費カロリー: ${result.calories} kcal`;
     timerNotice.textContent = '完了！計測結果を保存しました。';
+    store.rememberPlan(runPlan.questId, runPlan.difficulty, runPlan);
+    store.rememberTimerConfig(timerConfig);
     notifyCompletion('セットを完了しました。お疲れさまです！');
   };
 
-
-  publishPublic.addEventListener('click', () => {
-    const snapshot = engine.getSnapshot();
-    engine.stop();
-    postWorkout({ ...snapshot, finished: true }, 'public');
-  });
-
-  publishPrivate.addEventListener('click', () => {
-    const snapshot = engine.getSnapshot();
-    engine.stop();
-    postWorkout({ ...snapshot, finished: true }, 'private');
-  });
-
-  publishArchived.addEventListener('click', () => {
-    const snapshot = engine.getSnapshot();
-    engine.stop();
-    postWorkout({ ...snapshot, finished: true }, 'archived');
-  });
+  const updateMeta = () => {
+    const description =
+      timerConfig.mode === 'interval'
+        ? trainingConfig.descriptions.interval
+        : timerConfig.mode === 'setRest'
+          ? trainingConfig.descriptions.setRest
+          : timerConfig.timeMode === 'timer'
+            ? trainingConfig.descriptions.timeTimer
+            : trainingConfig.descriptions.timeStopwatch;
+    subMeta.textContent = description;
+    pointsBanner.textContent = `消費カロリー基準: 規定セット ${runPlan.baseSets}、上限 ${runPlan.maxSets}。`;
+  };
 
   const updateDisplay = (snapshot) => {
-    if (snapshot.mode === 'stopwatch') {
-      phaseBadge.textContent = snapshot.state === 'running' ? '計測中' : '停止中';
-      setProgress.textContent = runPlan.inputMode === 'stopwatch' ? 'ストップウォッチ計測' : `${runPlan.sets.length} セット入力済み`;
-      nextInfo.textContent = '次: 完了ボタンで終了';
-      timeDisplay.textContent = formatTime(snapshot.elapsedSeconds);
+    if (snapshot.mode === 'time') {
+      if (snapshot.timeMode === 'stopwatch') {
+        phaseBadge.textContent = snapshot.state === 'running' ? '計測中' : '停止中';
+        setProgress.textContent = 'ストップウォッチ';
+        nextInfo.textContent = '次: 投稿';
+        timeDisplay.textContent = formatTime(snapshot.elapsedSeconds);
+      } else {
+        phaseBadge.textContent = snapshot.state === 'running' ? 'カウント中' : '待機中';
+        setProgress.textContent = 'タイマー';
+        nextInfo.textContent = '次: 完了';
+        timeDisplay.textContent = formatTime(snapshot.remainingSeconds || timerConfig.workSeconds);
+      }
+      toggleButton.textContent = snapshot.state === 'running' ? '一時停止' : (snapshot.state === 'finished' ? '開始' : '開始');
       return;
     }
 
-    if (snapshot.mode === 'timer') {
-      phaseBadge.textContent = snapshot.state === 'running' ? 'カウント中' : '待機中';
-      setProgress.textContent = '1 / 1 セット';
-      nextInfo.textContent = '次: 完了通知';
-      timeDisplay.textContent = formatTime(snapshot.remainingSeconds || timerConfig.workSeconds);
+    if (snapshot.mode === 'setRest') {
+      if (snapshot.workflowState === 'in_set') {
+        phaseBadge.textContent = 'セット中';
+        toggleButton.textContent = 'セット完了';
+      } else if (snapshot.workflowState === 'rest_ready') {
+        phaseBadge.textContent = '休憩待機';
+        toggleButton.textContent = '休憩開始';
+      } else if (snapshot.workflowState === 'resting') {
+        phaseBadge.textContent = '休憩中';
+        toggleButton.textContent = snapshot.state === 'running' ? '一時停止' : '休憩再開';
+      } else if (snapshot.workflowState === 'completed') {
+        phaseBadge.textContent = '完了';
+        toggleButton.textContent = '開始';
+      } else {
+        phaseBadge.textContent = '待機中';
+        toggleButton.textContent = 'セット開始';
+      }
+      setProgress.textContent = `${Math.min(snapshot.currentSet, snapshot.totalSets)} / ${snapshot.totalSets} セット`;
+      nextInfo.textContent = `次: ${snapshot.next}`;
+      timeDisplay.textContent = snapshot.workflowState === 'resting' ? formatTime(snapshot.remainingSeconds) : formatTime(snapshot.elapsedSeconds);
       return;
     }
 
-    const phaseLabel = snapshot.phase === 'rest' ? '休憩中' : 'トレーニング中';
-    phaseBadge.textContent = `${phaseLabel}`;
+    phaseBadge.textContent = snapshot.phase === 'rest' ? '休憩中' : '保持中';
     setProgress.textContent = `${snapshot.currentSet} / ${snapshot.totalSets} セット`;
     nextInfo.textContent = `次: ${snapshot.next}`;
     timeDisplay.textContent = formatTime(snapshot.remainingSeconds);
+    toggleButton.textContent = snapshot.state === 'running' ? '一時停止' : '開始';
   };
 
+  const syncVisibility = () => {
+    const isTime = runPlan.inputMode === 'time';
+    const isSetRest = timerConfig.mode === 'setRest';
+    timeModeField.style.display = isTime ? '' : 'none';
+    workField.style.display = isTime || runPlan.inputMode === 'hold' ? '' : 'none';
+    restField.style.display = isSetRest || timerConfig.mode === 'interval' ? '' : 'none';
+  };
+
+  const resetEngine = () => {
+    engine.reset(buildEngineConfig());
+    completionRecorded = false;
+    submitButton.disabled = false;
+    timerNotice.textContent = '';
+    startTimestamp = null;
+    updateMeta();
+    updateDisplay(engine.getSnapshot());
+  };
+
+  modeSelect.addEventListener('change', (event) => {
+    timerConfig.mode = event.target.value;
+    resetEngine();
+  });
+  timeModeSelect.addEventListener('change', (event) => {
+    timerConfig.timeMode = event.target.value;
+    resetEngine();
+  });
+  workInput.addEventListener('change', (event) => {
+    timerConfig.workSeconds = clampNumber(event.target.value, trainingConfig.limits.trainingSeconds.min, trainingConfig.limits.trainingSeconds.max);
+    if (runPlan.inputMode === 'hold') {
+      runPlan.sets = runPlan.sets.map(() => ({ timeSeconds: timerConfig.workSeconds }));
+      runPlan.trainingSeconds = timerConfig.workSeconds;
+    }
+    resetEngine();
+  });
+  restInput.addEventListener('change', (event) => {
+    timerConfig.restSeconds = clampNumber(event.target.value, trainingConfig.limits.restSeconds.min, trainingConfig.limits.restSeconds.max);
+    runPlan.restSeconds = timerConfig.restSeconds;
+    resetEngine();
+  });
+  distanceInput.addEventListener('change', (event) => {
+    if (!hasDistanceMetric) return;
+    distanceMeters = clampNumber(event.target.value, distanceGoalConfig.min, distanceGoalConfig.max);
+    runPlan.metricGoals = { ...(runPlan.metricGoals || {}), distanceMeters };
+  });
+  noteInput.addEventListener('input', (event) => {
+    postNote = event.target.value;
+  });
+
+  stopButton.addEventListener('click', () => {
+    if (window.confirm('中断してワークアウト詳細に戻りますか？')) {
+      playSfx('timer:stop');
+      navigate(`#/workout/${quest.id}`);
+    }
+  });
+
+  resetButton.addEventListener('click', () => {
+    resetEngine();
+    playSfx('timer:stop');
+  });
+
+  toggleButton.addEventListener('click', () => {
+    const snapshot = engine.getSnapshot();
+    if (timerConfig.mode === 'setRest') {
+      if (snapshot.workflowState === 'idle' || snapshot.workflowState === 'in_set' || snapshot.workflowState === 'rest_ready') {
+        if (!startTimestamp) startTimestamp = Date.now();
+        engine.advanceSetRest();
+        return;
+      }
+      if (snapshot.workflowState === 'resting' && snapshot.state === 'running') {
+        engine.pause();
+        return;
+      }
+      if (snapshot.workflowState === 'resting' && snapshot.state === 'paused') {
+        engine.resume();
+        return;
+      }
+      if (snapshot.state === 'finished') engine.reset(buildEngineConfig());
+      return;
+    }
+
+    if (snapshot.state === 'running') {
+      engine.pause();
+      return;
+    }
+    if (snapshot.state === 'paused') {
+      engine.resume();
+      return;
+    }
+    startTimestamp = startTimestamp || Date.now();
+    engine.start(buildEngineConfig());
+  });
+
+  submitButton.addEventListener('click', () => {
+    const snapshot = engine.getSnapshot();
+    engine.stop();
+    postWorkout({ ...snapshot, state: 'finished' });
+  });
+
+  menuToggle.addEventListener('click', () => {
+    visibilityMenuOpen = !visibilityMenuOpen;
+    menu.classList.toggle('is-open', visibilityMenuOpen);
+    menuToggle.setAttribute('aria-expanded', visibilityMenuOpen ? 'true' : 'false');
+  });
+  document.addEventListener('click', (event) => {
+    if (!postSplit.contains(event.target)) {
+      visibilityMenuOpen = false;
+      menu.classList.remove('is-open');
+      menuToggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  renderVisibilityMenu();
+  submitButton.textContent = `投稿（${VISIBILITY_OPTIONS.find((entry) => entry.value === selectedVisibility)?.label || '公開'}）`;
+
+  postSplit.append(submitButton, menuToggle, menu);
+  controls.append(stopButton, resetButton, toggleButton, postSplit);
+
+  const planBox = document.createElement('div');
+  planBox.className = 'stack run-plan__box';
+  const planHeading = document.createElement('h3');
+  planHeading.textContent = 'ワークアウト設定';
+  const planLead = Object.assign(document.createElement('p'), { className: 'muted', textContent: `${runPlan.sets.length || 1} セット / 休憩 ${runPlan.restSeconds} 秒` });
+  const setEditorContainer = document.createElement('div');
+
+  const refreshSetEditor = () => {
+    setEditorContainer.innerHTML = '';
+    if (runPlan.inputMode === 'time') return;
+    const editor = buildSetInputs(runPlan.inputMode, runPlan.limits || {}, runPlan.sets, (index, setValue) => {
+      runPlan.sets[index] = setValue;
+      store.rememberPlan(runPlan.questId, runPlan.difficulty, runPlan);
+      resetEngine();
+    });
+    setEditorContainer.append(editor);
+  };
+  refreshSetEditor();
+
+  const howto = Object.assign(document.createElement('p'), { className: 'muted', textContent: runPlan.description });
+  planBox.append(planHeading, planLead, setEditorContainer, howto);
+
+  timerControls.append(modeField, timeModeField, workField, restField);
+  if (hasDistanceMetric) timerControls.append(distanceField);
+  timerControls.append(noteField);
+
+  timerBox.append(metaBox, statusRow, timeDisplay, subMeta, timerNotice, pointsBanner, timerControls, controls);
+
   engine.onTick((snapshot) => {
+    syncVisibility();
     updateDisplay(snapshot);
   });
 
   engine.onStateChange((snapshot) => {
     updateDisplay(snapshot);
     if (snapshot.state === 'finished') {
-      toggleButton.textContent = '開始';
       timerNotice.textContent = '完了！投稿ボタンで保存してください。';
       playSfx('timer:complete');
     }
   });
 
-  updateDisplay(engine.getSnapshot());
+  resetEngine();
 
-  window.addEventListener(
-    'hashchange',
-    () => {
-      engine.stop();
-    },
-    { once: true },
-  );
-
-  container.append(timerBox, planBox, sectionOne, sectionTwo, controls);
+  window.addEventListener('hashchange', () => engine.stop(), { once: true });
+  container.append(timerBox, planBox);
   return container;
 };

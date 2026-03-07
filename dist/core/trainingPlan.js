@@ -10,13 +10,17 @@ const clampNumber = (value, min, max) => {
   return Math.max(min, Math.min(max, numeric));
 };
 
+const normalizeInputMode = (mode) => (mode === 'stopwatch' ? 'time' : mode);
+const normalizeTimerMode = (mode) => (mode === 'stopwatch' ? 'time' : mode);
+const normalizeTimeMode = (mode) => (mode === 'timer' ? 'timer' : 'stopwatch');
+
 const resolveInputMode = (definition = {}) => {
-  if (definition.inputMode) return definition.inputMode;
+  if (definition.inputMode) return normalizeInputMode(definition.inputMode);
   return definition.unit === 'time' ? 'hold' : 'weightReps';
 };
 
 const clampSet = (inputMode, set = {}, limits = {}) => {
-  if (inputMode === 'hold') {
+  if (inputMode === 'hold' || inputMode === 'time') {
     const safeTime = clampNumber(set.timeSeconds ?? limits.timeSeconds?.min ?? 0, limits.timeSeconds?.min, limits.timeSeconds?.max);
     return { timeSeconds: safeTime };
   }
@@ -33,7 +37,7 @@ const clampSet = (inputMode, set = {}, limits = {}) => {
 };
 
 const buildSets = (inputMode, desiredCount, templateSets, limits) => {
-  if (inputMode === 'stopwatch') return [];
+  if (inputMode === 'time') return [];
   const safeCount = Math.max(1, Math.min(desiredCount, 50));
   const sets = [];
   for (let i = 0; i < safeCount; i += 1) {
@@ -67,6 +71,7 @@ export const createPlanFromDefinition = (quest, difficulty, previousPlan) => {
       difficulty,
       inputMode: 'hold',
       defaultTimerMode: 'interval',
+      timeMode: 'stopwatch',
       trackingMetrics: [],
       goalConfig: null,
       metricGoals: null,
@@ -89,19 +94,23 @@ export const createPlanFromDefinition = (quest, difficulty, previousPlan) => {
   const sourceSets = previousPlan?.sets?.length ? previousPlan.sets : diffConfig.defaultSets;
   const desiredCount = previousPlan?.sets?.length || sourceSets?.length || 1;
   const sets = buildSets(inputMode, desiredCount, sourceSets, diffConfig.limits || {});
-  const baseSets = inputMode === 'stopwatch' ? 1 : (diffConfig.defaultSets?.length || 1);
+  const baseSets = inputMode === 'time' ? 1 : (diffConfig.defaultSets?.length || 1);
 
   const primaryTime = inputMode === 'hold' ? sets[0]?.timeSeconds ?? trainingConfig.defaults.timerTrainingSeconds : trainingConfig.defaults.timerTrainingSeconds;
-  const mode = definition.defaultTimerMode || (inputMode === 'hold' ? 'interval' : 'stopwatch');
+  const fallbackMode = inputMode === 'hold' ? 'interval' : inputMode === 'time' ? 'time' : 'setRest';
+  const mode = normalizeTimerMode(definition.defaultTimerMode || previousPlan?.mode || fallbackMode);
   const restSeconds = diffConfig.restSeconds || definition.restSeconds || trainingConfig.defaults.timerRestSeconds;
   const goalConfig = definition.goalConfig || null;
+  const defaultTimeMode = normalizeTimeMode(definition.defaultTimeMode || previousPlan?.timeMode || 'stopwatch');
 
   return {
     questId: quest?.id,
     exerciseSlug: definition.id,
     difficulty,
     inputMode,
-    defaultTimerMode: definition.defaultTimerMode || mode,
+    defaultTimerMode: mode,
+    defaultTimeMode,
+    timeMode: defaultTimeMode,
     trackingMetrics: Array.isArray(definition.trackingMetrics) ? definition.trackingMetrics : [],
     goalConfig,
     metricGoals: resolveMetricGoals(previousPlan, goalConfig),
