@@ -1,6 +1,7 @@
 import { getQuestById } from '../core/content.js';
 import { normalizePostVisibility } from '../core/privacy/visibility.js';
 import { createTimerEngine } from '../core/timerEngine.js';
+import { buildWorkoutTimingSummary } from '../core/workoutTiming.js';
 import { createPlanFromDefinition } from '../core/trainingPlan.js';
 import { trainingConfig } from '../data/trainingConfig.js';
 
@@ -67,6 +68,30 @@ const computeCompletedSets = (snapshot, setsLength) => {
   }
   return Math.max(setsLength || 1, 1);
 };
+
+const isSetRestLike = (snapshot) => snapshot.mode === 'setRest' || snapshot.timeMode === 'intervalStopwatch';
+
+const resolvePausedAdvanceLabel = (snapshot) => {
+  if (snapshot.mode === 'time' && snapshot.timeMode === 'intervalTimer') {
+    return snapshot.phase === 'rest' ? 'この休憩を終了' : 'このセットを終了';
+  }
+  if (isSetRestLike(snapshot)) {
+    if (snapshot.workflowState === 'resting' || snapshot.workflowState === 'rest_ready') return 'この休憩を終了';
+    if (snapshot.workflowState === 'in_set') return 'このセットを終了';
+  }
+  if (snapshot.mode === 'time' && snapshot.timeMode === 'timer') return 'このタイマーを終了';
+  return '次へ進む';
+};
+
+const shouldShowPausedAdvance = (snapshot) => {
+  if (snapshot.state !== 'paused') return false;
+  if (snapshot.mode === 'time' && snapshot.timeMode === 'stopwatch') return false;
+  if (snapshot.mode === 'time' && snapshot.timeMode === 'timer') return true;
+  if (snapshot.mode === 'time' && snapshot.timeMode === 'intervalTimer') return true;
+  if (isSetRestLike(snapshot)) return ['in_set', 'resting', 'rest_ready'].includes(snapshot.workflowState);
+  return false;
+};
+
 
 const notifyCompletion = (message) => {
   if (typeof Notification === 'undefined') return;
@@ -217,6 +242,7 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   const stopButton = Object.assign(document.createElement('button'), { type: 'button', className: 'ghost', textContent: 'ワークアウト詳細へ' });
   const resetButton = Object.assign(document.createElement('button'), { type: 'button', className: 'ghost', textContent: 'リセット' });
   const toggleButton = Object.assign(document.createElement('button'), { type: 'button', textContent: '開始' });
+  const advanceButton = Object.assign(document.createElement('button'), { type: 'button', className: 'ghost', textContent: '次へ進む' });
 
   const postSplit = document.createElement('div');
   postSplit.className = 'split-button';
@@ -296,8 +322,8 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   let postNote = '';
   let completionRecorded = false;
   let startTimestamp = null;
-  let setElapsedSegments = [];
-  let setElapsedAnchor = 0;
+  let perSetActualSeconds = [];
+  let currentSetStartElapsed = 0;
 
   const initialVisibility = normalizePostVisibility(store.getProfile?.()?.default_visibility || store.getProfile?.()?.account_visibility || 'private');
   let selectedVisibility = initialVisibility;
@@ -344,9 +370,38 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
     modeSelect.disabled = true;
   };
 
+
+  const captureSetPartialIfNeeded = (snapshot) => {
+    if (timerConfig.workoutType === 'time' && timerConfig.timeMode === 'intervalStopwatch' && snapshot.workflowState === 'in_set') {
+      const current = Math.max(snapshot.elapsedSeconds - currentSetStartElapsed, 0);
+      if (current > 0) perSetActualSeconds.push(current);
+      currentSetStartElapsed = snapshot.elapsedSeconds;
+    }
+  };
+
+  const captureRunningPartialForPost = (snapshot) => {
+    if (timerConfig.workoutType === 'time' && timerConfig.timeMode === 'intervalStopwatch' && snapshot.workflowState === 'in_set') {
+      const current = Math.max(snapshot.elapsedSeconds - currentSetStartElapsed, 0);
+      const seeded = [...perSetActualSeconds];
+      if (current > 0) seeded.push(current);
+      return seeded;
+    }
+    return [...perSetActualSeconds];
+  };
+
   const postWorkout = (snapshot) => {
     if (completionRecorded) return;
     const completedSets = computeCompletedSets(snapshot, runPlan.sets.length);
+    const perSetActiveSeconds = captureRunningPartialForPost(snapshot).map((seconds) => Math.round(seconds));
+    const configuredActiveSeconds = timerConfig.workoutType === 'time'
+      ? (timerConfig.timeMode === 'intervalTimer' ? timerConfig.workSeconds * Math.max(timerConfig.sets || 1, 1) : timerConfig.workSeconds)
+      : 0;
+    const timingSummary = buildWorkoutTimingSummary({
+      actualActiveSeconds: snapshot.activeElapsedSeconds,
+      actualRestSeconds: snapshot.restElapsedSeconds,
+      configuredActiveSeconds,
+      perSetActiveSeconds,
+    });
     const result = store.recordResult({
       questId: quest.id,
       difficulty: settings.difficulty,
@@ -366,7 +421,12 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
       configuredSets: timerConfig.sets,
       completedSets,
       elapsedSeconds: snapshot.elapsedSeconds,
-      intervalSetElapsedSeconds: setElapsedSegments,
+      actualActiveSeconds: timingSummary.actualActiveSeconds,
+      actualRestSeconds: timingSummary.actualRestSeconds,
+      configuredActiveSeconds: timingSummary.configuredActiveSeconds,
+      perSetActiveSeconds: timingSummary.perSetActiveSeconds,
+      isPartial: timingSummary.isPartial,
+      intervalSetElapsedSeconds: timingSummary.perSetActiveSeconds,
       finished: snapshot.state === 'finished',
       exerciseSlug: runPlan.exerciseSlug,
       startTime: startTimestamp,
@@ -395,13 +455,15 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   };
 
   const updateDisplay = (snapshot) => {
+    advanceButton.style.display = shouldShowPausedAdvance(snapshot) ? '' : 'none';
+    advanceButton.textContent = resolvePausedAdvanceLabel(snapshot);
     if (snapshot.mode === 'time') {
       if (snapshot.timeMode === 'stopwatch') {
         phaseBadge.textContent = snapshot.state === 'running' ? '計測中' : '停止中';
         setProgress.textContent = 'ストップウォッチ';
         nextInfo.textContent = '次: 投稿';
         timeDisplay.textContent = formatTime(snapshot.elapsedSeconds);
-        toggleButton.textContent = snapshot.state === 'running' ? '一時停止' : '開始';
+        toggleButton.textContent = snapshot.state === 'running' ? '一時停止' : (snapshot.state === 'paused' ? '再開' : '開始');
         return;
       }
       if (snapshot.timeMode === 'timer') {
@@ -409,7 +471,7 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
         setProgress.textContent = 'タイマー';
         nextInfo.textContent = '次: 完了';
         timeDisplay.textContent = formatTime(snapshot.remainingSeconds || timerConfig.workSeconds);
-        toggleButton.textContent = snapshot.state === 'running' ? '一時停止' : '開始';
+        toggleButton.textContent = snapshot.state === 'running' ? '一時停止' : (snapshot.state === 'paused' ? '再開' : '開始');
         return;
       }
       if (snapshot.timeMode === 'intervalTimer') {
@@ -417,13 +479,13 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
         setProgress.textContent = `${snapshot.currentSet} / ${snapshot.totalSets} セット`;
         nextInfo.textContent = `次: ${snapshot.next}`;
         timeDisplay.textContent = formatTime(snapshot.remainingSeconds);
-        toggleButton.textContent = snapshot.state === 'running' ? '一時停止' : '開始';
+        toggleButton.textContent = snapshot.state === 'running' ? '一時停止' : (snapshot.state === 'paused' ? '再開' : '開始');
         return;
       }
       if (snapshot.timeMode === 'intervalStopwatch') {
         if (snapshot.workflowState === 'in_set') {
           phaseBadge.textContent = 'セット計測中';
-          toggleButton.textContent = 'セット完了';
+          toggleButton.textContent = snapshot.state === 'running' ? '一時停止' : '再開';
         } else if (snapshot.workflowState === 'rest_ready') {
           phaseBadge.textContent = '休憩待機';
           toggleButton.textContent = '休憩開始';
@@ -478,8 +540,8 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
     submitButton.disabled = false;
     timerNotice.textContent = '';
     startTimestamp = null;
-    setElapsedSegments = [];
-    setElapsedAnchor = 0;
+    perSetActualSeconds = [];
+    currentSetStartElapsed = 0;
     updateMeta();
     syncVisibility();
     updateDisplay(engine.getSnapshot());
@@ -565,13 +627,19 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
 
   toggleButton.addEventListener('click', () => {
     const snapshot = engine.getSnapshot();
-    const setRestLike = snapshot.mode === 'setRest' || snapshot.timeMode === 'intervalStopwatch';
+    const setRestLike = isSetRestLike(snapshot);
     if (setRestLike) {
-      if (snapshot.workflowState === 'idle') setElapsedAnchor = snapshot.elapsedSeconds;
-      if (snapshot.workflowState === 'in_set' && timerConfig.workoutType === 'time' && timerConfig.timeMode === 'intervalStopwatch') {
-        setElapsedSegments.push(Math.max(snapshot.elapsedSeconds - setElapsedAnchor, 0));
-        setElapsedAnchor = snapshot.elapsedSeconds;
+      const intervalStopwatchSet = timerConfig.workoutType === 'time' && timerConfig.timeMode === 'intervalStopwatch' && snapshot.workflowState === 'in_set';
+      if (snapshot.workflowState === 'idle') currentSetStartElapsed = snapshot.elapsedSeconds;
+      if (intervalStopwatchSet && snapshot.state === 'running') {
+        engine.pause();
+        return;
       }
+      if (intervalStopwatchSet && snapshot.state === 'paused') {
+        engine.resume();
+        return;
+      }
+      if (snapshot.workflowState === 'in_set') captureSetPartialIfNeeded(snapshot);
       if (snapshot.workflowState === 'idle' || snapshot.workflowState === 'in_set' || snapshot.workflowState === 'rest_ready') {
         if (!startTimestamp) startTimestamp = Date.now();
         engine.advanceSetRest();
@@ -601,6 +669,13 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
     engine.start(buildEngineConfig());
   });
 
+  advanceButton.addEventListener('click', () => {
+    const snapshot = engine.getSnapshot();
+    if (!shouldShowPausedAdvance(snapshot)) return;
+    if (isSetRestLike(snapshot) && snapshot.workflowState === 'in_set') captureSetPartialIfNeeded(snapshot);
+    engine.advanceFromPausedPhase();
+  });
+
   submitButton.addEventListener('click', () => {
     const snapshot = engine.getSnapshot();
     engine.stop();
@@ -625,7 +700,7 @@ export const renderRun = (params, { navigate, store, playSfx }) => {
   submitButton.textContent = `投稿（${VISIBILITY_OPTIONS.find((entry) => entry.value === selectedVisibility)?.label || '公開'}）`;
 
   postSplit.append(submitButton, menuToggle, menu);
-  controls.append(stopButton, resetButton, toggleButton, postSplit);
+  controls.append(stopButton, resetButton, toggleButton, advanceButton, postSplit);
 
   const planBox = document.createElement('div');
   planBox.className = 'stack run-plan__box';
