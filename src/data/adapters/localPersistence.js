@@ -567,6 +567,8 @@ export const createLocalPersistence = () => {
     const beforeTime = before ? new Date(before).getTime() : null;
     const notifications = loadNotifications().filter((row) => row?.user_id === currentUserId);
     const historyById = new Map(loadHistory().map((row) => [String(row.id), row]));
+    const followRequests = loadFollowRequests();
+    const follows = loadFollows();
     return notifications
       .filter((row) => {
         if (!beforeTime) return true;
@@ -579,20 +581,23 @@ export const createLocalPersistence = () => {
         const actor = ensureLocalProfile(row.actor_user_id);
         const workout = row.workout_run_id ? historyById.get(String(row.workout_run_id)) : null;
         const pendingReq = row.type === 'follow_request'
-          ? loadFollowRequests().some((req) => req.requester_id === row.actor_user_id && req.target_id === currentUserId && req.status === 'pending')
+          ? followRequests.some((req) => req.requester_id === row.actor_user_id && req.target_id === currentUserId && req.status === 'pending')
           : false;
-        const isFollowingActor = loadFollows().some((f) => f.follower_id === currentUserId && f.followee_id === row.actor_user_id);
+        const isFollowingActor = follows.some((f) => f.follower_id === currentUserId && f.followee_id === row.actor_user_id);
         return {
           id: row.id,
           type: row.type,
           created_at: row.created_at,
           read_at: row.read_at || null,
           actor_id: row.actor_user_id,
-          actor_display_name: actor?.display_name || row.actor_user_id,
+          actor_username: actor?.username || null,
+          actor_display_name: actor?.display_name || actor?.username || 'ユーザー',
+          actor_account_visibility: actor?.account_visibility || 'private',
           run_id: row.workout_run_id,
           workout_exercise_slug: workout?.exerciseSlug || workout?.result?.exerciseSlug || workout?.result?.exercise_slug || workout?.questId || workout?.result?.questId || workout?.result?.quest_id || null,
           workout_created_at: workout?.published_at || workout?.created_at || null,
           has_pending_request: pendingReq,
+          has_outgoing_request: followRequests.some((req) => req.requester_id === currentUserId && req.target_id === row.actor_user_id && req.status === 'pending'),
           is_following_actor: isFollowingActor,
           message: row.message || null,
         };

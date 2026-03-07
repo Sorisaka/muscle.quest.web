@@ -46,7 +46,42 @@ export const renderNotifications = (_params, { store, navigate, accountState }) 
 
   const currentUserId = accountState.getStatus().id;
 
+
+  const resolveFollowBackAction = (item) => {
+    const visibility = item.actor_account_visibility || 'private';
+    const isPrivate = visibility === 'private';
+
+    if (item.is_following_actor) {
+      return null;
+    }
+
+    if (isPrivate && item.has_outgoing_request) {
+      return { label: 'リクエスト送信済み', disabled: true, mode: 'requested' };
+    }
+
+    return {
+      label: isPrivate ? 'フォローリクエスト' : 'フォローバック',
+      disabled: false,
+      mode: isPrivate ? 'request' : 'follow',
+    };
+  };
+
   const renderActions = (item, actions) => {
+    const appendFollowBackAction = () => {
+      const action = resolveFollowBackAction(item);
+      if (!action) return;
+      const button = createActionButton(action.label, async () => {
+        if (action.mode === 'follow') {
+          await Promise.resolve(store.followUser(currentUserId, item.actor_id));
+        } else if (action.mode === 'request') {
+          await Promise.resolve(store.requestFollow(currentUserId, item.actor_id));
+        }
+        await load(true);
+      });
+      if (action.disabled) button.disabled = true;
+      actions.append(button);
+    };
+
     if (item.type === 'follow_request') {
       if (item.has_pending_request) {
         actions.append(
@@ -59,20 +94,14 @@ export const renderNotifications = (_params, { store, navigate, accountState }) 
             await load(true);
           }, 'ghost'),
         );
-      } else if (!item.is_following_actor) {
-        actions.append(createActionButton('フォローバック', async () => {
-          await Promise.resolve(store.requestFollow(currentUserId, item.actor_id));
-          await load(true);
-        }));
+      } else {
+        appendFollowBackAction();
       }
       return;
     }
 
-    if (item.type === 'follow' && !item.is_following_actor) {
-      actions.append(createActionButton('フォローバック', async () => {
-        await Promise.resolve(store.requestFollow(currentUserId, item.actor_id));
-        await load(true);
-      }));
+    if (item.type === 'follow') {
+      appendFollowBackAction();
     }
   };
 
