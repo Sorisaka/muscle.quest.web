@@ -64,6 +64,7 @@ export const renderHome = (_params, { navigate, playSfx, store }) => {
   todoMeta.className = 'muted';
   const todoList = document.createElement('div');
   todoList.className = 'stack';
+  let mounted = true;
 
   const startWorkoutFromTodo = (item) => {
     if (!item) return;
@@ -99,18 +100,17 @@ export const renderHome = (_params, { navigate, playSfx, store }) => {
     navigate(`#/workouts/${item?.category || 'cardio'}`);
   };
 
-  const renderTodos = async () => {
-    const userId = store.getProfile()?.id || 'local-user';
-    await Promise.resolve(store.loadWeeklyPlan(userId));
-    const today = store.getTodayPlan(userId, new Date());
-    await Promise.resolve(store.loadSpecialPlan(userId, today.dateKey));
-    const nextToday = store.getTodayPlan(userId, new Date());
-    const checks = store.getTodoStateForDate(nextToday.dateKey);
+  const renderTodos = () => {
+    if (!mounted) return;
 
-    todoMeta.textContent = `ソース: ${nextToday.source === 'special' ? '特別日メニュー' : '週間メニュー'} (${nextToday.dateKey})`;
+    const userId = store.getProfile()?.id || 'local-user';
+    const today = store.getTodayPlan(userId, new Date());
+    const checks = store.getTodoStateForDate(today.dateKey);
+
+    todoMeta.textContent = `ソース: ${today.source === 'special' ? '特別日メニュー' : '週間メニュー'} (${today.dateKey})`;
     todoList.innerHTML = '';
 
-    if (!nextToday.items.length) {
+    if (!today.items.length) {
       const empty = document.createElement('p');
       empty.className = 'muted';
       empty.textContent = '今日のメニューは未設定です。設定ページから追加してください。';
@@ -118,14 +118,14 @@ export const renderHome = (_params, { navigate, playSfx, store }) => {
       return;
     }
 
-    nextToday.items.forEach((item, index) => {
+    today.items.forEach((item, index) => {
       const row = document.createElement('div');
       row.className = 'row todo-row';
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.checked = Boolean(checks[index]);
       checkbox.addEventListener('change', (event) => {
-        store.setTodoDone(nextToday.dateKey, index, event.target.checked);
+        store.setTodoDone(today.dateKey, index, event.target.checked);
       });
       const action = document.createElement('button');
       action.type = 'button';
@@ -141,11 +141,39 @@ export const renderHome = (_params, { navigate, playSfx, store }) => {
     });
   };
 
-  renderTodos();
+  const loadTodos = async () => {
+    const userId = store.getProfile()?.id || 'local-user';
+    await Promise.resolve(store.loadWeeklyPlan(userId));
+    const today = store.getTodayPlan(userId, new Date());
+    await Promise.resolve(store.loadSpecialPlan(userId, today.dateKey));
+  };
+
+  todoMeta.textContent = '今日のTODOメニューを読み込み中...';
+  loadTodos()
+    .then(() => {
+      if (mounted) renderTodos();
+    })
+    .catch(() => {
+      if (!mounted) return;
+      todoList.innerHTML = '';
+      todoMeta.textContent = 'TODOメニューの取得に失敗しました。';
+    });
+
+  const unsubscribe = typeof store.subscribeProfile === 'function'
+    ? store.subscribeProfile(() => {
+      renderTodos();
+    })
+    : null;
 
   todoCard.append(todoTitle, todoMeta, todoList);
 
   grid.append(cardioCard, bodyweightCard, weightsCard);
   container.append(todoCard, grid);
-  return container;
+  return {
+    element: container,
+    dispose: () => {
+      mounted = false;
+      if (typeof unsubscribe === 'function') unsubscribe();
+    },
+  };
 };
