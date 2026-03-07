@@ -2,6 +2,7 @@ import { trainingDefinitions } from '../data/trainingDefinitions.js';
 import { MET_CALCULATION } from './calorie/constants.js';
 import { applyAutoProfileEstimation } from './calorie/estimateProfile.js';
 import { getBodyweightMet, getCardioMet, getResistanceMet, getSpeedIntensity } from './calorie/metTable.js';
+import { getActualActiveSeconds } from './workoutTiming.js';
 
 const WEIGHT_DEFAULT_KG = 60;
 
@@ -12,21 +13,7 @@ const toNumber = (value, fallback = 0) => {
 
 const getExerciseDefinition = (exerciseSlug) => trainingDefinitions[exerciseSlug] || null;
 
-const resolveDurationSeconds = (result = {}) => {
-  const start = toNumber(result.startTime, 0);
-  const end = toNumber(result.endTime, 0);
-  if (start > 0 && end > start) {
-    return Math.max(Math.round((end - start) / 1000), 0);
-  }
-  if (toNumber(result.elapsedSeconds, 0) > 0) {
-    return Math.max(Math.round(toNumber(result.elapsedSeconds, 0)), 0);
-  }
-  if (toNumber(result.trainingSeconds, 0) > 0) {
-    return Math.max(Math.round(toNumber(result.trainingSeconds, 0)), 0);
-  }
-  if (!Array.isArray(result.sets)) return 0;
-  return result.sets.reduce((total, set) => total + Math.max(toNumber(set.timeSeconds, 0), 0), 0);
-};
+const resolveDurationSeconds = (result = {}) => getActualActiveSeconds(result);
 
 const inferIntensity = (result, volumeScore) => {
   const explicit = result.intensity || result.effort;
@@ -49,7 +36,7 @@ const deriveMovementType = (exerciseSlug, mode) => {
 
 const computeVolumeScore = (inputMode, sets = []) => {
   if (!Array.isArray(sets)) return 0;
-  if (inputMode === 'hold') {
+  if (inputMode === 'time') {
     return sets.reduce((sum, set) => sum + Math.max(toNumber(set.timeSeconds, 0), 0), 0);
   }
   if (inputMode === 'reps') {
@@ -104,7 +91,7 @@ const resolveMet = ({ movementType, intensity, speedKmh }) => {
 
 export const calculateCalories = (result = {}, userProfile = {}) => {
   const definition = getExerciseDefinition(result.exerciseSlug);
-  const inputMode = definition?.inputMode || (definition?.unit === 'time' ? 'hold' : 'weightReps');
+  const inputMode = definition?.inputMode || (definition?.unit === 'time' ? 'time' : 'weightReps');
   const normalizedProfile = applyAutoProfileEstimation(userProfile, userProfile);
   const weightKg = Math.max(toNumber(normalizedProfile.weight_kg, WEIGHT_DEFAULT_KG), 1);
   const seconds = resolveDurationSeconds(result);

@@ -212,3 +212,39 @@ Phase B では Supabase テーブル化ではなく、**コード管理（Gitレ
 - `hold` は `interval`（保持→休憩を自動反復）を継続。
 - 投稿UIは分離ボタンを廃止し、公開範囲を選べる split button へ変更。
 - 旧 `stopwatch` 設定は `store` / `trainingPlan` で `time` へ移行するフォールバックを実装。
+
+---
+
+## Phase E: タイマー種別の再設計（time + 4 modes）
+
+### 新仕様（実装済み）
+- 種目タイプは `weightReps` / `reps` / `time` に統一。
+- 旧 `hold` は廃止し、`time + intervalTimer` へ統合。
+- 旧 `stopwatch` 型は `time + stopwatch` へ移行。
+- `time` の `timeMode` は次の4種類。
+  - `timer`
+  - `stopwatch`
+  - `intervalTimer`
+  - `intervalStopwatch`
+
+### モード別の入力表示
+- `timer`: ワーク時間（秒）
+- `stopwatch`: 入力なし（経過時間のみ）
+- `intervalTimer`: ワーク時間 / 休憩時間 / セット数
+- `intervalStopwatch`: 休憩時間 / セット数（各セットのワーク時間は事前入力なし）
+
+### UI配置ルール
+- 実行画面 `#/run/<id>` の配置を次の順番に統一。
+  1. 時間表示
+  2. ボタン群（ワークアウト詳細へ / リセット / 開始 / 投稿 split button）
+  3. タイマー種別ブロック
+  4. ワークアウト設定
+
+### 確認手順
+1. `npm run dev` で `#/run/<id>` を開く。
+2. 画面幅を狭くして、ラベル・入力・セレクト・ボタンが重ならないことを確認。
+3. `time + stopwatch` を選び、時間入力欄が出ないことを確認。
+4. `time + timer` を選び、時間入力欄が表示されることを確認。
+5. `time + intervalTimer` を選び、ワーク時間/休憩/セット数で進行できることを確認。
+6. `time + intervalStopwatch` を選び、セット計測→休憩→次セットの流れを確認。
+7. `npm run lint` と `npm run build` を実行し成功することを確認。

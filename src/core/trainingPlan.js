@@ -10,17 +10,37 @@ const clampNumber = (value, min, max) => {
   return Math.max(min, Math.min(max, numeric));
 };
 
-const normalizeInputMode = (mode) => (mode === 'stopwatch' ? 'time' : mode);
-const normalizeTimerMode = (mode) => (mode === 'stopwatch' ? 'time' : mode);
-const normalizeTimeMode = (mode) => (mode === 'timer' ? 'timer' : 'stopwatch');
+const normalizeInputMode = (mode) => {
+  if (mode === 'hold' || mode === 'stopwatch') return 'time';
+  return mode;
+};
+
+const normalizeTimerMode = (mode, inputMode) => {
+  const normalized = mode === 'stopwatch' ? 'time' : mode;
+  if (normalized === 'interval' || normalized === 'time' || normalized === 'setRest') return normalized;
+  return inputMode === 'time' ? 'time' : 'setRest';
+};
+
+const normalizeTimeMode = (mode, fallback = trainingConfig.defaults.timeMode) => {
+  const aliases = {
+    stopwatch: 'stopwatch',
+    timer: 'timer',
+    intervalTimer: 'intervalTimer',
+    intervalStopwatch: 'intervalStopwatch',
+    interval: 'intervalTimer',
+    setRest: 'intervalStopwatch',
+    hold: 'intervalTimer',
+  };
+  return aliases[mode] || aliases[fallback] || 'stopwatch';
+};
 
 const resolveInputMode = (definition = {}) => {
   if (definition.inputMode) return normalizeInputMode(definition.inputMode);
-  return definition.unit === 'time' ? 'hold' : 'weightReps';
+  return definition.unit === 'time' ? 'time' : 'weightReps';
 };
 
 const clampSet = (inputMode, set = {}, limits = {}) => {
-  if (inputMode === 'hold' || inputMode === 'time') {
+  if (inputMode === 'time') {
     const safeTime = clampNumber(set.timeSeconds ?? limits.timeSeconds?.min ?? 0, limits.timeSeconds?.min, limits.timeSeconds?.max);
     return { timeSeconds: safeTime };
   }
@@ -69,19 +89,17 @@ export const createPlanFromDefinition = (quest, difficulty, previousPlan) => {
       questId: quest?.id,
       exerciseSlug: quest?.exercises?.[0] || 'custom',
       difficulty,
-      inputMode: 'hold',
-      defaultTimerMode: 'interval',
-      timeMode: 'stopwatch',
+      inputMode: 'time',
+      defaultTimerMode: 'time',
+      timeMode: 'intervalTimer',
       trackingMetrics: [],
       goalConfig: null,
       metricGoals: null,
       unit: 'time',
-      mode: 'interval',
+      mode: 'time',
       restSeconds: trainingConfig.defaults.timerRestSeconds,
       trainingSeconds: trainingConfig.defaults.timerTrainingSeconds,
-      sets: buildSets('hold', trainingConfig.defaults.timerSets, [{ timeSeconds: trainingConfig.defaults.timerTrainingSeconds }], {
-        timeSeconds: trainingConfig.limits.trainingSeconds,
-      }),
+      sets: [],
       baseSets: trainingConfig.defaults.timerSets,
       maxSets: trainingConfig.limits.sets.max,
       limits: trainingConfig.limits,
@@ -96,12 +114,15 @@ export const createPlanFromDefinition = (quest, difficulty, previousPlan) => {
   const sets = buildSets(inputMode, desiredCount, sourceSets, diffConfig.limits || {});
   const baseSets = inputMode === 'time' ? 1 : (diffConfig.defaultSets?.length || 1);
 
-  const primaryTime = inputMode === 'hold' ? sets[0]?.timeSeconds ?? trainingConfig.defaults.timerTrainingSeconds : trainingConfig.defaults.timerTrainingSeconds;
-  const fallbackMode = inputMode === 'hold' ? 'interval' : inputMode === 'time' ? 'time' : 'setRest';
-  const mode = normalizeTimerMode(definition.defaultTimerMode || previousPlan?.mode || fallbackMode);
+  const fallbackMode = inputMode === 'time' ? 'time' : 'setRest';
+  const rawMode = definition.defaultTimerMode || previousPlan?.mode || fallbackMode;
+  const mode = normalizeTimerMode(rawMode, inputMode);
   const restSeconds = diffConfig.restSeconds || definition.restSeconds || trainingConfig.defaults.timerRestSeconds;
   const goalConfig = definition.goalConfig || null;
-  const defaultTimeMode = normalizeTimeMode(definition.defaultTimeMode || previousPlan?.timeMode || 'stopwatch');
+  const defaultTimeMode = normalizeTimeMode(
+    definition.defaultTimeMode || previousPlan?.timeMode || (rawMode === 'interval' ? 'intervalTimer' : rawMode === 'setRest' ? 'intervalStopwatch' : 'stopwatch'),
+    trainingConfig.defaults.timeMode,
+  );
 
   return {
     questId: quest?.id,
@@ -117,7 +138,7 @@ export const createPlanFromDefinition = (quest, difficulty, previousPlan) => {
     unit: definition.unit,
     mode,
     restSeconds,
-    trainingSeconds: primaryTime,
+    trainingSeconds: trainingConfig.defaults.timerTrainingSeconds,
     sets,
     baseSets,
     maxSets: diffConfig.maxSets,

@@ -78,7 +78,10 @@ const readSettings = () => {
     }
     if (normalized.timerType === 'stopwatch') normalized.timerType = 'time';
     if (normalized.mode === 'stopwatch') normalized.mode = 'time';
-    normalized.timeMode = normalized.timeMode || (parsed.timerType === 'stopwatch' || parsed.mode === 'stopwatch' ? 'stopwatch' : defaultSettings.timeMode);
+    if (normalized.timerType === 'hold') normalized.timerType = 'time';
+    if (normalized.mode === 'hold') normalized.mode = 'time';
+    if (normalized.timeMode === 'hold') normalized.timeMode = 'intervalTimer';
+    normalized.timeMode = normalized.timeMode || (parsed.timerType === 'stopwatch' || parsed.mode === 'stopwatch' ? 'stopwatch' : parsed.timerType === 'hold' || parsed.mode === 'hold' ? 'intervalTimer' : defaultSettings.timeMode);
     normalized.language = 'ja';
     return normalized;
   } catch (error) {

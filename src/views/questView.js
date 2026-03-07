@@ -62,9 +62,7 @@ const renderPlanPreview = (plan) => {
   summary.textContent =
     plan.inputMode === 'time'
       ? 'time計測（ストップウォッチ/タイマー切替、セット編集なし）'
-      : plan.inputMode === 'hold'
-        ? `各セット ${plan.trainingSeconds} 秒 / ${plan.sets.length} セット${plan.sets.length > 1 ? ` / 休憩 ${plan.restSeconds} 秒` : ''}`
-        : plan.inputMode === 'reps'
+      : plan.inputMode === 'reps'
           ? `${plan.sets.length} セット（回数入力）${plan.sets.length > 1 ? ` / 休憩 ${plan.restSeconds} 秒` : ''}`
           : `${plan.sets.length} セット（重量×回数）${plan.sets.length > 1 ? ` / 休憩 ${plan.restSeconds} 秒` : ''}`;
 
@@ -77,9 +75,7 @@ const renderPlanPreview = (plan) => {
   } else {
     plan.sets.forEach((set, index) => {
       const item = document.createElement('li');
-      if (plan.inputMode === 'hold') {
-        item.textContent = `セット${index + 1}: ${set.timeSeconds}秒`;
-      } else if (plan.inputMode === 'reps') {
+      if (plan.inputMode === 'reps') {
         item.textContent = `セット${index + 1}: ${set.reps}回`;
       } else {
         item.textContent = `セット${index + 1}: ${set.weight}kg x ${set.reps}回`;

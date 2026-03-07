@@ -247,6 +247,7 @@ section.panel {
   border: 1px solid #1f2937;
   border-radius: 10px;
   padding: 0.6rem 0.8rem;
+  min-width: 0;
 }
 
 .field input[type='checkbox'] {
@@ -421,8 +422,24 @@ section.panel {
 
 .run-timer__controls {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 0.5rem;
+}
+
+.run-field {
+  display: grid;
+  gap: 0.4rem;
+  align-items: stretch;
+}
+
+.run-field > span {
+  font-size: 0.92rem;
+  color: #cbd5e1;
+}
+
+.run-field :is(input, select, button) {
+  width: 100%;
+  min-width: 0;
 }
 
 .run-timer__meta {
@@ -519,8 +536,12 @@ section.panel {
 
 .run-controls {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 0.5rem;
+}
+
+.run-controls > * {
+  min-width: 0;
 }
 
 .leaderboard-row {
@@ -1229,4 +1250,25 @@ section.panel::after {
 
 .follow-modal-overlay[hidden] {
   display: none;
+}
+
+@media (max-width: 720px) {
+  .run-timer__controls {
+    grid-template-columns: 1fr;
+  }
+
+  .run-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .run-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .run-timer__status {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
