@@ -82,7 +82,9 @@ export const renderHome = (_params, { navigate, playSfx, store }) => {
         store.setTodoDone(nextToday.dateKey, index, event.target.checked);
       });
       const text = document.createElement('span');
-      text.textContent = `${item.exerciseSlug} (${item.category})`;
+      const fallback = item.defaultLabel || item.workoutLabel || item.exerciseSlug || '不明なワークアウト';
+      const title = (item.displayName || item.title || '').trim() || fallback;
+      text.textContent = `${title} (${item.category || 'unknown'})`;
       row.append(checkbox, text);
       todoList.append(row);
     });
