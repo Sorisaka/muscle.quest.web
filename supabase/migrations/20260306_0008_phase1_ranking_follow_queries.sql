@@ -81,17 +81,8 @@ as $$
   from public.follows f
   join public.profiles p on p.id = f.followee_id
   where auth.uid() is not null
+    and coalesce(p_user_id, auth.uid()) = auth.uid()
     and f.follower_id = coalesce(p_user_id, auth.uid())
-    and (
-      p.id = auth.uid()
-      or coalesce(p.account_visibility, 'private') = 'public'
-      or exists (
-        select 1
-        from public.follows vf
-        where vf.follower_id = auth.uid()
-          and vf.followee_id = p.id
-      )
-    )
   order by p.display_name nulls last, p.id;
 $$;
 
@@ -118,17 +109,8 @@ as $$
   from public.follows f
   join public.profiles p on p.id = f.follower_id
   where auth.uid() is not null
+    and coalesce(p_user_id, auth.uid()) = auth.uid()
     and f.followee_id = coalesce(p_user_id, auth.uid())
-    and (
-      p.id = auth.uid()
-      or coalesce(p.account_visibility, 'private') = 'public'
-      or exists (
-        select 1
-        from public.follows vf
-        where vf.follower_id = auth.uid()
-          and vf.followee_id = p.id
-      )
-    )
   order by p.display_name nulls last, p.id;
 $$;
 
