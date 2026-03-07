@@ -918,7 +918,10 @@ const createMenuSettings = async ({ store, playSfx }) => {
       const index = modalSelection.indexOf(entry.slug);
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = `workout-picker-item ${index >= 0 ? 'is-selected' : ''}`;
+      const isSelected = index >= 0;
+      button.className = `workout-picker-item ${isSelected ? 'is-selected' : ''}`;
+      button.setAttribute('aria-pressed', String(isSelected));
+      button.dataset.selected = String(isSelected);
       button.innerHTML = `
         <strong>${entry.label}</strong>
         <span class="muted">${entry.categoryLabel} / ${entry.primaryMuscleLabel}${entry.isUnknown ? ' / 不明データ' : ''}</span>

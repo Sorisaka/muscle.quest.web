@@ -30,10 +30,6 @@ body {
   color: #9ca3af;
 }
 
-.ghost:hover {
-  background: #132030;
-}
-
 main.shell {
   background: #0f1623;
   border: 1px solid #1f2937;
@@ -66,26 +62,31 @@ main.shell {
 .account-trigger {
   width: 44px;
   height: 44px;
+  aspect-ratio: 1 / 1;
   border-radius: 50%;
   border: 1px solid #1f2937;
   background: linear-gradient(135deg, #132030, #0c121d);
   color: #d1d5db;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  overflow: hidden;
   font-size: 1.1rem;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
   transition: transform 0.12s ease, background 0.2s ease;
   flex-shrink: 0;
-}
-
-.account-trigger:hover {
-  transform: translateY(-1px);
-  background: linear-gradient(135deg, #1a2940, #0c121d);
+  line-height: 0;
 }
 
 .account-trigger:active {
   transform: translateY(0);
+}
+
+.account-trigger > .account-avatar {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  flex-shrink: 0;
 }
 
 button,
@@ -100,7 +101,6 @@ select {
   transition: background 0.2s ease;
 }
 
-button:hover,
 select:focus {
   background: #2ea043;
 }
@@ -330,10 +330,6 @@ section.panel {
   cursor: pointer;
 }
 
-.todo-row__action:hover {
-  color: #67e8f9;
-}
-
 .todo-row__action:active {
   opacity: 0.8;
 }
@@ -347,10 +343,6 @@ section.panel {
 .link {
   color: #67e8f9;
   text-decoration: none;
-}
-
-.link:hover {
-  text-decoration: underline;
 }
 
 .hero {
@@ -1053,6 +1045,12 @@ section.panel {
   background: rgba(15, 23, 42, 0.35);
 }
 
+.history-filter-pill,
+.quest-muscle-filter-chip,
+.workout-picker-item {
+  transition: none;
+}
+
 .history-filter-pill.is-active {
   border-color: rgba(125, 211, 252, 0.8);
   background: rgba(14, 116, 144, 0.35);
@@ -1172,10 +1170,6 @@ section.panel::after {
 
 .metric-link {
   cursor: pointer;
-}
-
-.metric-link:hover {
-  border-color: #2ea043;
 }
 
 .list-account-row {
@@ -1443,6 +1437,7 @@ section.panel::after {
 .workout-picker-item.is-selected {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+  color: color-mix(in srgb, #ffffff 88%, var(--accent));
 }
 
 .workout-picker-item.is-selected .workout-picker-item__order {
@@ -1494,4 +1489,50 @@ section.panel::after {
 .notification-card--unread {
   background: rgba(74, 222, 128, 0.12);
   border-color: rgba(74, 222, 128, 0.45);
+}
+
+
+@media (hover: hover) and (pointer: fine) {
+  .ghost:hover {
+    background: #132030;
+  }
+
+  .account-trigger:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(135deg, #1a2940, #0c121d);
+  }
+
+  button:hover {
+    background: #2ea043;
+  }
+
+  .quest-muscle-filter-chip:hover:not(.is-active) {
+    background: #111827;
+    border-color: #1f2937;
+    color: #e6edf3;
+  }
+
+  .history-filter-pill:hover:not(.is-active) {
+    background: rgba(15, 23, 42, 0.35);
+    border-color: rgba(148, 163, 184, 0.35);
+    color: #d1d5db;
+  }
+
+  .workout-picker-item:hover:not(.is-selected) {
+    background: var(--surface);
+    border-color: var(--line);
+    color: inherit;
+  }
+
+  .todo-row__action:hover {
+    color: #67e8f9;
+  }
+
+  .link:hover {
+    text-decoration: underline;
+  }
+
+  .metric-link:hover {
+    border-color: #2ea043;
+  }
 }
