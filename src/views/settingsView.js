@@ -7,6 +7,20 @@ import {
 import { createAccountAvatar, getAvatarLabel } from '../ui/accountAvatar.js';
 import { quests } from '../core/content.js';
 import { applyAutoProfileEstimation, estimateProfileMetrics } from '../core/calorie/estimateProfile.js';
+import {
+  MENU_WORKOUT_CATEGORY_LABELS,
+  MENU_WORKOUT_MUSCLE_LABELS,
+  buildMenuWorkoutCatalog,
+  createUnknownMenuWorkout,
+  sortMenuWorkouts,
+} from '../core/menuWorkoutCatalog.js';
+import {
+  buildMenuWorkoutDefaultConfig,
+  getMenuConfigShape,
+  normalizeMenuItemConfig,
+  normalizeMenuPlanItem,
+  sanitizeMenuPlanItems,
+} from '../core/menuPlanItem.js';
 
 const SETTINGS_SECTIONS = [
   { key: 'account', label: 'アカウント設定', description: '表示名 / アイコン / 公開範囲' },
@@ -555,35 +569,22 @@ const createBodyProfileSettings = ({ store, playSfx, accountState }) => {
   return card;
 };
 
-const normalizeMenuItem = (item = {}, index = 0) => {
-  const exerciseSlug = item.exerciseSlug || item.exercise_slug || '';
-  const quest = item.questId ? (quests || []).find((entry) => entry.id === item.questId) : findQuestByExercise(exerciseSlug);
-  return {
-    id: item.id || `${Date.now()}-${index}`,
-    title: item.title || item.displayName || exerciseSlug || `項目${index + 1}`,
-    exerciseSlug,
-    questId: item.questId || quest?.id || '',
-    category: item.category || quest?.category || 'custom',
-    note: item.note || '',
-  };
-};
+const normalizeMenuItem = (item = {}, index = 0, options = {}) => normalizeMenuPlanItem(item, index, {
+  ...options,
+  findQuestByExercise,
+  quests,
+});
 
-const sanitizeMenuItems = (items = []) => (items || [])
-  .map((item, index) => normalizeMenuItem(item, index))
-  .map((item, index) => {
-    const quest = item.questId ? (quests || []).find((entry) => entry.id === item.questId) : findQuestByExercise(item.exerciseSlug);
-    const exerciseSlug = item.exerciseSlug || '';
-    const title = (item.title || '').trim() || exerciseSlug || `メニュー${index + 1}`;
-    return {
-      id: item.id || `${Date.now()}-${index}`,
-      title,
-      displayName: title,
-      exerciseSlug,
-      questId: item.questId || quest?.id || '',
-      category: item.category || quest?.category || 'custom',
-      note: (item.note || '').trim(),
-    };
-  });
+const sanitizeMenuItems = (items = [], options = {}) => sanitizeMenuPlanItems(items, {
+  ...options,
+  findQuestByExercise,
+  quests,
+});
+
+const parseInputNumber = (value) => {
+  const num = Number(value);
+  return Number.isFinite(num) && num >= 0 ? num : null;
+};
 
 const createMenuSettings = async ({ store, playSfx }) => {
   const card = document.createElement('div');
@@ -592,6 +593,11 @@ const createMenuSettings = async ({ store, playSfx }) => {
   const title = document.createElement('h3');
   title.textContent = 'メニュー設定';
 
+  const workoutCatalogState = buildMenuWorkoutCatalog({ findQuestByExercise });
+  const workoutCatalog = workoutCatalogState.workouts;
+  const workoutMap = workoutCatalogState.workoutMap;
+  const difficulty = store.getSettings?.().difficulty || 'beginner';
+
   const userId = store.getProfile()?.id || 'local-user';
   const loadedWeekly = await Promise.resolve(store.loadWeeklyPlan(userId));
   const weeklyPlan = { ...(loadedWeekly || {}) };
@@ -599,12 +605,12 @@ const createMenuSettings = async ({ store, playSfx }) => {
 
   const todayKey = new Date().toISOString().slice(0, 10);
   const todaySpecial = await Promise.resolve(store.loadSpecialPlan(userId, todayKey));
-  specialPlanCache[todayKey] = sanitizeMenuItems(todaySpecial || []);
+  specialPlanCache[todayKey] = sanitizeMenuItems(todaySpecial || [], { workoutMap, difficulty });
 
   let mode = 'weekly';
   let selectedWeekday = new Date().getDay();
   let selectedDate = todayKey;
-  let draftItems = sanitizeMenuItems(weeklyPlan[String(selectedWeekday)] || []);
+  let draftItems = sanitizeMenuItems(weeklyPlan[String(selectedWeekday)] || [], { workoutMap, difficulty });
   let dirty = false;
 
   const status = document.createElement('p');
@@ -635,9 +641,9 @@ const createMenuSettings = async ({ store, playSfx }) => {
 
   const actionRow = document.createElement('div');
   actionRow.className = 'hero__actions';
-  const addBtn = document.createElement('button');
-  addBtn.type = 'button';
-  addBtn.textContent = '項目を追加';
+  const selectWorkoutBtn = document.createElement('button');
+  selectWorkoutBtn.type = 'button';
+  selectWorkoutBtn.textContent = 'ワークアウト選択';
 
   const saveBtn = document.createElement('button');
   saveBtn.type = 'button';
@@ -652,9 +658,67 @@ const createMenuSettings = async ({ store, playSfx }) => {
   deleteSpecialBtn.className = 'ghost';
   deleteSpecialBtn.textContent = '特別日メニューを削除';
 
-  actionRow.append(addBtn, saveBtn, resetBtn, deleteSpecialBtn);
+  actionRow.append(selectWorkoutBtn, saveBtn, resetBtn, deleteSpecialBtn);
 
-  const exerciseOptions = buildExerciseOptions();
+  const categoryFilterField = createSelect('カテゴリー', 'all', [
+    { value: 'all', label: '未選択' },
+    { value: 'cardio', label: '有酸素' },
+    { value: 'bodyweight', label: '自重' },
+    { value: 'weights', label: 'ウエイト' },
+  ], (opt) => opt);
+
+  const muscleFilterField = createSelect(
+    '部位',
+    'all',
+    [{ value: 'all', label: '未選択' }, ...workoutCatalogState.muscleOptions],
+    (opt) => opt,
+  );
+
+  const modalOverlay = document.createElement('div');
+  modalOverlay.className = 'workout-picker-overlay';
+  modalOverlay.hidden = true;
+
+  const modal = document.createElement('div');
+  modal.className = 'workout-picker-modal card stack';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'workout-picker-title');
+
+  const modalHeader = document.createElement('div');
+  modalHeader.className = 'list-header';
+  const modalTitle = document.createElement('h3');
+  modalTitle.id = 'workout-picker-title';
+  modalTitle.textContent = 'ワークアウト選択';
+  const modalCount = document.createElement('p');
+  modalCount.className = 'muted';
+  const modalCloseBtn = document.createElement('button');
+  modalCloseBtn.type = 'button';
+  modalCloseBtn.className = 'ghost';
+  modalCloseBtn.textContent = '✕';
+  modalHeader.append(modalTitle, modalCloseBtn);
+
+  const filterGrid = document.createElement('div');
+  filterGrid.className = 'workout-picker-filters';
+  filterGrid.append(categoryFilterField.wrap, muscleFilterField.wrap);
+
+  const modalList = document.createElement('div');
+  modalList.className = 'workout-picker-list';
+
+  const modalActions = document.createElement('div');
+  modalActions.className = 'hero__actions';
+  const modalCancelBtn = document.createElement('button');
+  modalCancelBtn.type = 'button';
+  modalCancelBtn.className = 'ghost';
+  modalCancelBtn.textContent = 'キャンセル';
+  const modalSelectBtn = document.createElement('button');
+  modalSelectBtn.type = 'button';
+  modalSelectBtn.textContent = '選択';
+  modalActions.append(modalCancelBtn, modalSelectBtn);
+
+  modal.append(modalHeader, modalCount, filterGrid, modalList, modalActions);
+  modalOverlay.append(modal);
+
+  let modalSelection = [];
 
   const getModeLabel = () => (mode === 'weekly' ? `${WEEKDAY_LABELS[selectedWeekday]}曜日` : selectedDate);
 
@@ -681,14 +745,14 @@ const createMenuSettings = async ({ store, playSfx }) => {
     if (!dateKey) return [];
     if (!Object.prototype.hasOwnProperty.call(specialPlanCache, dateKey)) {
       const loaded = await Promise.resolve(store.loadSpecialPlan(userId, dateKey));
-      specialPlanCache[dateKey] = sanitizeMenuItems(loaded || []);
+      specialPlanCache[dateKey] = sanitizeMenuItems(loaded || [], { workoutMap, difficulty });
     }
-    return sanitizeMenuItems(specialPlanCache[dateKey] || []);
+    return sanitizeMenuItems(specialPlanCache[dateKey] || [], { workoutMap, difficulty });
   };
 
   const syncDraft = async () => {
     if (mode === 'weekly') {
-      draftItems = sanitizeMenuItems(weeklyPlan[String(selectedWeekday)] || []);
+      draftItems = sanitizeMenuItems(weeklyPlan[String(selectedWeekday)] || [], { workoutMap, difficulty });
     } else {
       draftItems = await loadSpecialDraft(selectedDate);
     }
@@ -759,12 +823,118 @@ const createMenuSettings = async ({ store, playSfx }) => {
     renderList();
   };
 
+  const updateItem = (index, patch = {}) => {
+    draftItems = draftItems.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item));
+    setDirty(true);
+  };
+
+  const updateWorkoutConfig = (index, patch = {}) => {
+    draftItems = draftItems.map((item, itemIndex) => {
+      if (itemIndex !== index) return item;
+      const workoutEntry = workoutMap.get(item.exerciseSlug);
+      const nextConfig = normalizeMenuItemConfig(
+        { ...(item.config || item.workoutConfig || {}), ...patch },
+        item.config || item.workoutConfig || {},
+        { definition: workoutEntry?.definition, lockInputModeToDefinition: false },
+      );
+      return {
+        ...item,
+        config: nextConfig,
+        workoutConfig: nextConfig,
+      };
+    });
+    setDirty(true);
+  };
+
+  const resolveAvailableWorkoutList = () => {
+    const unknownEntries = draftItems
+      .filter((item) => item.exerciseSlug && !workoutMap.has(item.exerciseSlug))
+      .map((item) => createUnknownMenuWorkout({
+        slug: item.exerciseSlug,
+        label: item.defaultLabel || item.workoutLabel || item.exerciseSlug || '不明なワークアウト',
+        muscles: item.muscles,
+      }));
+    const dedup = new Map([...workoutCatalog, ...unknownEntries].map((entry) => [entry.slug, entry]));
+    return sortMenuWorkouts(Array.from(dedup.values()));
+  };
+
+  const applySelection = (selectedSlugs = []) => {
+    const existingBySlug = new Map(draftItems.filter((item) => item.exerciseSlug).map((item) => [item.exerciseSlug, item]));
+    draftItems = selectedSlugs.map((slug, index) => {
+      const existing = existingBySlug.get(slug);
+      if (existing) {
+        return normalizeMenuItem(existing, index, { workoutMap, difficulty });
+      }
+      const workoutEntry = workoutMap.get(slug);
+      return normalizeMenuItem({
+        displayName: '',
+        title: '',
+        exerciseSlug: slug,
+        questId: workoutEntry?.quest?.id || '',
+        category: workoutEntry?.category || 'unknown',
+        muscles: workoutEntry?.muscles || [],
+        defaultLabel: workoutEntry?.label || slug,
+        workoutLabel: workoutEntry?.label || slug,
+        note: '',
+        workoutConfig: buildMenuWorkoutDefaultConfig(workoutEntry, difficulty),
+      }, index, { workoutMap, difficulty });
+    });
+    setDirty(true);
+    renderList();
+  };
+
+  const renderModalList = () => {
+    const listEntries = resolveAvailableWorkoutList().filter((entry) => {
+      const categoryOk = categoryFilterField.select.value === 'all' || entry.category === categoryFilterField.select.value;
+      const muscleOk = muscleFilterField.select.value === 'all' || (entry.muscles || []).includes(muscleFilterField.select.value);
+      return categoryOk && muscleOk;
+    });
+
+    modalList.innerHTML = '';
+    if (!listEntries.length) {
+      modalList.append(createPlaceholder('候補がありません', '絞り込み条件を変更してください。'));
+      return;
+    }
+
+    listEntries.forEach((entry) => {
+      const index = modalSelection.indexOf(entry.slug);
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `workout-picker-item ${index >= 0 ? 'is-selected' : ''}`;
+      button.innerHTML = `
+        <strong>${entry.label}</strong>
+        <span class="muted">${entry.categoryLabel} / ${entry.primaryMuscleLabel}${entry.isUnknown ? ' / 不明データ' : ''}</span>
+        <span class="workout-picker-item__order">${index >= 0 ? index + 1 : ''}</span>
+      `;
+      button.addEventListener('click', () => {
+        if (index >= 0) modalSelection = modalSelection.filter((slug) => slug !== entry.slug);
+        else modalSelection = [...modalSelection, entry.slug];
+        renderModalList();
+        refreshModalMeta();
+      });
+      modalList.append(button);
+    });
+  };
+
+  const openModal = () => {
+    categoryFilterField.select.value = 'all';
+    muscleFilterField.select.value = 'all';
+    modalSelection = draftItems.map((item) => item.exerciseSlug).filter(Boolean);
+    modalOverlay.hidden = false;
+    renderModalList();
+    modalCount.textContent = `${modalSelection.length}件選択中（押した順で番号表示）`;
+  };
+
+  const closeModal = () => {
+    modalOverlay.hidden = true;
+  };
+
   const renderList = () => {
     list.innerHTML = '';
     if (!draftItems.length) {
       const emptyText = mode === 'weekly'
-        ? 'この曜日のメニュー項目はまだありません。項目を追加してください。'
-        : 'この特別日のメニュー項目はまだありません。項目を追加してください。';
+        ? 'この曜日のメニュー項目はまだありません。「ワークアウト選択」から追加してください。'
+        : 'この特別日のメニュー項目はまだありません。「ワークアウト選択」から追加してください。';
       list.append(createPlaceholder('未設定', emptyText));
       return;
     }
@@ -773,21 +943,24 @@ const createMenuSettings = async ({ store, playSfx }) => {
       const row = document.createElement('div');
       row.className = 'card stack';
 
+      const workoutLabel = item.defaultLabel || item.workoutLabel || item.exerciseSlug || '不明なワークアウト';
+      const heading = Object.assign(document.createElement('strong'), {
+        textContent: `項目 ${index + 1}: ${(item.displayName || '').trim() || workoutLabel}`,
+      });
+
+      const info = Object.assign(document.createElement('p'), {
+        className: 'muted',
+        textContent: `${workoutLabel} / ${(MENU_WORKOUT_CATEGORY_LABELS[item.category] || MENU_WORKOUT_CATEGORY_LABELS.unknown)} / ${(item.muscles || []).map((muscle) => MENU_WORKOUT_MUSCLE_LABELS[muscle] || MENU_WORKOUT_MUSCLE_LABELS.other).join(', ') || MENU_WORKOUT_MUSCLE_LABELS.other}`,
+      });
+
       const nameField = document.createElement('label');
       nameField.className = 'field';
-      nameField.append(Object.assign(document.createElement('span'), { textContent: '表示名' }));
+      nameField.append(Object.assign(document.createElement('span'), { textContent: '表示名（空欄なら既定名）' }));
       const nameInput = document.createElement('input');
       nameInput.type = 'text';
-      nameInput.value = item.title || '';
+      nameInput.value = item.displayName || '';
+      nameInput.placeholder = workoutLabel;
       nameField.append(nameInput);
-
-      const exerciseField = createSelect('対応種目', item.exerciseSlug || '', [{ value: '', label: '(未選択)' }, ...exerciseOptions], (opt) => (typeof opt === 'string' ? { value: opt, label: opt } : opt));
-      const questField = createSelect(
-        '対応ワークアウト',
-        item.questId || '',
-        [{ value: '', label: '(自動/未選択)' }, ...(quests || []).map((quest) => ({ value: quest.id, label: `${quest.title || quest.id} (${quest.category})` }))],
-        (opt) => (typeof opt === 'string' ? { value: opt, label: opt } : opt),
-      );
 
       const noteField = document.createElement('label');
       noteField.className = 'field';
@@ -797,8 +970,60 @@ const createMenuSettings = async ({ store, playSfx }) => {
       noteInput.value = item.note || '';
       noteField.append(noteInput);
 
+      const config = item.config || item.workoutConfig || {};
+      const configShape = getMenuConfigShape(config);
+      const configGrid = document.createElement('div');
+      configGrid.className = 'workout-config-grid';
+
+      const inputModeField = createSelect('種別', configShape.inputMode, [
+        { value: 'weightReps', label: 'weightReps（重量×回数）' },
+        { value: 'reps', label: 'reps（回数）' },
+        { value: 'time', label: 'time（時間）' },
+      ], (opt) => opt);
+
+      const timeModeField = createSelect('モード', configShape.timeMode, [
+        { value: 'stopwatch', label: 'ストップウォッチ' },
+        { value: 'timer', label: 'タイマー' },
+        { value: 'intervalTimer', label: 'インターバルタイマー' },
+        { value: 'intervalStopwatch', label: 'インターバルストップウォッチ' },
+      ], (opt) => opt);
+      timeModeField.wrap.style.display = configShape.inputMode === 'time' ? '' : 'none';
+
+      const createNumberField = (labelText, value, step = '1') => {
+        const wrapper = document.createElement('label');
+        wrapper.className = 'field';
+        wrapper.append(Object.assign(document.createElement('span'), { textContent: labelText }));
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.step = step;
+        input.min = '0';
+        input.value = value == null ? '' : String(value);
+        wrapper.append(input);
+        return { wrapper, input };
+      };
+
+      const setsField = createNumberField('セット数', config.sets ?? 1);
+      const repsField = createNumberField('回数', config.reps);
+      const weightField = createNumberField('重量(kg)', config.weight, '0.5');
+      const workSecondsField = createNumberField('ワーク時間(秒)', config.workSeconds);
+      const restSecondsField = createNumberField('休憩(秒)', config.restSeconds);
+      const distanceField = createNumberField('距離(m)', config.distanceMeters);
+
+      const toggleVisibility = (field, key) => {
+        field.style.display = configShape.fields.includes(key) ? '' : 'none';
+      };
+      toggleVisibility(setsField.wrapper, 'sets');
+      toggleVisibility(repsField.wrapper, 'reps');
+      toggleVisibility(weightField.wrapper, 'weight');
+      toggleVisibility(workSecondsField.wrapper, 'workSeconds');
+      toggleVisibility(restSecondsField.wrapper, 'restSeconds');
+      toggleVisibility(distanceField.wrapper, 'distanceMeters');
+
+      configGrid.append(inputModeField.wrap, timeModeField.wrap, setsField.wrapper, repsField.wrapper, weightField.wrapper, workSecondsField.wrapper, restSecondsField.wrapper, distanceField.wrapper);
+
       const controls = document.createElement('div');
       controls.className = 'hero__actions';
+
       const up = document.createElement('button');
       up.type = 'button';
       up.className = 'ghost';
@@ -825,44 +1050,65 @@ const createMenuSettings = async ({ store, playSfx }) => {
 
       controls.append(up, down, remove);
 
-      const updateItem = () => {
-        const next = draftItems.slice();
-        const exerciseSlug = exerciseField.select.value;
-        const linkedQuest = findQuestByExercise(exerciseSlug);
-        next[index] = {
-          ...next[index],
-          title: nameInput.value,
-          exerciseSlug,
-          questId: questField.select.value || linkedQuest?.id || '',
-          category: linkedQuest?.category || next[index].category || 'custom',
-          note: noteInput.value,
-        };
-        draftItems = next;
-        setDirty(true);
-      };
-
-      [nameInput, exerciseField.select, questField.select, noteInput].forEach((el) => {
-        el.addEventListener('input', updateItem);
-        el.addEventListener('change', updateItem);
+      nameInput.addEventListener('input', () => {
+        updateItem(index, { displayName: nameInput.value, title: nameInput.value });
+        heading.textContent = `項目 ${index + 1}: ${(nameInput.value || '').trim() || workoutLabel}`;
       });
 
-      row.append(
-        Object.assign(document.createElement('strong'), { textContent: `項目 ${index + 1}` }),
-        nameField,
-        exerciseField.wrap,
-        questField.wrap,
-        noteField,
-        controls,
-      );
+      noteInput.addEventListener('input', () => updateItem(index, { note: noteInput.value }));
 
+      inputModeField.select.addEventListener('change', () => {
+        const nextMode = inputModeField.select.value;
+        const nextTimerType = nextMode === 'time' ? 'time' : 'setRest';
+        const nextTimeMode = nextMode === 'time' ? 'stopwatch' : 'stopwatch';
+        updateWorkoutConfig(index, { inputMode: nextMode, timerType: nextTimerType, mode: nextTimerType, timeMode: nextTimeMode });
+        renderList();
+      });
+      timeModeField.select.addEventListener('change', () => {
+        updateWorkoutConfig(index, { timeMode: timeModeField.select.value, timerType: 'time', mode: 'time' });
+        renderList();
+      });
+      setsField.input.addEventListener('input', () => updateWorkoutConfig(index, { sets: parseInputNumber(setsField.input.value) || 1 }));
+      repsField.input.addEventListener('input', () => updateWorkoutConfig(index, { reps: parseInputNumber(repsField.input.value) }));
+      weightField.input.addEventListener('input', () => updateWorkoutConfig(index, { weight: parseInputNumber(weightField.input.value) }));
+      workSecondsField.input.addEventListener('input', () => updateWorkoutConfig(index, { workSeconds: parseInputNumber(workSecondsField.input.value) }));
+      restSecondsField.input.addEventListener('input', () => updateWorkoutConfig(index, { restSeconds: parseInputNumber(restSecondsField.input.value) }));
+      distanceField.input.addEventListener('input', () => updateWorkoutConfig(index, { distanceMeters: parseInputNumber(distanceField.input.value) }));
+
+      row.append(heading, info, nameField, configGrid, noteField, controls);
       list.append(row);
     });
   };
 
-  addBtn.addEventListener('click', () => {
-    draftItems.push(normalizeMenuItem({ title: '', exerciseSlug: '', questId: '', note: '' }, draftItems.length));
-    setDirty(true);
-    renderList();
+  const refreshModalMeta = () => {
+    modalCount.textContent = `${modalSelection.length}件選択中（押した順で番号表示）`;
+  };
+
+  [categoryFilterField.select, muscleFilterField.select].forEach((el) => {
+    el.addEventListener('change', () => {
+      renderModalList();
+      refreshModalMeta();
+    });
+  });
+
+  selectWorkoutBtn.addEventListener('click', () => {
+    playSfx('ui:select');
+    openModal();
+    refreshModalMeta();
+  });
+
+  modalOverlay.addEventListener('click', (event) => {
+    if (event.target === modalOverlay) closeModal();
+  });
+  modalCloseBtn.addEventListener('click', closeModal);
+  modalCancelBtn.addEventListener('click', closeModal);
+  card.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !modalOverlay.hidden) closeModal();
+  });
+
+  modalSelectBtn.addEventListener('click', () => {
+    applySelection(modalSelection);
+    closeModal();
   });
 
   dateInput.addEventListener('change', async () => {
@@ -881,16 +1127,16 @@ const createMenuSettings = async ({ store, playSfx }) => {
     playSfx('ui:select');
     saveBtn.disabled = true;
     try {
-      const sanitized = sanitizeMenuItems(draftItems);
+      const sanitized = sanitizeMenuItems(draftItems, { workoutMap, difficulty });
       if (mode === 'weekly') {
         const saved = await Promise.resolve(store.saveWeeklyPlan(userId, selectedWeekday, sanitized));
         weeklyPlan[String(selectedWeekday)] = Array.isArray(saved) ? saved : sanitized;
-        draftItems = sanitizeMenuItems(weeklyPlan[String(selectedWeekday)] || []);
+        draftItems = sanitizeMenuItems(weeklyPlan[String(selectedWeekday)] || [], { workoutMap, difficulty });
         status.textContent = `${WEEKDAY_LABELS[selectedWeekday]}曜日のメニューを保存しました。`;
       } else {
         const saved = await Promise.resolve(store.saveSpecialPlan(userId, selectedDate, sanitized));
-        specialPlanCache[selectedDate] = sanitizeMenuItems(saved || sanitized);
-        draftItems = sanitizeMenuItems(specialPlanCache[selectedDate] || []);
+        specialPlanCache[selectedDate] = sanitizeMenuItems(saved || sanitized, { workoutMap, difficulty });
+        draftItems = sanitizeMenuItems(specialPlanCache[selectedDate] || [], { workoutMap, difficulty });
         status.textContent = `${selectedDate} の特別日メニューを保存しました。`;
       }
       setDirty(false);
@@ -930,7 +1176,7 @@ const createMenuSettings = async ({ store, playSfx }) => {
   renderContext();
   renderList();
 
-  card.append(title, hint, modeTabs, contextSlot, actionRow, status, list);
+  card.append(title, hint, modeTabs, contextSlot, actionRow, status, list, modalOverlay);
   return card;
 };
 

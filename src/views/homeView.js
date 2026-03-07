@@ -1,4 +1,5 @@
 import { quests } from '../core/content.js';
+import { createPlanFromDefinition } from '../core/trainingPlan.js';
 
 const createCategoryCard = (category, label, summary, navigate, playSfx) => {
   const card = document.createElement('article');
@@ -28,6 +29,22 @@ const findWorkoutIdByExercise = (exerciseSlug) => {
   return match?.id || null;
 };
 
+const createSetsFromMenuConfig = (inputMode, config = {}) => {
+  const setCount = Math.max(Number(config.sets) || 1, 1);
+  if (inputMode === 'weightReps') {
+    return Array.from({ length: setCount }, () => ({
+      weight: Number.isFinite(Number(config.weight)) ? Number(config.weight) : 0,
+      reps: Number.isFinite(Number(config.reps)) ? Number(config.reps) : 10,
+    }));
+  }
+  if (inputMode === 'reps') {
+    return Array.from({ length: setCount }, () => ({
+      reps: Number.isFinite(Number(config.reps)) ? Number(config.reps) : 10,
+    }));
+  }
+  return [];
+};
+
 export const renderHome = (_params, { navigate, playSfx, store }) => {
   const container = document.createElement('section');
   container.className = 'stack';
@@ -47,61 +64,116 @@ export const renderHome = (_params, { navigate, playSfx, store }) => {
   todoMeta.className = 'muted';
   const todoList = document.createElement('div');
   todoList.className = 'stack';
+  let mounted = true;
 
-  const startButton = document.createElement('button');
-  startButton.type = 'button';
-  startButton.textContent = 'このメニューでワークアウト開始';
+  const startWorkoutFromTodo = (item) => {
+    if (!item) return;
+    const workoutId = findWorkoutIdByExercise(item.exerciseSlug);
+    const settings = store.getSettings?.() || {};
+    const difficulty = settings.difficulty || 'beginner';
+    playSfx('ui:navigate');
 
-  const renderTodos = async () => {
+    if (workoutId) {
+      const quest = (quests || []).find((entry) => entry.id === workoutId);
+      const plan = createPlanFromDefinition(quest, difficulty, store.getLastPlan?.(workoutId, difficulty));
+      const config = item.config || item.workoutConfig || {};
+      const menuInputMode = config.inputMode || plan.inputMode;
+      const nextPlan = {
+        ...plan,
+        inputMode: menuInputMode,
+        mode: menuInputMode === 'time' ? 'time' : 'setRest',
+        defaultTimerMode: menuInputMode === 'time' ? 'time' : 'setRest',
+        timeMode: menuInputMode === 'time' ? (config.timeMode || plan.timeMode || 'stopwatch') : 'stopwatch',
+        defaultTimeMode: menuInputMode === 'time' ? (config.timeMode || plan.defaultTimeMode || 'stopwatch') : 'stopwatch',
+        restSeconds: config.restSeconds ?? plan.restSeconds,
+        trainingSeconds: config.workSeconds ?? plan.trainingSeconds,
+        sets: createSetsFromMenuConfig(menuInputMode, config),
+        metricGoals: plan.goalConfig?.type === 'distance'
+          ? { distanceMeters: config.distanceMeters ?? plan.metricGoals?.distanceMeters ?? plan.goalConfig.defaultValue }
+          : plan.metricGoals,
+      };
+      store.rememberPlan(workoutId, difficulty, nextPlan);
+      navigate(`#/run/${workoutId}`);
+      return;
+    }
+
+    navigate(`#/workouts/${item?.category || 'cardio'}`);
+  };
+
+  const renderTodos = () => {
+    if (!mounted) return;
+
     const userId = store.getProfile()?.id || 'local-user';
-    await Promise.resolve(store.loadWeeklyPlan(userId));
     const today = store.getTodayPlan(userId, new Date());
-    await Promise.resolve(store.loadSpecialPlan(userId, today.dateKey));
-    const nextToday = store.getTodayPlan(userId, new Date());
-    const checks = store.getTodoStateForDate(nextToday.dateKey);
+    const checks = store.getTodoStateForDate(today.dateKey);
 
-    todoMeta.textContent = `ソース: ${nextToday.source === 'special' ? '特別日メニュー' : '週間メニュー'} (${nextToday.dateKey})`;
+    todoMeta.textContent = `ソース: ${today.source === 'special' ? '特別日メニュー' : '週間メニュー'} (${today.dateKey})`;
     todoList.innerHTML = '';
 
-    if (!nextToday.items.length) {
+    if (!today.items.length) {
       const empty = document.createElement('p');
       empty.className = 'muted';
       empty.textContent = '今日のメニューは未設定です。設定ページから追加してください。';
       todoList.append(empty);
-      startButton.disabled = true;
       return;
     }
 
-    nextToday.items.forEach((item, index) => {
-      const row = document.createElement('label');
-      row.className = 'row';
+    today.items.forEach((item, index) => {
+      const row = document.createElement('div');
+      row.className = 'row todo-row';
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.checked = Boolean(checks[index]);
       checkbox.addEventListener('change', (event) => {
-        store.setTodoDone(nextToday.dateKey, index, event.target.checked);
+        store.setTodoDone(today.dateKey, index, event.target.checked);
       });
-      const text = document.createElement('span');
-      text.textContent = `${item.exerciseSlug} (${item.category})`;
-      row.append(checkbox, text);
+      const action = document.createElement('button');
+      action.type = 'button';
+      action.className = 'todo-row__action';
+      const fallback = item.defaultLabel || item.workoutLabel || item.exerciseSlug || '不明なワークアウト';
+      const title = (item.displayName || item.title || '').trim() || fallback;
+      action.textContent = `${title} (${item.category || 'unknown'})`;
+      action.addEventListener('click', () => {
+        startWorkoutFromTodo(item);
+      });
+      row.append(checkbox, action);
       todoList.append(row);
     });
-
-    startButton.disabled = false;
-    startButton.onclick = () => {
-      const first = nextToday.items[0];
-      const workoutId = findWorkoutIdByExercise(first.exerciseSlug);
-      playSfx('ui:navigate');
-      if (workoutId) navigate(`#/run/${workoutId}`);
-      else navigate(`#/workouts/${first?.category || 'cardio'}`);
-    };
   };
 
-  renderTodos();
+  const loadTodos = async () => {
+    const userId = store.getProfile()?.id || 'local-user';
+    await Promise.resolve(store.loadWeeklyPlan(userId));
+    const today = store.getTodayPlan(userId, new Date());
+    await Promise.resolve(store.loadSpecialPlan(userId, today.dateKey));
+  };
 
-  todoCard.append(todoTitle, todoMeta, todoList, startButton);
+  todoMeta.textContent = '今日のTODOメニューを読み込み中...';
+  loadTodos()
+    .then(() => {
+      if (mounted) renderTodos();
+    })
+    .catch(() => {
+      if (!mounted) return;
+      todoList.innerHTML = '';
+      todoMeta.textContent = 'TODOメニューの取得に失敗しました。';
+    });
+
+  const unsubscribe = typeof store.subscribeProfile === 'function'
+    ? store.subscribeProfile(() => {
+      renderTodos();
+    })
+    : null;
+
+  todoCard.append(todoTitle, todoMeta, todoList);
 
   grid.append(cardioCard, bodyweightCard, weightsCard);
   container.append(todoCard, grid);
-  return container;
+  return {
+    element: container,
+    dispose: () => {
+      mounted = false;
+      if (typeof unsubscribe === 'function') unsubscribe();
+    },
+  };
 };
