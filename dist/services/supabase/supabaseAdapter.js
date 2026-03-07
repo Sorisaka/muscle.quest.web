@@ -976,11 +976,14 @@ export const createSupabaseAdapter = (options = {}) => {
         created_at: row.created_at,
         read_at: row.read_at,
         actor_id: row.actor_id,
-        actor_display_name: row.actor_display_name,
+        actor_username: row.actor_username || null,
+        actor_display_name: row.actor_display_name || row.actor_username || 'ユーザー',
+        actor_account_visibility: normalizeAccountVisibility(row.actor_account_visibility, 'private'),
         run_id: row.run_id,
         workout_exercise_slug: row.workout_exercise_slug || null,
         workout_created_at: row.workout_created_at || null,
         has_pending_request: Boolean(row.has_pending_request),
+        has_outgoing_request: Boolean(row.has_outgoing_request),
         is_following_actor: Boolean(row.is_following_actor),
         message: row.message,
       }));
@@ -1021,19 +1024,28 @@ export const createSupabaseAdapter = (options = {}) => {
       return local.toggleLike(runId);
     }
 
+    const payload = { p_run_id: Number(runId) };
+
     return client
-      .rpc('toggle_like', { p_run_id: Number(runId) })
+      .rpc('toggle_like', payload)
       .then(({ data, error }) => {
         if (error) {
-          authWarn('toggle_like failed', error.message || error);
+          authWarn('toggle_like failed', {
+            message: error.message || error,
+            code: error.code,
+            details: error.details,
+            hint: error.hint,
+            payload,
+          });
           const detail = error?.details ? ` (${error.details})` : '';
           const hint = error?.hint ? ` [hint: ${error.hint}]` : '';
-          throw new Error(`toggle_like failed: ${error.message || 'unknown error'}${detail}${hint}`);
+          const code = error?.code ? ` [code: ${error.code}]` : '';
+          throw new Error(`toggle_like failed: ${error.message || 'unknown error'}${detail}${hint}${code}`);
         }
         const row = Array.isArray(data) ? data[0] : data;
         if (!row) return { runId, liked: false, likeCount: 0 };
         return {
-          runId: row.run_id ?? runId,
+          runId,
           liked: Boolean(row.liked),
           likeCount: Number(row.like_count ?? 0),
         };

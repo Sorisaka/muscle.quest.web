@@ -9,7 +9,7 @@ export const resolveNotificationTypeLabel = (type) => {
 };
 
 export const buildNotificationMessage = (item = {}) => {
-  const actor = item.actor_display_name || item.actor_id || '誰か';
+  const actor = item.actor_display_name || item.actor_username || 'ユーザー';
   if (item.type === 'like') {
     const workoutLabel = resolveWorkoutLabel(item.workout_exercise_slug);
     return `${actor} さんが ${workoutLabel}（${formatDateTimeJa(item.workout_created_at)}）の投稿にいいねしました`;
