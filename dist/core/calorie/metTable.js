@@ -1,6 +1,7 @@
 const cardioSpeedMet = {
   walk: { light: 2.8, moderate: 3.8, vigorous: 5.0 },
   run: { light: 6.0, moderate: 8.0, vigorous: 10.0 },
+  cycle: { light: 4.0, moderate: 6.8, vigorous: 8.8 },
 };
 
 const resistanceMet = {
@@ -20,6 +21,11 @@ export const getSpeedIntensity = (speedKmh = 0, activity = 'walk') => {
   if (activity === 'run') {
     if (safeSpeed < 8) return 'light';
     if (safeSpeed < 11) return 'moderate';
+    return 'vigorous';
+  }
+  if (activity === 'cycle') {
+    if (safeSpeed < 16) return 'light';
+    if (safeSpeed < 22) return 'moderate';
     return 'vigorous';
   }
 

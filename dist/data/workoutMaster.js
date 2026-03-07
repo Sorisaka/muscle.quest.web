@@ -2,7 +2,7 @@ const DIFFICULTY_KEYS = ['beginner', 'intermediate', 'advanced'];
 const CATEGORY_KEYS = ['cardio', 'bodyweight', 'weights'];
 const UNIT_KEYS = ['weightReps', 'time'];
 
-export const workoutMasterEntries = [
+const workoutMasterEntriesBase = [
   {
     "id": "walking",
     "isActive": true,
@@ -41,7 +41,6 @@ export const workoutMasterEntries = [
           "perWork": 0.45,
           "setBonus": 6,
           "completion": 25,
-          "challengeScale": 0.55
         },
         "howto": "一定ペースで呼吸を整えながら実施する。"
       },
@@ -72,7 +71,6 @@ export const workoutMasterEntries = [
           "perWork": 0.5,
           "setBonus": 8,
           "completion": 35,
-          "challengeScale": 0.6
         },
         "howto": "姿勢とリズムを保って継続する。"
       },
@@ -103,7 +101,6 @@ export const workoutMasterEntries = [
           "perWork": 0.55,
           "setBonus": 10,
           "completion": 45,
-          "challengeScale": 0.65
         },
         "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
@@ -147,7 +144,6 @@ export const workoutMasterEntries = [
           "perWork": 0.45,
           "setBonus": 6,
           "completion": 25,
-          "challengeScale": 0.55
         },
         "howto": "一定ペースで呼吸を整えながら実施する。"
       },
@@ -178,7 +174,6 @@ export const workoutMasterEntries = [
           "perWork": 0.5,
           "setBonus": 8,
           "completion": 35,
-          "challengeScale": 0.6
         },
         "howto": "姿勢とリズムを保って継続する。"
       },
@@ -209,7 +204,6 @@ export const workoutMasterEntries = [
           "perWork": 0.55,
           "setBonus": 10,
           "completion": 45,
-          "challengeScale": 0.65
         },
         "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
@@ -253,7 +247,6 @@ export const workoutMasterEntries = [
           "perWork": 0.45,
           "setBonus": 6,
           "completion": 25,
-          "challengeScale": 0.55
         },
         "howto": "一定ペースで呼吸を整えながら実施する。"
       },
@@ -284,7 +277,6 @@ export const workoutMasterEntries = [
           "perWork": 0.5,
           "setBonus": 8,
           "completion": 35,
-          "challengeScale": 0.6
         },
         "howto": "姿勢とリズムを保って継続する。"
       },
@@ -315,7 +307,6 @@ export const workoutMasterEntries = [
           "perWork": 0.55,
           "setBonus": 10,
           "completion": 45,
-          "challengeScale": 0.65
         },
         "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
@@ -359,7 +350,6 @@ export const workoutMasterEntries = [
           "perWork": 0.45,
           "setBonus": 6,
           "completion": 25,
-          "challengeScale": 0.55
         },
         "howto": "一定ペースで呼吸を整えながら実施する。"
       },
@@ -390,7 +380,6 @@ export const workoutMasterEntries = [
           "perWork": 0.5,
           "setBonus": 8,
           "completion": 35,
-          "challengeScale": 0.6
         },
         "howto": "姿勢とリズムを保って継続する。"
       },
@@ -421,7 +410,6 @@ export const workoutMasterEntries = [
           "perWork": 0.55,
           "setBonus": 10,
           "completion": 45,
-          "challengeScale": 0.65
         },
         "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
@@ -466,7 +454,6 @@ export const workoutMasterEntries = [
           "perWork": 0.45,
           "setBonus": 6,
           "completion": 25,
-          "challengeScale": 0.55
         },
         "howto": "一定ペースで呼吸を整えながら実施する。"
       },
@@ -497,7 +484,6 @@ export const workoutMasterEntries = [
           "perWork": 0.5,
           "setBonus": 8,
           "completion": 35,
-          "challengeScale": 0.6
         },
         "howto": "姿勢とリズムを保って継続する。"
       },
@@ -528,7 +514,6 @@ export const workoutMasterEntries = [
           "perWork": 0.55,
           "setBonus": 10,
           "completion": 45,
-          "challengeScale": 0.65
         },
         "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
@@ -572,7 +557,6 @@ export const workoutMasterEntries = [
           "perWork": 0,
           "setBonus": 6,
           "completion": 25,
-          "challengeScale": 0.55
         },
         "howto": "一定ペースで呼吸を整えながら実施する。"
       },
@@ -603,7 +587,6 @@ export const workoutMasterEntries = [
           "perWork": 0,
           "setBonus": 8,
           "completion": 35,
-          "challengeScale": 0.6
         },
         "howto": "姿勢とリズムを保って継続する。"
       },
@@ -634,7 +617,6 @@ export const workoutMasterEntries = [
           "perWork": 0,
           "setBonus": 10,
           "completion": 45,
-          "challengeScale": 0.65
         },
         "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
@@ -679,7 +661,6 @@ export const workoutMasterEntries = [
           "perWork": 0.45,
           "setBonus": 6,
           "completion": 25,
-          "challengeScale": 0.55
         },
         "howto": "一定ペースで呼吸を整えながら実施する。"
       },
@@ -710,7 +691,6 @@ export const workoutMasterEntries = [
           "perWork": 0.5,
           "setBonus": 8,
           "completion": 35,
-          "challengeScale": 0.6
         },
         "howto": "姿勢とリズムを保って継続する。"
       },
@@ -741,7 +721,6 @@ export const workoutMasterEntries = [
           "perWork": 0.55,
           "setBonus": 10,
           "completion": 45,
-          "challengeScale": 0.65
         },
         "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
@@ -787,7 +766,6 @@ export const workoutMasterEntries = [
           "perWork": 0.45,
           "setBonus": 6,
           "completion": 25,
-          "challengeScale": 0.55
         },
         "howto": "一定ペースで呼吸を整えながら実施する。"
       },
@@ -818,7 +796,6 @@ export const workoutMasterEntries = [
           "perWork": 0.5,
           "setBonus": 8,
           "completion": 35,
-          "challengeScale": 0.6
         },
         "howto": "姿勢とリズムを保って継続する。"
       },
@@ -849,7 +826,6 @@ export const workoutMasterEntries = [
           "perWork": 0.55,
           "setBonus": 10,
           "completion": 45,
-          "challengeScale": 0.65
         },
         "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
@@ -895,7 +871,6 @@ export const workoutMasterEntries = [
           "perWork": 0.45,
           "setBonus": 6,
           "completion": 25,
-          "challengeScale": 0.55
         },
         "howto": "一定ペースで呼吸を整えながら実施する。"
       },
@@ -926,7 +901,6 @@ export const workoutMasterEntries = [
           "perWork": 0.5,
           "setBonus": 8,
           "completion": 35,
-          "challengeScale": 0.6
         },
         "howto": "姿勢とリズムを保って継続する。"
       },
@@ -957,7 +931,6 @@ export const workoutMasterEntries = [
           "perWork": 0.55,
           "setBonus": 10,
           "completion": 45,
-          "challengeScale": 0.65
         },
         "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
@@ -1003,7 +976,6 @@ export const workoutMasterEntries = [
           "perWork": 0.45,
           "setBonus": 6,
           "completion": 25,
-          "challengeScale": 0.55
         },
         "howto": "一定ペースで呼吸を整えながら実施する。"
       },
@@ -1034,7 +1006,6 @@ export const workoutMasterEntries = [
           "perWork": 0.5,
           "setBonus": 8,
           "completion": 35,
-          "challengeScale": 0.6
         },
         "howto": "姿勢とリズムを保って継続する。"
       },
@@ -1065,7 +1036,6 @@ export const workoutMasterEntries = [
           "perWork": 0.55,
           "setBonus": 10,
           "completion": 45,
-          "challengeScale": 0.65
         },
         "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
@@ -1111,7 +1081,6 @@ export const workoutMasterEntries = [
           "perWork": 0.45,
           "setBonus": 6,
           "completion": 25,
-          "challengeScale": 0.55
         },
         "howto": "一定ペースで呼吸を整えながら実施する。"
       },
@@ -1142,7 +1111,6 @@ export const workoutMasterEntries = [
           "perWork": 0.5,
           "setBonus": 8,
           "completion": 35,
-          "challengeScale": 0.6
         },
         "howto": "姿勢とリズムを保って継続する。"
       },
@@ -1173,7 +1141,6 @@ export const workoutMasterEntries = [
           "perWork": 0.55,
           "setBonus": 10,
           "completion": 45,
-          "challengeScale": 0.65
         },
         "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
@@ -1218,7 +1185,6 @@ export const workoutMasterEntries = [
           "perWork": 0.45,
           "setBonus": 6,
           "completion": 25,
-          "challengeScale": 0.55
         },
         "howto": "一定ペースで呼吸を整えながら実施する。"
       },
@@ -1249,7 +1215,6 @@ export const workoutMasterEntries = [
           "perWork": 0.5,
           "setBonus": 8,
           "completion": 35,
-          "challengeScale": 0.6
         },
         "howto": "姿勢とリズムを保って継続する。"
       },
@@ -1280,7 +1245,6 @@ export const workoutMasterEntries = [
           "perWork": 0.55,
           "setBonus": 10,
           "completion": 45,
-          "challengeScale": 0.65
         },
         "howto": "長時間でもフォームを崩さず安全第一で行う。"
       }
@@ -1333,7 +1297,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -1372,7 +1335,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -1415,7 +1377,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -1468,7 +1429,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -1507,7 +1467,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -1550,7 +1509,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -1600,7 +1558,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -1639,7 +1596,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -1682,7 +1638,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -1732,7 +1687,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -1771,7 +1725,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -1814,7 +1767,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -1864,7 +1816,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -1903,7 +1854,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -1946,7 +1896,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -1996,7 +1945,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -2035,7 +1983,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -2078,7 +2025,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -2128,7 +2074,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -2167,7 +2112,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -2210,7 +2154,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -2261,7 +2204,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -2300,7 +2242,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -2343,7 +2284,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -2395,7 +2335,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -2434,7 +2373,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -2477,7 +2415,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -2527,7 +2464,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -2566,7 +2502,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -2609,7 +2544,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -2661,7 +2595,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -2700,7 +2633,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -2743,7 +2675,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -2795,7 +2726,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -2834,7 +2764,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -2877,7 +2806,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -2930,7 +2858,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -2969,7 +2896,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -3012,7 +2938,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -3055,7 +2980,6 @@ export const workoutMasterEntries = [
           "perWork": 0.45,
           "setBonus": 6,
           "completion": 25,
-          "challengeScale": 0.55
         },
         "howto": "姿勢を作り、呼吸を止めずに保持する。"
       },
@@ -3086,7 +3010,6 @@ export const workoutMasterEntries = [
           "perWork": 0.5,
           "setBonus": 8,
           "completion": 35,
-          "challengeScale": 0.6
         },
         "howto": "体幹を締め、ぶれを最小限に保つ。"
       },
@@ -3117,7 +3040,6 @@ export const workoutMasterEntries = [
           "perWork": 0.55,
           "setBonus": 10,
           "completion": 45,
-          "challengeScale": 0.65
         },
         "howto": "長時間でも肩と腰の位置を崩さない。"
       }
@@ -3160,7 +3082,6 @@ export const workoutMasterEntries = [
           "perWork": 0.45,
           "setBonus": 6,
           "completion": 25,
-          "challengeScale": 0.55
         },
         "howto": "姿勢を作り、呼吸を止めずに保持する。"
       },
@@ -3191,7 +3112,6 @@ export const workoutMasterEntries = [
           "perWork": 0.5,
           "setBonus": 8,
           "completion": 35,
-          "challengeScale": 0.6
         },
         "howto": "体幹を締め、ぶれを最小限に保つ。"
       },
@@ -3222,7 +3142,6 @@ export const workoutMasterEntries = [
           "perWork": 0.55,
           "setBonus": 10,
           "completion": 45,
-          "challengeScale": 0.65
         },
         "howto": "長時間でも肩と腰の位置を崩さない。"
       }
@@ -3267,7 +3186,6 @@ export const workoutMasterEntries = [
           "perWork": 0.45,
           "setBonus": 6,
           "completion": 25,
-          "challengeScale": 0.55
         },
         "howto": "姿勢を作り、呼吸を止めずに保持する。"
       },
@@ -3298,7 +3216,6 @@ export const workoutMasterEntries = [
           "perWork": 0.5,
           "setBonus": 8,
           "completion": 35,
-          "challengeScale": 0.6
         },
         "howto": "体幹を締め、ぶれを最小限に保つ。"
       },
@@ -3329,7 +3246,6 @@ export const workoutMasterEntries = [
           "perWork": 0.55,
           "setBonus": 10,
           "completion": 45,
-          "challengeScale": 0.65
         },
         "howto": "長時間でも肩と腰の位置を崩さない。"
       }
@@ -3374,7 +3290,6 @@ export const workoutMasterEntries = [
           "perWork": 0.45,
           "setBonus": 6,
           "completion": 25,
-          "challengeScale": 0.55
         },
         "howto": "姿勢を作り、呼吸を止めずに保持する。"
       },
@@ -3405,7 +3320,6 @@ export const workoutMasterEntries = [
           "perWork": 0.5,
           "setBonus": 8,
           "completion": 35,
-          "challengeScale": 0.6
         },
         "howto": "体幹を締め、ぶれを最小限に保つ。"
       },
@@ -3436,7 +3350,6 @@ export const workoutMasterEntries = [
           "perWork": 0.55,
           "setBonus": 10,
           "completion": 45,
-          "challengeScale": 0.65
         },
         "howto": "長時間でも肩と腰の位置を崩さない。"
       }
@@ -3488,7 +3401,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -3527,7 +3439,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -3570,7 +3481,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -3621,7 +3531,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -3660,7 +3569,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -3703,7 +3611,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -3755,7 +3662,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -3794,7 +3700,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -3837,7 +3742,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -3889,7 +3793,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -3928,7 +3831,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -3971,7 +3873,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -4023,7 +3924,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -4062,7 +3962,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -4105,7 +4004,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -4158,7 +4056,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -4197,7 +4094,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -4240,7 +4136,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -4290,7 +4185,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -4329,7 +4223,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -4372,7 +4265,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -4424,7 +4316,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -4463,7 +4354,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -4506,7 +4396,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -4557,7 +4446,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -4596,7 +4484,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -4639,7 +4526,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -4689,7 +4575,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -4728,7 +4613,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -4771,7 +4655,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -4821,7 +4704,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -4860,7 +4742,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -4903,7 +4784,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -4953,7 +4833,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -4992,7 +4871,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -5035,7 +4913,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -5085,7 +4962,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -5124,7 +5000,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -5167,7 +5042,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -5217,7 +5091,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -5256,7 +5129,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -5299,7 +5171,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -5349,7 +5220,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -5388,7 +5258,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -5431,7 +5300,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -5481,7 +5349,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -5520,7 +5387,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -5563,7 +5429,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -5616,7 +5481,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -5655,7 +5519,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -5698,7 +5561,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -5750,7 +5612,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -5789,7 +5650,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -5832,7 +5692,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -5883,7 +5742,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -5922,7 +5780,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -5965,7 +5822,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -6015,7 +5871,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -6054,7 +5909,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -6097,7 +5951,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -6149,7 +6002,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -6188,7 +6040,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -6231,7 +6082,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -6281,7 +6131,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -6320,7 +6169,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -6363,7 +6211,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -6413,7 +6260,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -6452,7 +6298,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -6495,7 +6340,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -6545,7 +6389,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -6584,7 +6427,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -6627,7 +6469,6 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
@@ -6677,7 +6518,6 @@ export const workoutMasterEntries = [
           "perWork": 0.09,
           "setBonus": 8,
           "completion": 30,
-          "challengeScale": 0.5
         },
         "howto": "軽めの重量で可動域と姿勢を確認する。"
       },
@@ -6716,7 +6556,6 @@ export const workoutMasterEntries = [
           "perWork": 0.11,
           "setBonus": 10,
           "completion": 40,
-          "challengeScale": 0.55
         },
         "howto": "反動を使わず対象筋へ効かせる。"
       },
@@ -6759,13 +6598,88 @@ export const workoutMasterEntries = [
           "perWork": 0.13,
           "setBonus": 12,
           "completion": 55,
-          "challengeScale": 0.6
         },
         "howto": "高重量時もフォームを優先し、無理なら重量を下げる。"
       }
     }
   }
 ];
+
+const INPUT_MODE_KEYS = ['weightReps', 'reps', 'time'];
+const TIMER_MODE_KEYS = ['interval', 'setRest', 'time'];
+const TRACKING_METRIC_KEYS = ['distance'];
+
+const applyExerciseOverrides = (entry) => {
+  const timeIds = new Set(['walking','jogging','running','cycling','aerobics','stretching','soccer','basketball','tennis','swimming','badminton','table-tennis']);
+  const repsIds = new Set(['push-ups','knee-push-ups','sit-ups','v-ups','abdominal-crunches','side-crunches','twist-crunches','leg-raises','ab-roller','decline-sit-ups','squats','jump-squats','pull-ups','handstand-push-ups']);
+  const holdIds = new Set(['plank','side-plank','assisted-handstand-hold','freestanding-handstand-hold']);
+  const weightRepsIds = new Set(['shrug','bent-over-row','weighted-squats','lunges','deadlifts','calf-raises','military-press','shoulder-press','side-raises','front-raises','lateral-raises','curls','preacher-curls','wrist-curls','reverse-wrist-curls','bench-press','incline-bench-press','fly','weighted-abdominal-crunches','cable-woodchops','cable-crunches','cable-side-bends','rotary-torso','triceps-extension']);
+
+  const forceMode = timeIds.has(entry.id)
+    ? 'time'
+    : repsIds.has(entry.id)
+      ? 'reps'
+      : holdIds.has(entry.id)
+        ? 'time'
+        : weightRepsIds.has(entry.id)
+          ? 'weightReps'
+          : null;
+
+  const baselineSet = (mode) => {
+    if (mode === 'reps') return { reps: 10 };
+    if (mode === 'time') return { timeSeconds: 60 };
+    if (mode === 'weightReps') {
+      const defaultWeightMap = {
+        shrug: 20, 'bent-over-row': 30, 'weighted-squats': 30, lunges: 20, deadlifts: 40, 'calf-raises': 20,
+        'military-press': 20, 'shoulder-press': 20, 'side-raises': 5, 'front-raises': 5, 'lateral-raises': 5,
+        curls: 10, 'preacher-curls': 10, 'wrist-curls': 10, 'reverse-wrist-curls': 10,
+        'bench-press': 30, 'incline-bench-press': 20, fly: 10,
+        'weighted-abdominal-crunches': 15, 'cable-woodchops': 15, 'cable-crunches': 20, 'cable-side-bends': 15, 'rotary-torso': 20, 'triceps-extension': 10,
+      };
+      return { weight: defaultWeightMap[entry.id] ?? 10, reps: 10 };
+    }
+    return null;
+  };
+
+  const withDifficultyOverride = (difficulty = {}) => {
+    if (!forceMode || forceMode === 'time') return difficulty;
+    const base = baselineSet(forceMode);
+    return {
+      ...difficulty,
+      defaultSets: [base, base, base, base, base],
+      maxSets: Math.max(Number(difficulty.maxSets || 1), 5),
+      restSeconds: 60,
+    };
+  };
+
+  const next = {
+    ...entry,
+    inputMode: forceMode || (entry.unit === 'time' ? 'time' : 'weightReps'),
+    defaultTimerMode: forceMode === 'time' ? 'time' : 'setRest',
+    trackingMetrics: ['running', 'cycling'].includes(entry.id) ? ['distance'] : [],
+    goalConfig: entry.id === 'running'
+      ? { type: 'distance', defaultValue: 1500, min: 100, max: 100000, step: 100, unitLabel: 'm' }
+      : null,
+    difficulties: {
+      beginner: withDifficultyOverride(entry.difficulties.beginner),
+      intermediate: withDifficultyOverride(entry.difficulties.intermediate),
+      advanced: withDifficultyOverride(entry.difficulties.advanced),
+    },
+  };
+
+  if (next.inputMode === 'reps') next.unit = 'weightReps';
+  if (next.inputMode === 'time') next.unit = 'time';
+  if (next.inputMode === 'time') {
+    next.restSeconds = 0;
+    next.defaultTimeMode = holdIds.has(entry.id) ? 'intervalTimer' : 'stopwatch';
+  }
+  if (next.id === 'abdominal-crunches') next.label = 'クランチ';
+  if (next.id === 'weighted-abdominal-crunches') next.label = 'クランチ（加重）';
+  if (next.id === 'weighted-squats') next.label = 'スクワット（加重）';
+  return next;
+};
+
+export const workoutMasterEntries = workoutMasterEntriesBase.map((entry) => applyExerciseOverrides(entry));
 
 const assert = (condition, message) => {
   if (!condition) throw new Error(`[workoutMaster] ${message}`);
@@ -6782,6 +6696,10 @@ export const validateWorkoutMaster = (entries = workoutMasterEntries) => {
     assert(typeof entry.label === 'string' && entry.label.trim(), `${entry.id}.label は必須です`);
     assert(CATEGORY_KEYS.includes(entry.category), `${entry.id}.category が不正です: ${entry.category}`);
     assert(UNIT_KEYS.includes(entry.unit), `${entry.id}.unit が不正です: ${entry.unit}`);
+    assert(INPUT_MODE_KEYS.includes(entry.inputMode), `${entry.id}.inputMode が不正です: ${entry.inputMode}`);
+    assert(TIMER_MODE_KEYS.includes(entry.defaultTimerMode), `${entry.id}.defaultTimerMode が不正です: ${entry.defaultTimerMode}`);
+    assert(Array.isArray(entry.trackingMetrics), `${entry.id}.trackingMetrics は配列が必要です`);
+    entry.trackingMetrics.forEach((metric) => assert(TRACKING_METRIC_KEYS.includes(metric), `${entry.id}.trackingMetric が不正です: ${metric}`));
     assert(Array.isArray(entry.muscles) && entry.muscles.length > 0, `${entry.id}.muscles は 1 件以上必要です`);
     assert(typeof entry.restSeconds === 'number' && entry.restSeconds >= 0, `${entry.id}.restSeconds が不正です`);
 
@@ -6805,6 +6723,10 @@ export const buildTrainingDefinitionsMap = (entries = workoutMasterEntries) => {
       category: entry.category,
       muscles: entry.muscles,
       unit: entry.unit,
+      inputMode: entry.inputMode,
+      defaultTimerMode: entry.defaultTimerMode,
+      trackingMetrics: entry.trackingMetrics,
+      goalConfig: entry.goalConfig,
       description: entry.description,
       restSeconds: entry.restSeconds,
       difficulties: entry.difficulties,
