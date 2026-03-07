@@ -3,6 +3,7 @@ import { createAccountListRow, withPrivateLock } from '../ui/accountListRow.js';
 import { createFollowActionButton } from '../ui/followActionButton.js';
 import { createIncomingRequestActions, createOutgoingRequestActions } from '../ui/requestActionButtons.js';
 import { createCountsSummaryBlock } from '../ui/accountCountsSummary.js';
+import { resolveWorkoutLabel } from '../core/workoutLabel.js';
 
 const resolveUiState = ({ currentUserId, account, followState }) => {
   if (!account?.id || account.id === currentUserId) return 'own_account';
@@ -212,7 +213,17 @@ export const renderAccount = (_params, { navigate, accountState, store }) => {
   list.className = 'stack';
   const entries = (store.getHistory() || []).slice(0, 10);
   if (!entries.length) list.append(createEmpty('投稿はまだありません。'));
-  else entries.forEach((entry) => list.append(Object.assign(document.createElement('div'), { className: 'row', textContent: `${entry.exerciseSlug || entry.questId || 'workout'} / ${entry.calories || 0} kcal` })));
+  else entries.forEach((entry) => {
+    const workoutLabel = resolveWorkoutLabel(
+      entry.exerciseSlug,
+      entry.result?.exerciseSlug,
+      entry.result?.exercise_slug,
+      entry.questId,
+      entry.result?.questId,
+      entry.result?.quest_id,
+    );
+    list.append(Object.assign(document.createElement('div'), { className: 'row', textContent: `${workoutLabel} / ${entry.calories || 0} kcal` }));
+  });
   postCard.append(list);
 
   container.append(profileCard, activityCard, postCard, feedback, followModalOverlay);

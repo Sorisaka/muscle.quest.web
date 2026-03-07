@@ -3,6 +3,7 @@ import { createSparkline } from '../ui/chart/sparkline.js';
 import { createMonthGrid } from '../ui/calendar/monthGrid.js';
 import { defaultHistoryFilter, filterRuns, getRunTags } from '../core/historyFilters.js';
 import { createHistoryFilterControls, HISTORY_CATEGORY_LABELS, toMuscleLabel } from '../ui/historyFilterControls.js';
+import { resolveWorkoutLabel } from '../core/workoutLabel.js';
 
 const PERIODS = [7, 30, 90, 180];
 
@@ -407,7 +408,14 @@ const createDayDetail = async ({ store, dateKey, navigate, playSfx, filterState 
       const row = document.createElement('div');
       row.className = 'row';
       const name = document.createElement('strong');
-      name.textContent = entry.exerciseSlug || entry.questId || 'workout';
+      name.textContent = resolveWorkoutLabel(
+        entry.exerciseSlug,
+        entry.result?.exerciseSlug,
+        entry.result?.exercise_slug,
+        entry.questId,
+        entry.result?.questId,
+        entry.result?.quest_id,
+      );
       const meta = document.createElement('span');
       meta.className = 'muted';
       const tags = getRunTags(entry);
