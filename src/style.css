@@ -275,6 +275,46 @@ section.panel {
   border: 1px solid #1f2937;
 }
 
+
+.settings-list {
+  gap: 0.75rem;
+}
+
+.settings-item {
+  width: 100%;
+  text-align: left;
+}
+
+.settings-item__content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.settings-item__title {
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+
+.settings-item__subtitle {
+  margin: 0;
+  width: 100%;
+  text-align: left;
+}
+
+.settings-item__chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.75rem;
+  flex-shrink: 0;
+}
+
 .todo-row {
   gap: 0.75rem;
 }
