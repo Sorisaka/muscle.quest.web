@@ -6,23 +6,19 @@ const createRankRow = (position, entry, selfId) => {
   }
   row.dataset.entryId = entry.id || '';
 
-  const badge = document.createElement('span');
-  badge.className = 'pill';
+  const badge = document.createElement('strong');
+  badge.className = 'leaderboard-row__rank';
   badge.textContent = `#${position}`;
 
-  const user = document.createElement('div');
-  user.className = 'leaderboard-row__user';
   const name = document.createElement('strong');
+  name.className = 'leaderboard-row__name';
   name.textContent = entry.displayName || entry.id || 'Anonymous';
-  const points = document.createElement('span');
-  points.className = 'muted';
-  points.textContent = `${entry.calories ?? 0} kcal`;
-  user.append(name, points);
 
   const total = document.createElement('strong');
+  total.className = 'leaderboard-row__calories';
   total.textContent = `${entry.calories ?? 0} kcal`;
 
-  row.append(badge, user, total);
+  row.append(badge, name, total);
   return row;
 };
 

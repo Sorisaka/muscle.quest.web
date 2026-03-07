@@ -77,12 +77,30 @@ export const renderSettings = (_params, { navigate, playSfx }) => {
   title.textContent = '設定';
 
   const list = document.createElement('div');
-  list.className = 'stack';
+  list.className = 'stack settings-list';
   SETTINGS_SECTIONS.forEach((section) => {
     const row = document.createElement('button');
     row.type = 'button';
-    row.className = 'row';
-    row.innerHTML = `<span><strong>${section.label}</strong><p class="muted">${section.description}</p></span><span>→</span>`;
+    row.className = 'row settings-item';
+
+    const content = document.createElement('span');
+    content.className = 'settings-item__content';
+
+    const label = document.createElement('strong');
+    label.className = 'settings-item__title';
+    label.textContent = section.label;
+
+    const description = document.createElement('p');
+    description.className = 'muted settings-item__subtitle';
+    description.textContent = section.description;
+
+    const chevron = document.createElement('span');
+    chevron.className = 'settings-item__chevron';
+    chevron.textContent = '→';
+
+    content.append(label, description);
+    row.append(content, chevron);
+
     row.addEventListener('click', () => {
       playSfx('ui:navigate');
       navigate(`#/settings/${section.key}`);
