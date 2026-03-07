@@ -19,6 +19,7 @@ const defaultSettings = {
   timerSets: trainingConfig.defaults.timerSets,
   mode: trainingConfig.defaults.mode,
   timerType: trainingConfig.defaults.timerType,
+  timeMode: trainingConfig.defaults.timeMode,
 };
 
 const defaultProfile = {
@@ -75,6 +76,12 @@ const readSettings = () => {
     if (!normalized.timerType) {
       normalized.timerType = normalized.mode || defaultSettings.timerType;
     }
+    if (normalized.timerType === 'stopwatch') normalized.timerType = 'time';
+    if (normalized.mode === 'stopwatch') normalized.mode = 'time';
+    if (normalized.timerType === 'hold') normalized.timerType = 'time';
+    if (normalized.mode === 'hold') normalized.mode = 'time';
+    if (normalized.timeMode === 'hold') normalized.timeMode = 'intervalTimer';
+    normalized.timeMode = normalized.timeMode || (parsed.timerType === 'stopwatch' || parsed.mode === 'stopwatch' ? 'stopwatch' : parsed.timerType === 'hold' || parsed.mode === 'hold' ? 'intervalTimer' : defaultSettings.timeMode);
     normalized.language = 'ja';
     return normalized;
   } catch (error) {
@@ -286,6 +293,7 @@ export const createStore = (driver = 'supabase') => {
       timerSets: timerConfig.sets ?? settings.timerSets,
       timerType: timerConfig.mode || timerConfig.timerType || settings.timerType,
       mode: timerConfig.mode || timerConfig.timerType || settings.mode,
+      timeMode: timerConfig.timeMode || settings.timeMode,
     };
     persistSettings();
     notifySettings();
@@ -293,6 +301,7 @@ export const createStore = (driver = 'supabase') => {
 
   const getTimerPreferences = () => ({
     mode: settings.timerType || settings.mode,
+    timeMode: settings.timeMode || trainingConfig.defaults.timeMode,
     workSeconds: settings.timerTrainingSeconds,
     restSeconds: settings.timerRestSeconds,
     sets: settings.timerSets,

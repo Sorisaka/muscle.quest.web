@@ -60,26 +60,22 @@ const renderPlanPreview = (plan) => {
   const summary = document.createElement('p');
   summary.className = 'muted';
   summary.textContent =
-    plan.inputMode === 'stopwatch'
-      ? 'ストップウォッチで計測（セット編集なし）'
-      : plan.inputMode === 'hold'
-        ? `各セット ${plan.trainingSeconds} 秒 / ${plan.sets.length} セット${plan.sets.length > 1 ? ` / 休憩 ${plan.restSeconds} 秒` : ''}`
-        : plan.inputMode === 'reps'
+    plan.inputMode === 'time'
+      ? 'time計測（ストップウォッチ/タイマー切替、セット編集なし）'
+      : plan.inputMode === 'reps'
           ? `${plan.sets.length} セット（回数入力）${plan.sets.length > 1 ? ` / 休憩 ${plan.restSeconds} 秒` : ''}`
           : `${plan.sets.length} セット（重量×回数）${plan.sets.length > 1 ? ` / 休憩 ${plan.restSeconds} 秒` : ''}`;
 
   const detail = document.createElement('ul');
   detail.className = 'muted';
-  if (plan.inputMode === 'stopwatch') {
+  if (plan.inputMode === 'time') {
     const item = document.createElement('li');
-    item.textContent = 'セット編集は不要です。ストップウォッチで計測します。';
+    item.textContent = 'セット編集は不要です。画面上でストップウォッチ/タイマーを切り替えて計測します。';
     detail.append(item);
   } else {
     plan.sets.forEach((set, index) => {
       const item = document.createElement('li');
-      if (plan.inputMode === 'hold') {
-        item.textContent = `セット${index + 1}: ${set.timeSeconds}秒`;
-      } else if (plan.inputMode === 'reps') {
+      if (plan.inputMode === 'reps') {
         item.textContent = `セット${index + 1}: ${set.reps}回`;
       } else {
         item.textContent = `セット${index + 1}: ${set.weight}kg x ${set.reps}回`;
@@ -141,7 +137,7 @@ export const renderQuest = (params, { navigate, store, playSfx }) => {
 
   const start = document.createElement('button');
   start.type = 'button';
-  start.textContent = 'ワークアウト開始（編集して消費カロリーUP）';
+  start.textContent = 'ワークアウト開始';
   start.addEventListener('click', () => {
     store.rememberPlan(quest.id, settings.difficulty, plan);
     playSfx('ui:navigate');
