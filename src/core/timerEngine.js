@@ -17,6 +17,8 @@ export const createTimerEngine = (initialConfig = {}) => {
   let workflowState = 'idle';
   let timerId = null;
   let lastTimestamp = null;
+  let activeElapsedSeconds = 0;
+  let restElapsedSeconds = 0;
 
   const tickSubscribers = new Set();
   const stateSubscribers = new Set();
@@ -92,6 +94,8 @@ export const createTimerEngine = (initialConfig = {}) => {
     totalSets: totalSets(),
     remainingSeconds: isTimeStopwatch() ? 0 : Math.max(remainingSeconds, 0),
     elapsedSeconds,
+    activeElapsedSeconds,
+    restElapsedSeconds,
     next: nextPhase(),
   });
 
@@ -125,8 +129,11 @@ export const createTimerEngine = (initialConfig = {}) => {
       elapsedSeconds += diffSeconds;
 
       if (isTimeStopwatch() || (usesSetRestWorkflow() && workflowState === 'in_set')) {
+        activeElapsedSeconds += diffSeconds;
         notifyTick();
       } else if (isTimeTimer() || (usesSetRestWorkflow() && workflowState === 'resting')) {
+        if (isTimeTimer()) activeElapsedSeconds += diffSeconds;
+        if (usesSetRestWorkflow() && workflowState === 'resting') restElapsedSeconds += diffSeconds;
         remainingSeconds -= diffSeconds;
         if (remainingSeconds <= 0) {
           if (usesSetRestWorkflow()) {
@@ -148,6 +155,8 @@ export const createTimerEngine = (initialConfig = {}) => {
         }
         notifyTick();
       } else if (usesIntervalWorkflow()) {
+        if (phase === 'work') activeElapsedSeconds += diffSeconds;
+        if (phase === 'rest') restElapsedSeconds += diffSeconds;
         remainingSeconds -= diffSeconds;
         while (remainingSeconds <= 0) {
           const overflow = Math.abs(remainingSeconds);
@@ -200,6 +209,8 @@ export const createTimerEngine = (initialConfig = {}) => {
     phase = 'work';
     currentSet = 1;
     elapsedSeconds = 0;
+    activeElapsedSeconds = 0;
+    restElapsedSeconds = 0;
     workflowState = usesSetRestWorkflow() ? 'in_set' : 'idle';
     remainingSeconds = usesIntervalWorkflow() ? getWorkDuration(1) : config.workSeconds;
     lastTimestamp = Date.now();
@@ -276,6 +287,83 @@ export const createTimerEngine = (initialConfig = {}) => {
     timerId = setTimeout(scheduleTick, 1000);
   };
 
+
+  const advanceFromPausedPhase = () => {
+    if (state !== 'paused' || state === 'finished') return;
+
+    if (usesSetRestWorkflow()) {
+      if (workflowState === 'in_set') {
+        if (currentSet >= config.sets) {
+          finish();
+          return;
+        }
+        phase = 'rest';
+        workflowState = config.restSeconds > 0 ? 'rest_ready' : 'idle';
+        remainingSeconds = config.restSeconds;
+        if (config.restSeconds <= 0) {
+          currentSet += 1;
+          phase = 'work';
+        }
+        notifyState();
+        notifyTick();
+        return;
+      }
+      if (workflowState === 'resting' || workflowState === 'rest_ready') {
+        currentSet += 1;
+        if (currentSet > config.sets) {
+          finish();
+          return;
+        }
+        phase = 'work';
+        workflowState = 'idle';
+        remainingSeconds = getWorkDuration(currentSet);
+        notifyState();
+        notifyTick();
+      }
+      return;
+    }
+
+    if (isTimeIntervalTimer()) {
+      if (phase === 'work') {
+        if (currentSet >= config.sets) {
+          finish();
+          return;
+        }
+        if (config.restSeconds > 0) {
+          phase = 'rest';
+          remainingSeconds = config.restSeconds;
+        } else {
+          currentSet += 1;
+          if (currentSet > config.sets) {
+            finish();
+            return;
+          }
+          phase = 'work';
+          remainingSeconds = getWorkDuration(currentSet);
+        }
+        notifyState();
+        notifyTick();
+        return;
+      }
+
+      currentSet += 1;
+      if (currentSet > config.sets) {
+        finish();
+        return;
+      }
+      phase = 'work';
+      remainingSeconds = getWorkDuration(currentSet);
+      notifyState();
+      notifyTick();
+      return;
+    }
+
+    if (isTimeTimer()) {
+      finish();
+      return;
+    }
+  };
+
   const stop = () => {
     clearTimer();
     state = 'finished';
@@ -293,6 +381,8 @@ export const createTimerEngine = (initialConfig = {}) => {
     workflowState = 'idle';
     remainingSeconds = usesIntervalWorkflow() ? getWorkDuration(1) : config.workSeconds;
     elapsedSeconds = 0;
+    activeElapsedSeconds = 0;
+    restElapsedSeconds = 0;
     lastTimestamp = null;
     notifyState();
     notifyTick();
@@ -315,6 +405,7 @@ export const createTimerEngine = (initialConfig = {}) => {
     stop,
     reset,
     advanceSetRest,
+    advanceFromPausedPhase,
     onTick,
     onStateChange,
     getSnapshot,
