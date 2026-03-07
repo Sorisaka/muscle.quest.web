@@ -1,20 +1,7 @@
 import { defaultHistoryFilter, filterRuns, getRunTags } from '../core/historyFilters.js';
 import { createHistoryFilterControls, HISTORY_CATEGORY_LABELS, toMuscleLabel } from '../ui/historyFilterControls.js';
-
-const formatDateTime = (value) => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '-';
-  return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-};
-
-const getExerciseCountLabel = (result) => {
-  const exercises = result?.exercises;
-  if (Array.isArray(exercises) && exercises.length) {
-    return `種目数: ${exercises.length}`;
-  }
-  return '';
-};
+import { resolveWorkoutPresentation } from '../core/workoutResultPresenter.js';
+import { formatDateTimeJa } from '../core/dateTimeFormatter.js';
 
 const normalizeTimelineResponse = (timelineState) => {
   const state = timelineState || {};
@@ -130,8 +117,17 @@ export const renderTimeline = (_params, { playSfx, store }) => {
 
       const date = document.createElement('span');
       date.className = 'muted';
-      date.textContent = formatDateTime(item.publishedAt || item.createdAt);
+      date.textContent = formatDateTimeJa(item.publishedAt || item.createdAt);
       top.append(author, date);
+
+      const presentation = resolveWorkoutPresentation(item);
+
+      const workoutLine = document.createElement('p');
+      workoutLine.textContent = `運動: ${presentation.workoutLabel}`;
+
+      const amountLine = document.createElement('p');
+      amountLine.className = 'muted';
+      amountLine.textContent = `内容: ${presentation.workoutAmountLabel}`;
 
       const meta = document.createElement('div');
       meta.className = 'timeline-card__meta';
@@ -143,14 +139,6 @@ export const renderTimeline = (_params, { playSfx, store }) => {
           return calories;
         })(),
       );
-
-      const exerciseLabel = getExerciseCountLabel(item.result);
-      if (exerciseLabel) {
-        const ex = document.createElement('span');
-        ex.className = 'pill';
-        ex.textContent = exerciseLabel;
-        meta.append(ex);
-      }
 
       const tags = getRunTags(item.result || item);
       const tagLine = document.createElement('p');
@@ -175,6 +163,7 @@ export const renderTimeline = (_params, { playSfx, store }) => {
         render();
         try {
           await Promise.resolve(store.toggleLike(item.runId));
+          await Promise.resolve(store.fetchNotificationUnreadCount({ force: true })).catch(() => {});
           syncFromStore();
         } catch (likeError) {
           error = 'Like の更新に失敗しました。時間をおいて再試行してください。';
@@ -187,7 +176,7 @@ export const renderTimeline = (_params, { playSfx, store }) => {
       });
 
       actions.append(likeButton);
-      card.append(top, meta, tagLine, note, actions);
+      card.append(top, workoutLine, amountLine, meta, tagLine, note, actions);
       list.append(card);
     });
   };

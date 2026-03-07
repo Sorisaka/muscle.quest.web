@@ -12,6 +12,7 @@ import { renderRank } from './views/rankView.js';
 import { renderAccount, renderAccountConnections } from './views/accountView.js';
 import { renderTimeline } from './views/timelineView.js';
 import { renderHistory, renderHistoryDay } from './views/historyView.js';
+import { renderNotifications } from './views/notificationsView.js';
 import { createAccountDrawer } from './ui/accountDrawer.js';
 
 const outlet = document.querySelector('[data-view]');
@@ -44,6 +45,7 @@ const routes = [
   { path: '#/history', render: renderHistory },
   { path: '#/history/:date', render: renderHistoryDay },
   { path: '#/follow-requests', render: (p, c) => renderAccountConnections({ type: 'requests' }, c) },
+  { path: '#/notifications', render: renderNotifications },
 ];
 
 

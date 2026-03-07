@@ -141,6 +141,14 @@ export const createStore = (driver = 'supabase') => {
     },
   };
 
+  let notifications = {
+    items: [],
+    unreadCount: 0,
+    loading: false,
+    error: null,
+    lastFetchedAt: null,
+  };
+
   const notifySettings = () => {
     settingsSubscribers.forEach((callback) => callback(settings));
   };
@@ -633,6 +641,82 @@ export const createStore = (driver = 'supabase') => {
   };
 
 
+
+
+  const applyNotificationState = (items = [], extra = {}) => {
+    const unreadCount = (Array.isArray(items) ? items : []).filter((entry) => !entry?.read_at).length;
+    notifications = {
+      ...notifications,
+      items: Array.isArray(items) ? items : [],
+      unreadCount,
+      loading: false,
+      error: null,
+      lastFetchedAt: new Date().toISOString(),
+      ...extra,
+    };
+    notifyProfile();
+    return notifications;
+  };
+
+  const fetchNotificationUnreadCount = ({ force = false } = {}) => {
+    if (!force && notifications.lastFetchedAt) {
+      return Promise.resolve(notifications.unreadCount);
+    }
+    return Promise.resolve(persistence.getUnreadNotificationCount(resolveCurrentUserId()))
+      .then((count) => {
+        notifications = {
+          ...notifications,
+          unreadCount: Math.max(Number(count) || 0, 0),
+          error: null,
+        };
+        notifyProfile();
+        return notifications.unreadCount;
+      })
+      .catch((error) => {
+        notifications = {
+          ...notifications,
+          error: error?.message || '通知件数の取得に失敗しました。',
+        };
+        notifyProfile();
+        throw error;
+      });
+  };
+
+  const markAllNotificationsRead = () => Promise.resolve(persistence.markAllNotificationsRead(resolveCurrentUserId()))
+    .then(() => {
+      const now = new Date().toISOString();
+      notifications = {
+        ...notifications,
+        unreadCount: 0,
+        items: (notifications.items || []).map((entry) => ({ ...entry, read_at: entry.read_at || now })),
+      };
+      notifyProfile();
+      return notifications;
+    });
+
+  const fetchNotifications = ({ limit = 30, before = null, force = false } = {}) => {
+    if (!force && notifications.lastFetchedAt && notifications.items.length && !before) {
+      return Promise.resolve(notifications);
+    }
+    notifications = { ...notifications, loading: true, error: null };
+    notifyProfile();
+    return Promise.resolve(persistence.listNotifications(resolveCurrentUserId(), limit, before))
+      .then((items) => applyNotificationState(items || []))
+      .catch((error) => {
+        notifications = {
+          ...notifications,
+          loading: false,
+          error: error?.message || '通知取得に失敗しました。',
+        };
+        notifyProfile();
+        throw error;
+      });
+  };
+
+  const getNotificationState = () => notifications;
+
+  const getLikeCountsByWorkoutRunIds = (runIds = []) => Promise.resolve(persistence.getTimelineLikeSummaries(runIds || []));
+
   const fetchTimeline = ({ scope = 'following', limit = 30, before = null, force = false } = {}) => {
     const normalizedScope = scope || 'following';
     const isHeadLoad = before == null;
@@ -660,12 +744,31 @@ export const createStore = (driver = 'supabase') => {
     }
 
     return Promise.resolve(persistence.getTimeline({ scope: normalizedScope, limit, before, force }))
-      .then((items) => applyTimeline(normalizedScope, items || [], {
-        append: !isHeadLoad,
-        loading: false,
-        error: null,
-        markLoaded: isHeadLoad,
-      }))
+      .then(async (items) => {
+        const timelineItems = Array.isArray(items) ? items : [];
+        const runIds = timelineItems.map((entry) => entry?.runId || entry?.run_id).filter(Boolean);
+        let likeMap = new Map();
+        if (runIds.length) {
+          const likeRows = await Promise.resolve(persistence.getTimelineLikeSummaries(runIds));
+          likeMap = new Map((likeRows || []).map((row) => [String(row.runId || row.run_id), row]));
+        }
+        const merged = timelineItems.map((entry) => {
+          const key = String(entry?.runId || entry?.run_id || '');
+          const like = likeMap.get(key);
+          if (!like) return entry;
+          return {
+            ...entry,
+            liked: Boolean(like.liked),
+            likeCount: Number(like.likeCount ?? 0),
+          };
+        });
+        return applyTimeline(normalizedScope, merged, {
+          append: !isHeadLoad,
+          loading: false,
+          error: null,
+          markLoaded: isHeadLoad,
+        });
+      })
       .catch((error) => {
         const fallbackItems = isHeadLoad ? [] : (timeline.itemsByScope?.[normalizedScope] || []);
         applyTimeline(normalizedScope, fallbackItems, {
@@ -677,50 +780,48 @@ export const createStore = (driver = 'supabase') => {
       });
   };
 
-  const toggleLike = (runId) => {
-    if (!runId) return { runId, liked: false, likeCount: 0 };
+  const applyLikeResultToTimeline = (runId, likeResult = {}) => {
+    const normalizedRunId = Number(runId);
+    if (!Number.isFinite(normalizedRunId) || normalizedRunId <= 0) return;
 
-    const previous = timeline.items.slice();
-    const idx = previous.findIndex((item) => item.runId === runId);
+    const nextLiked = Boolean(likeResult.liked);
+    const nextLikeCount = Math.max(0, Number(likeResult.likeCount ?? 0));
 
-    if (idx >= 0) {
-      const target = previous[idx];
-      const optimisticLiked = !target.liked;
-      const optimisticCount = Math.max(0, Number(target.likeCount || 0) + (optimisticLiked ? 1 : -1));
-      const optimisticItems = previous.slice();
-      optimisticItems[idx] = { ...target, liked: optimisticLiked, likeCount: optimisticCount };
-      applyTimeline(timeline.scope, optimisticItems);
-    }
-
-    const result = persistence.toggleLike(runId);
-    const sync = resolveMaybeAsync(result, (next) => {
-      if (!next) return;
-      const targetIndex = timeline.items.findIndex((item) => item.runId === runId);
-      if (targetIndex < 0) return;
-      const items = timeline.items.slice();
-      items[targetIndex] = {
-        ...items[targetIndex],
-        liked: Boolean(next.liked),
-        likeCount: Number(next.likeCount ?? items[targetIndex].likeCount ?? 0),
-      };
-      applyTimeline(timeline.scope, items);
-    });
-
-    if (sync) {
-      const targetIndex = timeline.items.findIndex((item) => item.runId === runId);
-      if (targetIndex >= 0) {
-        const items = timeline.items.slice();
-        items[targetIndex] = {
-          ...items[targetIndex],
-          liked: Boolean(sync.liked),
-          likeCount: Number(sync.likeCount ?? items[targetIndex].likeCount ?? 0),
+    const patchItems = (items = []) => {
+      if (!Array.isArray(items)) return [];
+      return items.map((item) => {
+        if (Number(item?.runId) !== normalizedRunId) return item;
+        return {
+          ...item,
+          liked: nextLiked,
+          likeCount: nextLikeCount,
         };
-        applyTimeline(timeline.scope, items);
-      }
-      return sync;
-    }
+      });
+    };
 
-    return { runId, liked: idx >= 0 ? !previous[idx].liked : false, likeCount: idx >= 0 ? Math.max(0, Number(previous[idx].likeCount || 0) + (!previous[idx].liked ? 1 : -1)) : 0 };
+    const nextItemsByScope = {
+      following: patchItems(timeline.itemsByScope?.following || []),
+      global: patchItems(timeline.itemsByScope?.global || []),
+    };
+
+    const activeScope = timeline.scope || 'following';
+    timeline = {
+      ...timeline,
+      itemsByScope: nextItemsByScope,
+      items: patchItems(nextItemsByScope[activeScope] || []),
+    };
+
+    notifyProfile();
+  };
+
+  const toggleLike = (runId) => {
+    if (!runId) return Promise.resolve({ runId, liked: false, likeCount: 0 });
+
+    return Promise.resolve(persistence.toggleLike(runId)).then((next) => {
+      if (!next) return { runId, liked: false, likeCount: 0 };
+      applyLikeResultToTimeline(runId, next);
+      return next;
+    });
   };
 
   const getTimelineState = () => timeline;
@@ -778,6 +879,11 @@ export const createStore = (driver = 'supabase') => {
     fetchTimeline,
     toggleLike,
     getTimelineState,
+    getLikeCountsByWorkoutRunIds,
+    fetchNotificationUnreadCount,
+    fetchNotifications,
+    getNotificationState,
+    markAllNotificationsRead,
     getTimerPreferences,
     upsertBodyMetric,
     deleteBodyMetric,

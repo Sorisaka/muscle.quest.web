@@ -318,3 +318,120 @@ Phase B では Supabase テーブル化ではなく、**コード管理（Gitレ
 ### 既知の制約
 - 同一ワークアウトを同一メニュー内で重複選択する用途は想定せず、選択順管理は `exerciseSlug` 単位。
 - 一部 legacy データで `exerciseSlug` が欠損している場合は項目由来を特定できないため、再選択で置き換えて利用する運用を推奨。
+
+
+## Phase F: タイムライン取得経路の分離と通知フィード
+
+### 変更概要
+- タイムライン本体 (`get_timeline`) といいね集計 (`get_timeline_like_summaries`) を分離しました。
+- 通知一覧を `#/notifications` として追加しました。
+- 左ドロワーに通知導線（未読件数表示）を追加しました。
+
+### Supabase SQL 適用手順
+1. migration を使う場合
+   ```bash
+   # Supabase CLI を使う場合の例
+   supabase db push
+   ```
+2. 手動適用の場合
+   - `supabase/sql/018_phase6_timeline_notifications.sql` を SQL Editor で実行
+
+### ローカル確認手順
+1. 開発サーバーを起動
+   ```bash
+   npm run dev
+   ```
+2. `#/timeline` を表示
+   - 一覧が表示されること
+   - いいね操作後に件数が更新されること
+3. `#/notifications` を表示
+   - フォローリクエスト通知 / いいね通知が表示されること
+4. 左ドロワーを開く
+   - 通知ボタンに未読件数が表示されること
+
+### 動作確認項目
+- タイムライン読み込み時に RLS 由来で一覧取得が失敗しないこと
+- いいね数は分離取得でも表示されること
+- 通知画面が表示できること
+- `npm run build` が成功すること
+
+
+### 追補: タイムライン / 自分の投稿一覧 表示改善
+- タイムライン・自分の投稿一覧で、種目名を日本語ラベルで表示
+- 結果データから「どれくらい運動したか」を運動タイプ別に表示（時間/距離/セット）
+- 自分の投稿一覧でも likes 集計を別取得で表示（`♡ n`）
+
+
+## Phase G: 通知機能（DB保存 + 未読件数 + 一括既読）
+
+### 通知テーブルの役割
+- `notifications` は「受信者(user_id)に対して、誰(actor_user_id)が、何(type)をしたか」を保存します。
+- type は `like` / `follow` / `follow_request`。
+- 未読は `read_at is null` で判定します。
+
+### 発火条件
+- like通知: 他人の投稿にいいねしたとき（自分への自分いいねは通知しない）
+- follow通知: フォロー成立時
+- follow request通知: リクエスト送信時（status=pending）
+- いいね解除時: **通知は残します**（履歴として保持）
+
+### SQL適用手順
+1. migration適用: `supabase db push`
+2. 手動適用: `supabase/sql/019_notifications_table.sql` を SQL Editor で実行
+
+### ローカル確認方法
+1. `npm run dev`
+2. 左ドロワーを開く（都度未読件数を再取得）
+3. 通知ボタンの右端バッジを確認（0件時は非表示）
+4. `#/notifications` で like / follow / follow request が表示されること
+5. 「通知を既読にする」で未読バッジが0になること
+
+
+### 通知機能のSQL適用順
+1. `supabase/sql/018_phase6_timeline_notifications.sql`
+2. `supabase/sql/019_notifications_table.sql`
+
+## Phase H: フォロー検索 / いいね永続化 / 通知導線UIの修正
+
+### 追加ファイル
+- migration: `supabase/migrations/20260307_0012_fix_follow_search_and_like_toggle.sql`
+- 手動SQL: `supabase/sql/020_fix_follow_search_and_like_toggle.sql`
+
+### 目的
+- 新規フォロー検索で exact UUID が 0 件になりやすい環境差分を吸収するため、`search_accounts` を再定義
+- `toggle_like` の DB 正更新を前提に、フロントのローカルフォールバックによる見かけだけ更新を廃止
+- 左ドロワー通知ボタンのラベル中央固定 + バッジ右端固定
+
+### SQL 適用順（018/019 前提）
+1. `supabase/sql/018_phase6_timeline_notifications.sql`
+2. `supabase/sql/019_notifications_table.sql`
+3. `supabase/sql/020_fix_follow_search_and_like_toggle.sql`
+
+### ローカル確認手順
+1. `npm run dev`
+2. 新規フォロー検索
+   - UUID 完全一致で検索結果が出る
+   - display_name 部分一致で検索結果が出る
+   - 自分自身は結果に出ない
+   - RPC失敗時は「検索に失敗しました。時間をおいて再試行してください。」
+3. タイムラインいいね
+   - いいね操作時に 400 が出ない
+   - リロード後も like 状態が維持される
+4. 通知
+   - A の投稿を B が like すると A に like 通知が作成される
+   - 左ドロワー未読件数が再取得で整合する
+5. 左ドロワー
+   - 通知ラベルが中央固定で、バッジが右端表示（1 / 9 / 12 / 99+）
+
+### 手順化（確認ケース）
+- ケースA（public投稿）
+  1. A が public 投稿
+  2. B が like
+  3. A 側で通知追加と未読増加を確認
+- ケースB（private投稿 + follow済み）
+  1. B が A を follow
+  2. A の private 投稿に B が like
+  3. リロード後も like 維持 + A 側通知を確認
+- ケースC（archived投稿）
+  1. archived 投稿への like を試行
+  2. DB 側で拒否され UI が破綻しないことを確認
